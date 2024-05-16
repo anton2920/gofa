@@ -90,7 +90,7 @@ func PutEnv(buffer []byte, j Jail) int {
 func PutRctlPrefix(buffer []byte, name []byte) int {
 	var n int
 
-	n += copy(buffer[n:], "j:")
+	n += copy(buffer[n:], "jail:")
 	n += copy(buffer[n:], name)
 
 	buffer[n] = ':'
@@ -113,6 +113,7 @@ func New(template string, wd string) (Jail, error) {
 	var j Jail
 	var err error
 
+	j.WorkingDirectory = wd
 	j.Index = atomic.AddUint32(&JailLastIndex, 1)
 
 	tmpl := make([]byte, syscall.PATH_MAX)
@@ -135,8 +136,8 @@ func New(template string, wd string) (Jail, error) {
 	n = PutEnv(env, j)
 	env = env[:n+1]
 
-	if err := syscall.Access(unsafe.String(unsafe.SliceData(tmp), len(tmp)), 0); err != nil {
-		return Jail{}, err
+	if err := syscall.Access(unsafe.String(unsafe.SliceData(tmpl), len(tmpl)), 0); err != nil {
+		return Jail{}, fmt.Errorf("provided template is not valid BSD userland: %w", err)
 	}
 
 	if err := syscall.Mkdir(unsafe.String(unsafe.SliceData(path), len(path)), 0755); err != nil {
@@ -171,7 +172,7 @@ func New(template string, wd string) (Jail, error) {
 	}
 
 	j.ID, err = syscall.JailSet([]syscall.Iovec{
-		syscall.Iovec("host.hostname\x00"), syscall.Iovec("sems-j\x00"),
+		syscall.Iovec("host.hostname\x00"), syscall.Iovec("sems-jail\x00"),
 		syscall.Iovec("name\x00"), syscall.IovecForByteSlice(name),
 		syscall.Iovec("path\x00"), syscall.IovecForByteSlice(path),
 		syscall.Iovec("persist\x00"), syscall.IovecZ,
@@ -257,11 +258,11 @@ func Remove(j Jail) error {
 	prefix = prefix[:n+1]
 
 	if err1 := syscall.RctlRemoveRule(prefix); err1 != nil {
-		err = errors.Join(err, fmt.Errorf("failed to remove j rules: %w", err1))
+		err = errors.Join(err, fmt.Errorf("failed to remove jail rules: %w", err1))
 	}
 
 	if err1 := syscall.JailRemove(j.ID); err1 != nil {
-		err = errors.Join(err, fmt.Errorf("failed to remove j: %w", err1))
+		err = errors.Join(err, fmt.Errorf("failed to remove jail: %w", err1))
 	}
 
 	if err1 := syscall.Unmount(unsafe.String(unsafe.SliceData(tmp), len(tmp)), 0); err1 != nil {
