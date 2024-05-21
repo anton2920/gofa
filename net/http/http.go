@@ -203,7 +203,7 @@ func (rp *RequestParser) Parse(request string, r *Request) (int, error) {
 
 			uriEnd := strings.FindChar(request[rp.Pos:rp.Pos+lineEnd], ' ')
 			if uriEnd == -1 {
-				return 0, fmt.Errorf("expected space after URI, found %q", request[rp.Pos:lineEnd])
+				return 0, fmt.Errorf("expected space after URI, found %q", request[rp.Pos:rp.Pos+lineEnd])
 			}
 
 			queryStart := strings.FindChar(request[rp.Pos:rp.Pos+uriEnd], '?')
@@ -685,7 +685,7 @@ func WriteResponses(ctx *Context, ws []Response) (int, error) {
 		w.Arena.Reset()
 	}
 
-	/* IOV_MAX is 1024, so F**CK ME for not sending large pipelines with one syscall!!! */
+	/* NOTE(anton2920): IOV_MAX is 1024, so F**CK ME for not sending large pipelines with one syscall!!! */
 	for len(ctx.ResponseIovs[ctx.ResponsePos:]) > 0 {
 		end := min(len(ctx.ResponseIovs[ctx.ResponsePos:]), syscall.IOV_MAX)
 		n, err := syscall.Writev(ctx.Connection, ctx.ResponseIovs[ctx.ResponsePos:ctx.ResponsePos+end])
