@@ -80,6 +80,6 @@ func Panicf(format string, args ...interface{}) {
 	panic(string(buffer))
 }
 
-func SetLogLevel(new Level) Level {
+func SetLevel(new Level) Level {
 	return Level(atomic.SwapInt32((*int32)(unsafe.Pointer(&LogLevel)), int32(new)))
 }
