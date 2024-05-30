@@ -69,7 +69,7 @@ func platformQueueAddSocket(q *Queue, l int32, request Request, trigger Trigger,
 	return nil
 }
 
-func platformQueueAddSignal(q *Queue, sig int32) error {
+func platformQueueAddSignal(q *Queue, sig syscall.Signal) error {
 	event := syscall.Kevent_t{Ident: uintptr(sig), Filter: syscall.EVFILT_SIGNAL, Flags: syscall.EV_ADD}
 	if _, err := syscall.Kevent(q.kq, unsafe.Slice(&event, 1), nil, nil); err != nil {
 		return fmt.Errorf("failed to request signal event: %w", err)

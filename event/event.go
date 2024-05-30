@@ -3,6 +3,8 @@ package event
 import (
 	"runtime"
 	"unsafe"
+
+	"github.com/anton2920/gofa/syscall"
 )
 
 type Queue struct {
@@ -70,8 +72,13 @@ func (q *Queue) AddSocket(sock int32, request Request, trigger Trigger, userData
 	return platformQueueAddSocket(q, sock, request, trigger, userData)
 }
 
-func (q *Queue) AddSignal(sig int32) error {
-	return platformQueueAddSignal(q, sig)
+func (q *Queue) AddSignals(sigs ...syscall.Signal) error {
+	for i := 0; i < len(sigs); i++ {
+		if err := platformQueueAddSignal(q, sigs[i]); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (q *Queue) AddTimer(identifier int32, duration int, measurement DurationMeasurement, userData unsafe.Pointer) error {

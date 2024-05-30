@@ -34,6 +34,7 @@ const (
 	SYS_read             = 3
 	SYS_rmdir            = 137
 	SYS_setsockopt       = 105
+	SYS_sigaction        = 416
 	SYS_shm_open2        = 571
 	SYS_shutdown         = 134
 	SYS_socket           = 97
@@ -135,7 +136,7 @@ func Kevent(kq int32, changelist []Kevent_t, eventlist []Kevent_t, timeout *Time
 	return int(r1), NewError("kevent", errno)
 }
 
-func Kill(pid int32, sig int32) error {
+func Kill(pid int32, sig Signal) error {
 	_, _, errno := RawSyscall(SYS_kill, uintptr(pid), uintptr(sig), 0)
 	return NewError("kill", errno)
 }
@@ -227,6 +228,11 @@ func Rmdir(path string) error {
 func Setsockopt(s, level, optname int32, optval unsafe.Pointer, optlen uint32) error {
 	_, _, errno := RawSyscall6(SYS_setsockopt, uintptr(s), uintptr(level), uintptr(optname), uintptr(optval), uintptr(optlen), 0)
 	return NewError("setsockopt", errno)
+}
+
+func Sigaction(sig int32, act *Sigaction_t, oact *Sigaction_t) error {
+	_, _, errno := RawSyscall(SYS_sigaction, uintptr(sig), uintptr(unsafe.Pointer(act)), uintptr(unsafe.Pointer(oact)))
+	return NewError("sigaction", errno)
 }
 
 func ShmOpen2(path string, flags int32, mode uint16, shmflags int32, name string) (int32, error) {
