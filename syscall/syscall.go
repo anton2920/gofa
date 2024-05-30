@@ -27,6 +27,8 @@ const (
 	SYS_nanosleep        = 240
 	SYS_nmount           = 378
 	SYS_open             = 5
+	SYS_pread            = 475
+	SYS_pwrite           = 476
 	SYS_rctl_add_rule    = 528
 	SYS_rctl_remove_rule = 529
 	SYS_read             = 3
@@ -189,6 +191,16 @@ func Open(path string, flags int32, mode uint16) (int32, error) {
 	return int32(r1), NewError("open", errno)
 }
 
+func Pread(fd int32, buf []byte, offset int64) (int, error) {
+	r1, _, errno := Syscall6(SYS_pread, uintptr(fd), uintptr(unsafe.Pointer(unsafe.SliceData(buf))), uintptr(len(buf)), uintptr(offset), 0, 0)
+	return int(r1), NewError("pread", errno)
+}
+
+func Pwrite(fd int32, buf []byte, offset int64) (int, error) {
+	r1, _, errno := Syscall6(SYS_pwrite, uintptr(fd), uintptr(unsafe.Pointer(unsafe.SliceData(buf))), uintptr(len(buf)), uintptr(offset), 0, 0)
+	return int(r1), NewError("pwrite", errno)
+}
+
 func RctlAddRule(rule []byte) error {
 	_, _, errno := RawSyscall6(SYS_rctl_add_rule, uintptr(unsafe.Pointer(unsafe.SliceData(rule))), uintptr(len(rule)), 0, 0, 0, 0)
 	return NewError("rctl_add_rule", errno)
@@ -199,9 +211,9 @@ func RctlRemoveRule(filter []byte) error {
 	return NewError("rctl_remove_rule", errno)
 }
 
-func Read(fd int32, buf []byte) (int64, error) {
+func Read(fd int32, buf []byte) (int, error) {
 	r1, _, errno := Syscall(SYS_read, uintptr(fd), uintptr(unsafe.Pointer(unsafe.SliceData(buf))), uintptr(len(buf)))
-	return int64(r1), NewError("read", errno)
+	return int(r1), NewError("read", errno)
 }
 
 func Rmdir(path string) error {
