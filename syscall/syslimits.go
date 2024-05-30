@@ -1,4 +1,7 @@
 package syscall
 
-/* From <sys/syslimits.h>. */
-const IOV_MAX = 1024
+const (
+	/* From <sys/syslimits.h>. */
+	IOV_MAX  = 1024
+	PATH_MAX = 1024
+)
