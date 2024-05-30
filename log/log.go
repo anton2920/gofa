@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"os"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -31,7 +32,7 @@ var Level2String = [...]interface{}{
 var LogLevel Level = LevelInfo
 
 func Logf(level Level, format string, args ...interface{}) {
-	if level < Level(atomic.LoadInt32((*int32)(unsafe.Pointer(&LogLevel)))) {
+	if (level < LevelFatal) && (level < Level(atomic.LoadInt32((*int32)(unsafe.Pointer(&LogLevel))))) {
 		return
 	}
 
@@ -43,8 +44,16 @@ func Logf(level Level, format string, args ...interface{}) {
 		buffer = append(buffer, '\n')
 	}
 
-	/* TODO(anton2920): are race-conditions possible? */
-	syscall.Write(2, buffer)
+	switch level {
+	default:
+		/* TODO(anton2920): are race-conditions possible? */
+		syscall.Write(2, buffer)
+	case LevelFatal:
+		syscall.Write(2, buffer)
+		os.Exit(1)
+	case LevelPanic:
+		panic(string(buffer))
+	}
 }
 
 func Debugf(format string, args ...interface{}) {
@@ -65,19 +74,10 @@ func Errorf(format string, args ...interface{}) {
 
 func Fatalf(format string, args ...interface{}) {
 	Logf(LevelFatal, format, args...)
-	syscall.Exit(1)
 }
 
 func Panicf(format string, args ...interface{}) {
-	buffer := make([]byte, 0, 512)
-	buffer = time.Now().AppendFormat(buffer, "2006/01/02 15:04:05")
-	buffer = fmt.Appendf(buffer, " %5s ", Level2String[LevelPanic])
-	buffer = fmt.Appendf(buffer, format, args...)
-	if format[len(format)-1] != '\n' {
-		buffer = append(buffer, '\n')
-	}
-
-	panic(string(buffer))
+	Logf(LevelPanic, format, args...)
 }
 
 func SetLevel(new Level) Level {
