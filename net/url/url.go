@@ -1,6 +1,11 @@
 package url
 
-import "strconv"
+import (
+	"strconv"
+
+	"github.com/anton2920/gofa/database"
+	"github.com/anton2920/gofa/errors"
+)
 
 type URL struct {
 	Path  string
@@ -57,6 +62,17 @@ func (vs Values) Get(key string) string {
 
 func (vs Values) GetInt(key string) (int, error) {
 	return strconv.Atoi(vs.Get(key))
+}
+
+func (vs Values) GetID(key string) (database.ID, error) {
+	id, err := strconv.Atoi(vs.Get(key))
+	if err != nil {
+		return -1, err
+	}
+	if (id < database.MinValidID) || (id > database.MaxValidID) {
+		return -1, errors.New("ID out of range")
+	}
+	return database.ID(id), nil
 }
 
 func (vs Values) GetMany(key string) []string {

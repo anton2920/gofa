@@ -8,6 +8,7 @@ import (
 
 	"github.com/anton2920/gofa/arena"
 	"github.com/anton2920/gofa/buffer"
+	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/event"
 	"github.com/anton2920/gofa/net/tcp"
@@ -413,10 +414,10 @@ func (w *Response) Redirect(path string, code Status) {
 	w.StatusCode = code
 }
 
-func (w *Response) RedirectID(prefix string, id int, code Status) {
+func (w *Response) RedirectID(prefix string, id database.ID, code Status) {
 	buffer := w.Arena.NewSlice(len(prefix) + 20)
 	n := copy(buffer, prefix)
-	n += slices.PutInt(buffer[n:], id)
+	n += slices.PutInt(buffer[n:], int(id))
 
 	w.SetHeaderUnsafe("Location", unsafe.String(unsafe.SliceData(buffer), n))
 	w.Bodies = w.Bodies[:0]
@@ -468,6 +469,10 @@ func (w *Response) WriteInt(i int) (int, error) {
 	n := slices.PutInt(buffer, i)
 	w.Append(buffer[:n])
 	return n, nil
+}
+
+func (w *Response) WriteID(id database.ID) (int, error) {
+	return w.WriteInt(int(id))
 }
 
 func (w *Response) WriteString(s string) (int, error) {
