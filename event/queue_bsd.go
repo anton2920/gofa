@@ -59,7 +59,7 @@ func platformQueueAddSocket(q *Queue, l int32, request Request, trigger Trigger,
 		}
 	}
 
-	if (request & RequestRead) == RequestRead {
+	if (request & RequestWrite) == RequestWrite {
 		event := syscall.Kevent_t{Ident: uintptr(l), Filter: syscall.EVFILT_WRITE, Flags: flags, Udata: userData}
 		if _, err := syscall.Kevent(q.kq, unsafe.Slice(&event, 1), nil, nil); err != nil {
 			return fmt.Errorf("failed to request socket write event: %w", err)
