@@ -179,3 +179,14 @@ func (w *Response) WriteString(s string) (int, error) {
 func (w *Response) WriteHTMLString(s string) {
 	w.WriteHTML(unsafe.Slice(unsafe.StringData(s), len(s)))
 }
+
+func (w *Response) Reset() {
+	w.StatusCode = StatusOK
+	w.Headers.Values = w.Headers.Values[:0]
+	w.Headers.OmitDate = false
+	w.Headers.OmitServer = false
+	w.Headers.OmitContentType = false
+	w.Headers.OmitContentLength = false
+	w.Bodies = w.Bodies[:0]
+	w.Arena.Reset()
+}

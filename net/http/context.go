@@ -1,6 +1,8 @@
 package http
 
 import (
+	"unsafe"
+
 	"github.com/anton2920/gofa/buffer"
 	"github.com/anton2920/gofa/event"
 	"github.com/anton2920/gofa/net/tcp"
@@ -46,14 +48,35 @@ func NewContext(c int32, addr tcp.SockAddrIn, bufferSize int) (*Context, error) 
 	return ctx, nil
 }
 
+func GetContextFromEvent(event *event.Event) (*Context, bool) {
+	if event.UserData == nil {
+		return nil, false
+	}
+	uptr := uintptr(event.UserData)
+
+	check := uptr & 0x1
+	ctx := (*Context)(unsafe.Pointer(uptr - check))
+	ctx.RequestPendingBytes = event.Available
+
+	return ctx, ctx.Check == int32(check)
+}
+
+func GetContextFromPointer(ptr unsafe.Pointer) (*Context, bool) {
+	uptr := uintptr(ptr)
+
+	check := uptr & 0x1
+	ctx := (*Context)(unsafe.Pointer(uptr - check))
+
+	return ctx, ctx.Check == int32(check)
+}
+
+func (ctx *Context) Pointer() unsafe.Pointer {
+	return unsafe.Pointer(uintptr(unsafe.Pointer(ctx)) | uintptr(ctx.Check))
+}
+
 func (ctx *Context) Reset() {
 	ctx.Check = 1 - ctx.Check
 	ctx.RequestBuffer.Reset()
 	ctx.ResponsePos = 0
 	ctx.ResponseIovs = ctx.ResponseIovs[:0]
-}
-
-func FreeContext(ctx *Context) {
-	ctx.Reset()
-	buffer.FreeCircular(&ctx.RequestBuffer)
 }

@@ -138,6 +138,7 @@ func platformQueueGetEvent(q *Queue, event *Event) error {
 
 	event.EndOfFile = (head.Flags & syscall.EV_EOF) == syscall.EV_EOF
 	event.Type = keventFilter2Type[-head.Filter]
+	event.Identifier = int32(head.Ident)
 	event.UserData = head.Udata
 	event.Available = head.Data
 	return nil

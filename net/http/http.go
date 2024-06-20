@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"unsafe"
 
+	"github.com/anton2920/gofa/buffer"
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/event"
 	"github.com/anton2920/gofa/log"
@@ -36,20 +37,7 @@ func AddClientToQueue(q *event.Queue, ctx *Context, request event.Request, trigg
 	/* TODO(anton2920): switch to pinning inside platform methods. */
 	q.Pinner.Pin(ctx)
 	ctx.EventQueue = q
-	return q.AddSocket(ctx.Connection, request, trigger, unsafe.Pointer(uintptr(unsafe.Pointer(ctx))|uintptr(ctx.Check)))
-}
-
-func GetContextFromEvent(event *event.Event) (*Context, bool) {
-	if event.UserData == nil {
-		return nil, false
-	}
-	uptr := uintptr(event.UserData)
-
-	check := uptr & 0x1
-	ctx := (*Context)(unsafe.Pointer(uptr - check))
-	ctx.RequestPendingBytes = event.Available
-
-	return ctx, ctx.Check == int32(check)
+	return q.AddSocket(ctx.Connection, request, trigger, ctx.Pointer())
 }
 
 /* ReadRequests reads data from socket and parses  requests. Returns the number of requests parsed. */
@@ -73,11 +61,9 @@ func ReadRequests(ctx *Context, rs []Request) (int, error) {
 	var i int
 	for i = 0; i < len(rs); i++ {
 		r := &rs[i]
+
 		r.RemoteAddr = ctx.ClientAddress
-		r.Headers = r.Headers[:0]
-		r.Body = r.Body[:0]
-		r.Form = r.Form[:0]
-		r.Arena.Reset()
+		r.Reset()
 
 		n, err := parser.Parse(rBuf.UnconsumedString(), r)
 		if err != nil {
@@ -88,6 +74,7 @@ func ReadRequests(ctx *Context, rs []Request) (int, error) {
 		}
 		rBuf.Consume(n)
 	}
+
 	if (usesQ) && ((ctx.RequestPendingBytes > 0) || (i == len(rs))) {
 		ctx.EventQueue.AppendEvent(event.Event{Type: event.Read, Identifier: ctx.Connection, Available: ctx.RequestPendingBytes, UserData: unsafe.Pointer(ctx)})
 	}
@@ -150,15 +137,7 @@ func WriteResponses(ctx *Context, ws []Response) (int, error) {
 		ctx.ResponseIovs = append(ctx.ResponseIovs, w.Headers.Values...)
 		ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("\r\n"))
 		ctx.ResponseIovs = append(ctx.ResponseIovs, w.Bodies...)
-
-		w.StatusCode = StatusOK
-		w.Headers.Values = w.Headers.Values[:0]
-		w.Headers.OmitDate = false
-		w.Headers.OmitServer = false
-		w.Headers.OmitContentType = false
-		w.Headers.OmitContentLength = false
-		w.Bodies = w.Bodies[:0]
-		w.Arena.Reset()
+		w.Reset()
 	}
 
 	/* NOTE(anton2920): IOV_MAX is 1024, so F**CK ME for not sending large pipelines with one syscall!!! */
@@ -190,7 +169,7 @@ func WriteResponses(ctx *Context, ws []Response) (int, error) {
 }
 
 func Close(ctx *Context) error {
-	c := ctx.Connection
-	FreeContext(ctx)
-	return syscall.Close(c)
+	ctx.Reset()
+	buffer.FreeCircular(&ctx.RequestBuffer)
+	return syscall.Close(ctx.Connection)
 }
