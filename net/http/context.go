@@ -1,8 +1,6 @@
 package http
 
 import (
-	"unsafe"
-
 	"github.com/anton2920/gofa/buffer"
 	"github.com/anton2920/gofa/event"
 	"github.com/anton2920/gofa/net/tcp"
@@ -46,19 +44,6 @@ func NewContext(c int32, addr tcp.SockAddrIn, bufferSize int) (*Context, error) 
 	ctx.ClientAddress = string(buffer[:n])
 
 	return ctx, nil
-}
-
-func ContextFromEvent(event event.Event) (*Context, bool) {
-	if event.UserData == nil {
-		return nil, false
-	}
-	uptr := uintptr(event.UserData)
-
-	check := uptr & 0x1
-	ctx := (*Context)(unsafe.Pointer(uptr - check))
-	ctx.RequestPendingBytes = event.Available
-
-	return ctx, ctx.Check == int32(check)
 }
 
 func (ctx *Context) Reset() {

@@ -58,8 +58,6 @@ type Event struct {
 	EndOfFile bool
 }
 
-var EmptyEvent Event
-
 func NewQueue() (*Queue, error) {
 	q := new(Queue)
 	if err := platformNewEventQueue(q); err != nil {
@@ -94,8 +92,8 @@ func (q *Queue) Close() error {
 	return platformQueueClose(q)
 }
 
-func (q *Queue) GetEvent() (Event, error) {
-	return platformQueueGetEvent(q)
+func (q *Queue) GetEvent(event *Event) error {
+	return platformQueueGetEvent(q, event)
 }
 
 func (q *Queue) HasEvents() bool {

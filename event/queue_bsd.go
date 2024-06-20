@@ -123,20 +123,24 @@ retry:
 	return nil
 }
 
-func platformQueueGetEvent(q *Queue) (Event, error) {
+func platformQueueGetEvent(q *Queue, event *Event) error {
 	if q.head >= q.tail {
 		if err := platformQueueRequestNewEvents(q, nil); err != nil {
-			return EmptyEvent, err
+			return err
 		}
 	}
 	head := q.events[q.head]
 	q.head++
 
 	if (head.Flags & syscall.EV_ERROR) == syscall.EV_ERROR {
-		return EmptyEvent, fmt.Errorf("requested event for %v failed with code %v", head.Ident, head.Data)
+		return fmt.Errorf("requested event for %v failed with code %v", head.Ident, head.Data)
 	}
 
-	return Event{Type: keventFilter2Type[-head.Filter], Identifier: int32(head.Ident), Available: head.Data, UserData: head.Udata, EndOfFile: (head.Flags & syscall.EV_EOF) == syscall.EV_EOF}, nil
+	event.EndOfFile = (head.Flags & syscall.EV_EOF) == syscall.EV_EOF
+	event.Type = keventFilter2Type[-head.Filter]
+	event.UserData = head.Udata
+	event.Available = head.Data
+	return nil
 }
 
 /* platformQueueGetTime returns current time in nanoseconds. */

@@ -39,6 +39,19 @@ func AddClientToQueue(q *event.Queue, ctx *Context, request event.Request, trigg
 	return q.AddSocket(ctx.Connection, request, trigger, unsafe.Pointer(uintptr(unsafe.Pointer(ctx))|uintptr(ctx.Check)))
 }
 
+func GetContextFromEvent(event *event.Event) (*Context, bool) {
+	if event.UserData == nil {
+		return nil, false
+	}
+	uptr := uintptr(event.UserData)
+
+	check := uptr & 0x1
+	ctx := (*Context)(unsafe.Pointer(uptr - check))
+	ctx.RequestPendingBytes = event.Available
+
+	return ctx, ctx.Check == int32(check)
+}
+
 /* ReadRequests reads data from socket and parses  requests. Returns the number of requests parsed. */
 func ReadRequests(ctx *Context, rs []Request) (int, error) {
 	usesQ := ctx.EventQueue != nil
