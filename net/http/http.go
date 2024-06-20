@@ -33,6 +33,7 @@ func Accept(l int32, bufferSize int) (*Context, error) {
 	return ctx, nil
 }
 
+//go:norace
 func AddClientToQueue(q *event.Queue, ctx *Context, request event.Request, trigger event.Trigger) error {
 	/* TODO(anton2920): switch to pinning inside platform methods. */
 	q.Pinner.Pin(ctx)
@@ -91,6 +92,8 @@ func ContentTypeHTML(bodies []syscall.Iovec) bool {
 
 /* WriteResponses generates  responses and writes them on wire. Returns the number of processed responses. */
 func WriteResponses(ctx *Context, ws []Response) (int, error) {
+	/* TODO(anton2920): remove this. */
+	ctx.DateRFC822 = []byte("Thu, 09 May 2024 16:30:39 +0300")
 	dateBuf := ctx.DateRFC822
 
 	for i := 0; i < len(ws); i++ {

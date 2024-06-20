@@ -30,6 +30,7 @@ type Context struct {
 	EventQueue *event.Queue
 }
 
+//go:norace
 func NewContext(c int32, addr tcp.SockAddrIn, bufferSize int) (*Context, error) {
 	rb, err := buffer.NewCircular(bufferSize)
 	if err != nil {
@@ -70,6 +71,7 @@ func GetContextFromPointer(ptr unsafe.Pointer) (*Context, bool) {
 	return ctx, ctx.Check == int32(check)
 }
 
+//go:norace
 func (ctx *Context) Pointer() unsafe.Pointer {
 	return unsafe.Pointer(uintptr(unsafe.Pointer(ctx)) | uintptr(ctx.Check))
 }
