@@ -23,9 +23,6 @@ type Context struct {
 	ResponseIovs []syscall.Iovec
 	ResponsePos  int
 
-	/* DateRFC822 could be set by client to reduce unnecessary syscalls and date formatting. */
-	DateRFC822 []byte
-
 	/* Optional event queue this client is attached to. */
 	EventQueue *event.Queue
 }

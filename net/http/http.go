@@ -90,12 +90,8 @@ func ContentTypeHTML(bodies []syscall.Iovec) bool {
 	return bodies[0] == html.Header
 }
 
-/* WriteResponses generates  responses and writes them on wire. Returns the number of processed responses. */
-func WriteResponses(ctx *Context, ws []Response) (int, error) {
-	/* TODO(anton2920): remove this. */
-	ctx.DateRFC822 = []byte("Thu, 09 May 2024 16:30:39 +0300")
-	dateBuf := ctx.DateRFC822
-
+/* WriteResponses generates  responses and writes them on wire. Returns the number of processed responses. You may optionally pass dateBuf as an external source of RFC822-formatted current time to optimize response time. */
+func WriteResponses(ctx *Context, ws []Response, dateBuf []byte) (int, error) {
 	for i := 0; i < len(ws); i++ {
 		w := &ws[i]
 
@@ -103,11 +99,8 @@ func WriteResponses(ctx *Context, ws []Response) (int, error) {
 
 		if !w.Headers.OmitDate {
 			if dateBuf == nil {
-				dateBuf := make([]byte, 31)
-
-				var tp syscall.Timespec
-				syscall.ClockGettime(syscall.CLOCK_REALTIME, &tp)
-				time.PutTmRFC822(dateBuf, time.ToTm(int(tp.Sec)))
+				dateBuf = make([]byte, 31)
+				time.PutTmRFC822(dateBuf, time.ToTm(time.Unix()))
 			}
 
 			ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("Date: "), syscall.IovecForByteSlice(dateBuf), syscall.Iovec("\r\n"))

@@ -39,7 +39,7 @@ func (w *Response) DelCookie(name string) {
 	w.SetHeaderUnsafe("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
 }
 
-func (w *Response) SetCookie(name, value string, expiry int64) {
+func (w *Response) SetCookie(name, value string, expiry int) {
 	const secure = "; HttpOnly; Secure; SameSite=Strict"
 	const expires = "; Expires="
 	const path = "; Path=/"
@@ -53,14 +53,14 @@ func (w *Response) SetCookie(name, value string, expiry int64) {
 	n += copy(cookie[n:], value)
 	n += copy(cookie[n:], path)
 	n += copy(cookie[n:], expires)
-	n += time.PutTmRFC822(cookie[n:], time.ToTm(int(expiry)))
+	n += time.PutTmRFC822(cookie[n:], time.ToTm(expiry))
 	n += copy(cookie[n:], secure)
 
 	w.SetHeaderUnsafe("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
 }
 
 /* SetCookieUnsafe is useful for debugging purposes. It's also more compatible with older browsers. */
-func (w *Response) SetCookieUnsafe(name, value string, expiry int64) {
+func (w *Response) SetCookieUnsafe(name, value string, expiry int) {
 	const expires = "; Expires="
 	const path = "; Path=/"
 	const eq = "="
@@ -73,7 +73,7 @@ func (w *Response) SetCookieUnsafe(name, value string, expiry int64) {
 	n += copy(cookie[n:], value)
 	n += copy(cookie[n:], path)
 	n += copy(cookie[n:], expires)
-	n += time.PutTmRFC822(cookie[n:], time.ToTm(int(expiry)))
+	n += time.PutTmRFC822(cookie[n:], time.ToTm(expiry))
 
 	w.SetHeaderUnsafe("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
 }
