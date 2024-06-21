@@ -1,6 +1,9 @@
 package time
 
-import "github.com/anton2920/gofa/slices"
+import (
+	"github.com/anton2920/gofa/slices"
+	"github.com/anton2920/gofa/syscall"
+)
 
 /* From <time.h>. */
 type Tm struct {
@@ -16,6 +19,18 @@ type Tm struct {
 }
 
 const RFC822Len = 31
+
+func Unix() int {
+	var tp syscall.Timespec
+	syscall.ClockGettime(syscall.CLOCK_REALTIME, &tp)
+	return int(tp.Sec)
+}
+
+func UnixNs() int64 {
+	var tp syscall.Timespec
+	syscall.ClockGettime(syscall.CLOCK_REALTIME, &tp)
+	return tp.Sec*1_000_000_000 + tp.Nsec
+}
 
 func ToTm(t int) Tm {
 	var tm Tm
