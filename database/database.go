@@ -39,7 +39,7 @@ var NotFound = errors.New("not found")
 
 //go:nosplit
 func Offset2String(s string, base *byte) string {
-	return unsafe.String((*byte)(unsafe.Add(unsafe.Pointer(base), uintptr(unsafe.Pointer(unsafe.StringData(s)))-MinValidPointer)), len(s))
+	return unsafe.String((*byte)(util.Noescape(unsafe.Add(unsafe.Pointer(base), uintptr(unsafe.Pointer(unsafe.StringData(s)))-MinValidPointer))), len(s))
 }
 
 //go:nosplit
@@ -47,17 +47,17 @@ func Offset2Slice[T any](s []T, base *byte) []T {
 	if len(s) == 0 {
 		return s
 	}
-	return unsafe.Slice((*T)(unsafe.Add(unsafe.Pointer(base), uintptr(unsafe.Pointer(unsafe.SliceData(s)))-MinValidPointer)), len(s))
+	return unsafe.Slice((*T)(util.Noescape(unsafe.Add(unsafe.Pointer(base), uintptr(unsafe.Pointer(unsafe.SliceData(s)))-MinValidPointer))), len(s))
 }
 
 //go:nosplit
 func String2Offset(s string, offset int) string {
-	return unsafe.String((*byte)(unsafe.Pointer(uintptr(offset)+MinValidPointer)), len(s))
+	return unsafe.String((*byte)(util.Noescape(unsafe.Pointer(uintptr(offset)+MinValidPointer))), len(s))
 }
 
 //go:nosplit
 func Slice2Offset[T any](s []T, offset int) []T {
-	return unsafe.Slice((*T)(unsafe.Pointer(uintptr(offset)+MinValidPointer)), len(s))
+	return unsafe.Slice((*T)(util.Noescape(unsafe.Pointer(uintptr(offset)+MinValidPointer))), len(s))
 }
 
 //go:nosplit
