@@ -85,9 +85,9 @@ func (w *Response) SetHeaderUnsafe(header string, value string) {
 		w.Headers.OmitDate = true
 	case "Server":
 		w.Headers.OmitServer = true
-	case "ContentType":
+	case "Content-Type":
 		w.Headers.OmitContentType = true
-	case "ContentLength":
+	case "Content-Length":
 		w.Headers.OmitContentLength = true
 	}
 
