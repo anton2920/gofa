@@ -77,17 +77,14 @@ func ReadRequests(ctx *Context, rs []Request) (int, error) {
 	}
 
 	if (usesQ) && ((ctx.RequestPendingBytes > 0) || (i == len(rs))) {
-		ctx.EventQueue.AppendEvent(event.Event{Type: event.Read, Identifier: uintptr(ctx.Connection), Data: ctx.RequestPendingBytes, UserData: unsafe.Pointer(ctx)})
+		ctx.EventQueue.AppendEvent(event.Event{Type: event.Read, Identifier: uintptr(ctx.Connection), Data: ctx.RequestPendingBytes, UserData: ctx.Pointer()})
 	}
 
 	return i, nil
 }
 
 func ContentTypeHTML(bodies []syscall.Iovec) bool {
-	if len(bodies) == 0 {
-		return false
-	}
-	return bodies[0] == html.Header
+	return (len(bodies) > 0) && (bodies[0] == html.Header)
 }
 
 /* WriteResponses generates  responses and writes them on wire. Returns the number of processed responses. You may optionally pass dateBuf as an external source of RFC822-formatted current time to optimize response time. */
