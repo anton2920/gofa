@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/syscall"
+	"github.com/anton2920/gofa/time"
 )
 
 type platformEventQueue struct {
@@ -171,7 +172,6 @@ func platformQueuePause(q *Queue, duration int64) {
 		return
 	}
 
-	const NsecInSec = 1_000_000_000
-	tp := syscall.Timespec{Sec: duration / NsecInSec, Nsec: duration % NsecInSec}
+	tp := syscall.Timespec{Sec: duration / time.NsecPerSec, Nsec: duration % time.NsecPerSec}
 	platformQueueRequestNewEvents(q, &tp)
 }
