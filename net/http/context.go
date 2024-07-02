@@ -54,7 +54,7 @@ func GetContextFromEvent(event *event.Event) (*Context, bool) {
 
 	check := uptr & 0x1
 	ctx := (*Context)(unsafe.Pointer(uptr - check))
-	ctx.RequestPendingBytes = event.Available
+	ctx.RequestPendingBytes = event.Data
 
 	return ctx, ctx.Check == int32(check)
 }

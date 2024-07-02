@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/syscall"
+	"github.com/anton2920/gofa/time"
 )
 
 type Queue struct {
@@ -28,36 +29,6 @@ const (
 	TriggerEdge
 )
 
-type DurationMeasurement int
-
-const (
-	Seconds DurationMeasurement = iota
-	Milliseconds
-	Microseconds
-	Nanoseconds
-	Absolute
-)
-
-type Type int32
-
-const (
-	None Type = iota
-	Read
-	Write
-	Signal
-	Timer
-)
-
-type Event struct {
-	Type       Type
-	Identifier int32
-	Available  int
-	UserData   unsafe.Pointer
-
-	/* TODO(anton2920): I don't like this!!! */
-	EndOfFile bool
-}
-
 func NewQueue() (*Queue, error) {
 	q := new(Queue)
 	if err := platformNewEventQueue(q); err != nil {
@@ -79,8 +50,8 @@ func (q *Queue) AddSignals(sigs ...syscall.Signal) error {
 	return nil
 }
 
-func (q *Queue) AddTimer(identifier int32, duration int, measurement DurationMeasurement, userData unsafe.Pointer) error {
-	return platformQueueAddTimer(q, identifier, duration, measurement, userData)
+func (q *Queue) AddTimer(identifier uintptr, duration int, units DurationUnits, userData unsafe.Pointer) error {
+	return platformQueueAddTimer(q, identifier, duration, units, userData)
 }
 
 func (q *Queue) AppendEvent(event Event) {
@@ -92,8 +63,8 @@ func (q *Queue) Close() error {
 	return platformQueueClose(q)
 }
 
-func (q *Queue) GetEvent(event *Event) error {
-	return platformQueueGetEvent(q, event)
+func (q *Queue) GetEvents(events []Event) (int, error) {
+	return platformQueueGetEvents(q, events)
 }
 
 func (q *Queue) HasEvents() bool {
@@ -101,14 +72,14 @@ func (q *Queue) HasEvents() bool {
 }
 
 func (q *Queue) Pause(FPS int) {
-	now := platformQueueGetTime()
+	now := time.UnixNs()
 	durationBetweenPauses := now - q.LastPause
 	targetRate := int64(1000.0/float32(FPS)) * 1_000_000
 
 	duration := targetRate - durationBetweenPauses
 	if duration > 0 {
 		platformQueuePause(q, duration)
-		now = platformQueueGetTime()
+		now = time.UnixNs()
 	}
 	q.LastPause = now
 }

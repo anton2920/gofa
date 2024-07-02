@@ -11,30 +11,49 @@ type platformEventQueue struct {
 	kq int32
 
 	/* Events buffer */
-	events [1024]syscall.Kevent_t
+	events [64]Event
 	head   int
 	tail   int
 }
 
-var keventFilter2Type = [...]Type{
-	-syscall.EVFILT_READ:   Read,
-	-syscall.EVFILT_WRITE:  Write,
-	-syscall.EVFILT_SIGNAL: Signal,
-	-syscall.EVFILT_TIMER:  Timer,
+type Type int16
+
+const (
+	Read   = syscall.EVFILT_READ
+	Write  = syscall.EVFILT_WRITE
+	Signal = syscall.EVFILT_SIGNAL
+	Timer  = syscall.EVFILT_TIMER
+)
+
+type DurationUnits int
+
+const (
+	Seconds      DurationUnits = syscall.NOTE_SECONDS
+	Milliseconds               = syscall.NOTE_MSECONDS
+	Microseconds               = syscall.NOTE_USECONDS
+	Nanoseconds                = syscall.NOTE_NSECONDS
+	Absolute                   = syscall.NOTE_ABSTIME
+)
+
+type Event struct {
+	Identifier uintptr
+	Type       int16
+	Flags      uint16
+	Fflags     uint32
+	Data       int
+	UserData   unsafe.Pointer
+	_          [4]uint
 }
 
-var eventType2Filter = [...]int16{
-	Read:   syscall.EVFILT_READ,
-	Write:  syscall.EVFILT_WRITE,
-	Signal: syscall.EVFILT_SIGNAL,
-	Timer:  syscall.EVFILT_TIMER,
+func (e *Event) EndOfFile() bool {
+	return (e.Flags & syscall.EV_EOF) == syscall.EV_EOF
 }
 
-var measurement2Note = [...]uint32{
-	Seconds:      syscall.NOTE_SECONDS,
-	Milliseconds: syscall.NOTE_MSECONDS,
-	Microseconds: syscall.NOTE_USECONDS,
-	Nanoseconds:  syscall.NOTE_NSECONDS,
+func (e *Event) Error() syscall.Errno {
+	if (e.Flags & syscall.EV_ERROR) == syscall.EV_ERROR {
+		return syscall.Errno(e.Data)
+	}
+	return 0
 }
 
 func platformNewEventQueue(q *Queue) error {
@@ -77,8 +96,8 @@ func platformQueueAddSignal(q *Queue, sig syscall.Signal) error {
 	return nil
 }
 
-func platformQueueAddTimer(q *Queue, identifier int32, timeout int, measurement DurationMeasurement, userData unsafe.Pointer) error {
-	event := syscall.Kevent_t{Ident: uintptr(identifier), Filter: syscall.EVFILT_TIMER, Flags: syscall.EV_ADD, Fflags: measurement2Note[measurement], Udata: userData}
+func platformQueueAddTimer(q *Queue, identifier uintptr, timeout int, units DurationUnits, userData unsafe.Pointer) error {
+	event := syscall.Kevent_t{Ident: identifier, Filter: syscall.EVFILT_TIMER, Flags: syscall.EV_ADD, Fflags: uint32(units), Udata: userData}
 	if _, err := syscall.Kevent(q.kq, unsafe.Slice(&event, 1), nil, nil); err != nil {
 		return fmt.Errorf("failed to request timer event: %w", err)
 	}
@@ -94,13 +113,7 @@ func platformQueueAppendEvent(q *Queue, event Event) {
 		panic("no space left for events")
 	}
 
-	var flags uint16
-	if event.EndOfFile {
-		flags = syscall.EV_EOF
-	}
-
-	/* TODO(anton2920): this is actually incomplete for timer events. Rework that later. */
-	q.events[q.tail] = syscall.Kevent_t{Ident: uintptr(event.Identifier), Filter: eventType2Filter[event.Type], Flags: flags, Data: event.Available, Udata: event.UserData}
+	q.events[q.tail] = event
 	q.tail++
 }
 
@@ -111,7 +124,7 @@ func platformQueueClose(q *Queue) error {
 func platformQueueRequestNewEvents(q *Queue, tp *syscall.Timespec) error {
 	var err error
 retry:
-	q.tail, err = syscall.Kevent(q.kq, nil, unsafe.Slice(&q.events[0], len(q.events)), tp)
+	q.tail, err = syscall.Kevent(q.kq, nil, unsafe.Slice((*syscall.Kevent_t)(unsafe.Pointer(&q.events[0])), len(q.events)), tp)
 	if err != nil {
 		if err.(syscall.Error).Errno == syscall.EINTR {
 			goto retry
@@ -123,32 +136,22 @@ retry:
 	return nil
 }
 
-func platformQueueGetEvent(q *Queue, event *Event) error {
-	if q.head >= q.tail {
-		if err := platformQueueRequestNewEvents(q, nil); err != nil {
-			return err
+func platformQueueGetEvents(q *Queue, events []Event) (int, error) {
+	if q.head < q.tail {
+		n := copy(events, q.events[q.head:q.tail])
+		q.head = 0
+		q.tail = 0
+		return n, nil
+	}
+
+retry:
+	n, err := syscall.Kevent(q.kq, nil, unsafe.Slice((*syscall.Kevent_t)(unsafe.Pointer(&events[0])), len(events)), nil)
+	if err != nil {
+		if err.(syscall.Error).Errno == syscall.EINTR {
+			goto retry
 		}
 	}
-	head := q.events[q.head]
-	q.head++
-
-	if (head.Flags & syscall.EV_ERROR) == syscall.EV_ERROR {
-		return fmt.Errorf("requested event for %v failed with code %v", head.Ident, head.Data)
-	}
-
-	event.EndOfFile = (head.Flags & syscall.EV_EOF) == syscall.EV_EOF
-	event.Type = keventFilter2Type[-head.Filter]
-	event.Identifier = int32(head.Ident)
-	event.UserData = head.Udata
-	event.Available = head.Data
-	return nil
-}
-
-/* platformQueueGetTime returns current time in nanoseconds. */
-func platformQueueGetTime() int64 {
-	var tp syscall.Timespec
-	syscall.ClockGettime(syscall.CLOCK_REALTIME, &tp)
-	return tp.Sec*1_000_000_000 + tp.Nsec
+	return n, err
 }
 
 func platformQueueHasEvents(q *Queue) bool {
@@ -168,6 +171,7 @@ func platformQueuePause(q *Queue, duration int64) {
 		return
 	}
 
-	tp := syscall.Timespec{Sec: duration / 1_000_000_000, Nsec: duration % 1_000_000_000}
+	const NsecInSec = 1_000_000_000
+	tp := syscall.Timespec{Sec: duration / NsecInSec, Nsec: duration % NsecInSec}
 	platformQueueRequestNewEvents(q, &tp)
 }

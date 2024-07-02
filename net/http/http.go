@@ -77,7 +77,7 @@ func ReadRequests(ctx *Context, rs []Request) (int, error) {
 	}
 
 	if (usesQ) && ((ctx.RequestPendingBytes > 0) || (i == len(rs))) {
-		ctx.EventQueue.AppendEvent(event.Event{Type: event.Read, Identifier: ctx.Connection, Available: ctx.RequestPendingBytes, UserData: unsafe.Pointer(ctx)})
+		ctx.EventQueue.AppendEvent(event.Event{Type: event.Read, Identifier: uintptr(ctx.Connection), Data: ctx.RequestPendingBytes, UserData: unsafe.Pointer(ctx)})
 	}
 
 	return i, nil
