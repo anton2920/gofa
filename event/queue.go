@@ -71,15 +71,15 @@ func (q *Queue) HasEvents() bool {
 	return platformQueueHasEvents(q)
 }
 
-func (q *Queue) Pause(FPS int) {
-	now := time.UnixNs()
+func (q *Queue) SyncFPS(FPS int) {
+	now := time.RDTSC().ToNsec()
 	durationBetweenPauses := now - q.LastPause
-	targetRate := int64(1000.0/float32(FPS)) * 1_000_000
+	targetRate := int64(time.MsecPerSec / float64(FPS) * (time.NsecPerSec / time.MsecPerSec))
 
 	duration := targetRate - durationBetweenPauses
 	if duration > 0 {
 		platformQueuePause(q, duration)
-		now = time.UnixNs()
+		now = time.RDTSC().ToNsec()
 	}
 	q.LastPause = now
 }
