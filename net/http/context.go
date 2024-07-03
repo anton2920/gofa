@@ -4,7 +4,6 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/buffer"
-	"github.com/anton2920/gofa/event"
 	"github.com/anton2920/gofa/net/tcp"
 	"github.com/anton2920/gofa/syscall"
 )
@@ -16,15 +15,10 @@ type Context struct {
 	Connection    int32
 	ClientAddress string
 
-	RequestPendingBytes int
-	RequestParser       RequestParser
-	RequestBuffer       buffer.Circular
+	RequestBuffer buffer.Circular
 
 	ResponseIovs []syscall.Iovec
 	ResponsePos  int
-
-	/* Optional event queue this client is attached to. */
-	EventQueue *event.Queue
 }
 
 //go:norace
@@ -46,20 +40,10 @@ func NewContext(c int32, addr tcp.SockAddrIn, bufferSize int) (*Context, error) 
 	return ctx, nil
 }
 
-func GetContextFromEvent(event *event.Event) (*Context, bool) {
-	if event.UserData == nil {
+func GetContextFromPointer(ptr unsafe.Pointer) (*Context, bool) {
+	if ptr == nil {
 		return nil, false
 	}
-	uptr := uintptr(event.UserData)
-
-	check := uptr & 0x1
-	ctx := (*Context)(unsafe.Pointer(uptr - check))
-	ctx.RequestPendingBytes = event.Data
-
-	return ctx, ctx.Check == int32(check)
-}
-
-func GetContextFromPointer(ptr unsafe.Pointer) (*Context, bool) {
 	uptr := uintptr(ptr)
 
 	check := uptr & 0x1

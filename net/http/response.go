@@ -78,7 +78,7 @@ func (w *Response) SetCookieUnsafe(name, value string, expiry int) {
 	w.SetHeaderUnsafe("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
 }
 
-/* SetHeaderUnsafe sets new 'value' for 'header' relying on that memory lives long enough. */
+/* SetHeaderUnsafe sets new 'value' for 'header' assuming that memory lives long enough. */
 func (w *Response) SetHeaderUnsafe(header string, value string) {
 	switch header {
 	case "Date":
