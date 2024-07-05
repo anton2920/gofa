@@ -12,6 +12,8 @@ import (
 type Request struct {
 	Arena arena.Arena
 
+	RemoteAddr string
+
 	Method string
 	URL    url.URL
 	Proto  string

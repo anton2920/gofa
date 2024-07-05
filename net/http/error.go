@@ -15,6 +15,8 @@ type Error struct {
 var (
 	UnauthorizedError = Error{StatusCode: StatusUnauthorized, DisplayMessage: "whoops... You have to sign in to see this page", LogError: errors.New("whoops... You have to sign in to see this page")}
 	ForbiddenError    = Error{StatusCode: StatusForbidden, DisplayMessage: "whoops... Your permissions are insufficient", LogError: errors.New("whoops... Your permissions are insufficient")}
+
+	NoSpaceLeft = Error{StatusCode: StatusRequestEntityTooLarge, DisplayMessage: "no space left in the buffer", LogError: errors.New("no space left in the buffer")}
 )
 
 func BadRequest(format string, args ...interface{}) Error {

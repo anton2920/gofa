@@ -5,15 +5,12 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/buffer"
-	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/event"
 	"github.com/anton2920/gofa/log"
 	"github.com/anton2920/gofa/net/html"
 	"github.com/anton2920/gofa/net/tcp"
 	"github.com/anton2920/gofa/syscall"
 )
-
-var NoSpaceLeft = errors.New("no space left in the buffer")
 
 func Accept(l int32, bufferSize int) (*Context, error) {
 	var addr tcp.SockAddrIn
@@ -89,6 +86,9 @@ func Write(ctx *Context) (int, error) {
 		}
 	}
 
+	if ctx.CloseAfterWrite {
+		Close(ctx)
+	}
 	return written, nil
 }
 
@@ -96,4 +96,8 @@ func Close(ctx *Context) error {
 	ctx.Reset()
 	buffer.FreeCircular(&ctx.RequestBuffer)
 	return syscall.Close(ctx.Connection)
+}
+
+func CloseAfterWrite(ctx *Context) {
+	ctx.CloseAfterWrite = true
 }

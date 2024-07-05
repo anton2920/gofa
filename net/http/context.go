@@ -19,6 +19,9 @@ type Context struct {
 
 	ResponseIovs []syscall.Iovec
 	ResponsePos  int
+
+	/* TODO(anton2920): I don't like this. */
+	CloseAfterWrite bool
 }
 
 //go:norace
@@ -57,8 +60,10 @@ func (ctx *Context) Pointer() unsafe.Pointer {
 	return unsafe.Pointer(uintptr(unsafe.Pointer(ctx)) | uintptr(ctx.Check))
 }
 
+/* TODO(anton2920): maybe remove this altogether? */
 func (ctx *Context) Reset() {
 	ctx.Check = 1 - ctx.Check
+	ctx.CloseAfterWrite = false
 	ctx.RequestBuffer.Reset()
 	ctx.ResponsePos = 0
 	ctx.ResponseIovs = ctx.ResponseIovs[:0]

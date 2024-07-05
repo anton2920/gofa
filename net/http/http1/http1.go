@@ -1,7 +1,6 @@
 package http1
 
 import (
-	"fmt"
 	"strconv"
 	"unsafe"
 
@@ -24,22 +23,20 @@ const (
 	StateDone
 )
 
-func ParseRequests(ctx *http.Context, rs []http.Request) (int, error) {
-	rBuf := &ctx.RequestBuffer
-	request := rBuf.UnconsumedString()
-
+func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remoteAddr string) (int, error) {
 	var err error
-	var pos int
+
+	request := unsafe.String(unsafe.SliceData(buffer), len(buffer))
+	pos := *consumed
 
 	var i int
 	for i = 0; i < len(rs); i++ {
 		var contentLength int
 		var state State
-		r := &rs[i]
-		r.Reset()
 
-		request = request[pos:]
-		pos = 0
+		r := &rs[i]
+		r.RemoteAddr = remoteAddr
+		r.Reset()
 
 		for state != StateDone {
 			switch state {
@@ -68,7 +65,7 @@ func ParseRequests(ctx *http.Context, rs []http.Request) (int, error) {
 
 				sp := strings.FindChar(request[pos:pos+lineEnd], ' ')
 				if sp == -1 {
-					return i, fmt.Errorf("expected method, found %q", request[pos:])
+					return i, http.BadRequest("expected method, found %q", request[pos:])
 				}
 				r.Method = request[pos : pos+sp]
 				pos += len(r.Method) + 1
@@ -76,7 +73,7 @@ func ParseRequests(ctx *http.Context, rs []http.Request) (int, error) {
 
 				uriEnd := strings.FindChar(request[pos:pos+lineEnd], ' ')
 				if uriEnd == -1 {
-					return i, fmt.Errorf("expected space after URI, found %q", request[pos:pos+lineEnd])
+					return i, http.BadRequest("expected space after URI, found %q", request[pos:pos+lineEnd])
 				}
 
 				queryStart := strings.FindChar(request[pos:pos+uriEnd], '?')
@@ -91,7 +88,7 @@ func ParseRequests(ctx *http.Context, rs []http.Request) (int, error) {
 				lineEnd -= len(r.URL.Path) + len(r.URL.Query) + 1
 
 				if request[pos:pos+len("HTTP/")] != "HTTP/" {
-					return i, fmt.Errorf("expected version prefix, found %q", request[pos:pos+lineEnd])
+					return i, http.BadRequest("expected version prefix, found %q", request[pos:pos+lineEnd])
 				}
 				r.Proto = request[pos : pos+lineEnd]
 
@@ -109,7 +106,7 @@ func ParseRequests(ctx *http.Context, rs []http.Request) (int, error) {
 					header = header[len("Content-Length: "):]
 					contentLength, err = strconv.Atoi(header)
 					if err != nil {
-						return i, fmt.Errorf("failed to parse Content-Length value: %w", err)
+						return i, http.BadRequest("failed to parse Content-Length value: %v", err)
 					}
 				}
 
@@ -126,10 +123,20 @@ func ParseRequests(ctx *http.Context, rs []http.Request) (int, error) {
 			}
 		}
 
-		rBuf.Consume(pos)
+		*consumed = pos
 	}
 
 	return i, nil
+}
+
+/* ParseRequestsUnsafe fills slice of requests with data from (*http.Context).RequestBuffer. Data in buffer must live for as long as requests are needed. */
+func ParseRequestsUnsafe(ctx *http.Context, rs []http.Request) (int, error) {
+	rBuf := &ctx.RequestBuffer
+	var pos int
+
+	n, err := ParseRequestsUnsafeEx(rBuf.UnconsumedSlice(), &pos, rs, ctx.ClientAddress)
+	rBuf.Consume(pos)
+	return n, err
 }
 
 func FillResponses(ctx *http.Context, ws []http.Response, dateBuf []byte) {
@@ -176,4 +183,26 @@ func FillResponses(ctx *http.Context, ws []http.Response, dateBuf []byte) {
 		ctx.ResponseIovs = append(ctx.ResponseIovs, w.Bodies...)
 		w.Reset()
 	}
+}
+
+func FillError(ctx *http.Context, err error, dateBuf []byte) {
+	var w http.Response
+	var message string
+
+	switch err := err.(type) {
+	default:
+		w.StatusCode = http.StatusInternalServerError
+		message = err.Error()
+	case http.Error:
+		w.StatusCode = err.StatusCode
+		message = err.DisplayMessage
+	}
+
+	w.AppendString(http.Status2Reason[w.StatusCode])
+	w.AppendString(`: `)
+	w.WriteString(message)
+	w.AppendString("\r\n")
+
+	w.SetHeaderUnsafe("Connection", "close")
+	FillResponses(ctx, unsafe.Slice(&w, 1), dateBuf)
 }
