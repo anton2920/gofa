@@ -4,6 +4,7 @@ import (
 	"runtime"
 	"unsafe"
 
+	"github.com/anton2920/gofa/intel"
 	"github.com/anton2920/gofa/syscall"
 	"github.com/anton2920/gofa/time"
 )
@@ -11,8 +12,8 @@ import (
 type Queue struct {
 	platformEventQueue
 
-	Pinner    runtime.Pinner
-	LastPause int64
+	Pinner   runtime.Pinner
+	LastSync intel.Cycles
 }
 
 type Request int
@@ -71,15 +72,15 @@ func (q *Queue) HasEvents() bool {
 	return platformQueueHasEvents(q)
 }
 
-func (q *Queue) SyncFPS(FPS int) {
-	now := time.RDTSC().ToNsec()
-	durationBetweenPauses := now - q.LastPause
-	targetRate := int64(time.MsecPerSec / float64(FPS) * (time.NsecPerSec / time.MsecPerSec))
+func (q *Queue) SyncFPS(fps int) {
+	now := intel.RDTSC()
+	durationBetweenPauses := now - q.LastSync
+	targetRate := int64(time.MsecPerSec / float64(fps) * (time.NsecPerSec / time.MsecPerSec))
 
-	duration := targetRate - durationBetweenPauses
+	duration := targetRate - durationBetweenPauses.ToNsec()
 	if duration > 0 {
 		platformQueuePause(q, duration)
-		now = time.RDTSC().ToNsec()
+		now = intel.RDTSC()
 	}
-	q.LastPause = now
+	q.LastSync = now
 }
