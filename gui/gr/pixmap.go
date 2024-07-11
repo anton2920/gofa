@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/gui/color"
+	"github.com/anton2920/gofa/util"
 )
 
 type AlphaType int
@@ -34,10 +35,7 @@ func NewPixmap(width, height int, alpha AlphaType) Pixmap {
 	pixmap.Alpha = alpha
 
 	/* Force alpha to be opaque. */
-	for i := 0; i < pixmap.Width*pixmap.Height; i++ {
-		pixmap.Pixels[i] = color.RGBA(0, 0, 0, 255)
-	}
-
+	util.Memset(pixmap.Pixels, color.Black)
 	return pixmap
 }
 

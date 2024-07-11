@@ -1,6 +1,8 @@
 package gr
 
-import "github.com/anton2920/gofa/gui/color"
+import (
+	"github.com/anton2920/gofa/gui/color"
+)
 
 var blacktext [256]color.Color
 
@@ -205,10 +207,19 @@ func DrawVLine(pixmap Pixmap, bounds Rect, x, y0, y1 int, clr color.Color) {
 	}
 }
 
+func advanceBy(vs []color.Color, by int) []color.Color {
+	if len(vs) < by {
+		return nil
+	}
+	return vs[by:]
+}
+
 func drawPixmap(dst Pixmap, bounds Rect, x, y int, src Pixmap, pclr *color.Color) {
 	srcBox := Rect{x, y, x + src.Width, y + src.Height}
 
 	if !bounds.Contains(srcBox) {
+		// runtime.Breakpoint()
+
 		var x0, y0 int
 		x1 := src.Width
 		y1 := src.Height
@@ -216,27 +227,27 @@ func drawPixmap(dst Pixmap, bounds Rect, x, y int, src Pixmap, pclr *color.Color
 		if bounds.X0 >= srcBox.X1 {
 			return
 		}
-		if bounds.X1 >= srcBox.X0 {
+		if bounds.X1 <= srcBox.X0 {
 			return
 		}
 		if bounds.Y0 >= srcBox.Y1 {
 			return
 		}
-		if bounds.Y1 >= srcBox.Y0 {
+		if bounds.Y1 <= srcBox.Y0 {
 			return
 		}
 
 		if x < bounds.X0 {
 			x0 = bounds.X0 - x
 		}
-		if x+src.Width < bounds.X1 {
+		if x+src.Width > bounds.X1 {
 			x1 = bounds.X1 - x
 		}
 		if y < bounds.Y0 {
-			y0 = bounds.Y0 - x
+			y0 = bounds.Y0 - y
 		}
-		if y+src.Height < bounds.Y1 {
-			y1 = bounds.Y1 - x
+		if y+src.Height > bounds.Y1 {
+			y1 = bounds.Y1 - y
 		}
 
 		src = src.Sub(x0, y0, x1, y1)
@@ -276,8 +287,8 @@ func drawPixmap(dst Pixmap, bounds Rect, x, y int, src Pixmap, pclr *color.Color
 					}
 				}
 
-				out = out[dst.Stride:]
-				in = in[src.Stride:]
+				out = advanceBy(out, dst.Stride)
+				in = advanceBy(in, src.Stride)
 			}
 		} else {
 			for j := 0; j < src.Height; j++ {
@@ -286,18 +297,15 @@ func drawPixmap(dst Pixmap, bounds Rect, x, y int, src Pixmap, pclr *color.Color
 						out[i] = color.BlendMultiply(out[i], in[i], clr)
 					}
 				}
-				out = out[dst.Stride:]
-				in = in[src.Stride:]
+				out = advanceBy(out, dst.Stride)
+				in = advanceBy(in, src.Stride)
 			}
 		}
 	} else if src.Alpha == AlphaOpaque {
 		for j := 0; j < src.Height; j++ {
-			n := copy(out, in[:src.Width])
-			if n != src.Width {
-				panic("wrong copy!")
-			}
-			out = out[dst.Stride:]
-			in = in[src.Stride:]
+			copy(out, in[:src.Width])
+			out = advanceBy(out, dst.Stride)
+			in = advanceBy(in, src.Stride)
 		}
 	} else if src.Alpha == Alpha1bit {
 		for j := 0; j < src.Height; j++ {
@@ -306,8 +314,8 @@ func drawPixmap(dst Pixmap, bounds Rect, x, y int, src Pixmap, pclr *color.Color
 					out[i] = in[i]
 				}
 			}
-			out = out[dst.Stride:]
-			in = in[src.Stride:]
+			out = advanceBy(out, dst.Stride)
+			in = advanceBy(in, src.Stride)
 		}
 	} else {
 		for j := 0; j < src.Height; j++ {
@@ -316,8 +324,8 @@ func drawPixmap(dst Pixmap, bounds Rect, x, y int, src Pixmap, pclr *color.Color
 					out[i] = color.Blend(out[i], in[i])
 				}
 			}
-			out = out[dst.Stride:]
-			in = in[src.Stride:]
+			out = advanceBy(out, dst.Stride)
+			in = advanceBy(in, src.Stride)
 		}
 	}
 }
