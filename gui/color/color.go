@@ -6,7 +6,7 @@ var (
 	Black = RGB(0, 0, 0)
 	Red   = RGB(255, 0, 0)
 	Green = RGB(0, 255, 0)
-	Blue  = RGB(0, 255, 0)
+	Blue  = RGB(0, 0, 255)
 	White = RGB(255, 255, 255)
 )
 
