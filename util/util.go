@@ -26,3 +26,14 @@ func Memset[T any](mem []T, v T) {
 		mem[i] = v
 	}
 }
+
+func RemoveAtIndex[T any](ts []T, i int) []T {
+	if (len(ts) == 0) || (i < 0) || (i >= len(ts)) {
+		return ts
+	}
+
+	if i < len(ts)-1 {
+		copy(ts[i:], ts[i+1:])
+	}
+	return ts[:len(ts)-1]
+}
