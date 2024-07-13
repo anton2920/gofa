@@ -5,10 +5,12 @@ package gui
 /*
 #cgo CFLAGS: -I/usr/local/include
 #cgo LDFLAGS: -L/usr/local/lib
-#cgo LDFLAGS: -lX11 -lm -lxcb -lXau -lXdmcp
+#cgo LDFLAGS: -lX11 -lm -lxcb -lXau -lXdmcp -lXfixes
 
+#include <stdlib.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/extensions/Xfixes.h>
 */
 import "C"
 import (
@@ -19,33 +21,38 @@ import (
 )
 
 type platformWindow struct {
+	display *C.Display
+	window  C.Window
+	visual  *C.Visual
+	gc      C.GC
+
+	title *C.char
+
 	wmDeleteWindow C.Atom
-	display        *C.Display
-	window         C.Window
-	root           C.Window
-	visual         *C.Visual
-	screen         C.int
-	gc             C.GC
+	wmTransientFor C.Atom
 
 	pendingEvents int
 }
 
-func platformNewWindow(w *Window) error {
+func platformNewWindow(w *Window, x, y int) error {
+	// runtime.Breakpoint()
+
 	w.display = C.XOpenDisplay(nil)
 	if w.display == nil {
 		return errors.New("failed to open display")
 	}
 
-	w.screen = C.XDefaultScreen(w.display)
-	w.visual = C.XDefaultVisual(w.display, w.screen)
+	screen := C.XDefaultScreen(w.display)
+	w.visual = C.XDefaultVisual(w.display, screen)
 	if w.visual.class != C.TrueColor {
+		C.XCloseDisplay(w.display)
 		return errors.New("cannot handle non-true color visual")
 	}
-	w.root = C.XDefaultRootWindow(w.display)
-	w.gc = C.XDefaultGC(w.display, w.screen)
+	root := C.XDefaultRootWindow(w.display)
+	w.gc = C.XDefaultGC(w.display, screen)
 
-	w.window = C.XCreateSimpleWindow(w.display, w.root, 0, 0, C.uint(w.Width), C.uint(w.Height), 1, 0, 0)
-	C.XSelectInput(w.display, w.window, C.ExposureMask|C.KeyPressMask|C.KeyReleaseMask|C.ButtonPressMask|C.ButtonReleaseMask|C.PointerMotionMask|C.StructureNotifyMask)
+	w.window = C.XCreateSimpleWindow(w.display, root, C.int(x), C.int(y), C.uint(w.Width), C.uint(w.Height), 1, 0, 0)
+	C.XSelectInput(w.display, w.window, C.ExposureMask|C.KeyPressMask|C.KeyReleaseMask|C.ButtonPressMask|C.ButtonReleaseMask|C.PointerMotionMask|C.StructureNotifyMask|C.LeaveWindowMask)
 
 	platformWindowSetTitle(w, w.Title)
 
@@ -64,6 +71,10 @@ func platformNewWindow(w *Window) error {
 		C.XMapWindow(w.display, w.window)
 	}
 
+	if (w.Flags & windowTransient) == windowTransient {
+		C.XSetTransientForHint(w.display, w.window, w.Parent.window)
+	}
+
 	w.wmDeleteWindow = C.XInternAtom(w.display, C.CString("WM_DELETE_WINDOW"), 1)
 	C.XSetWMProtocols(w.display, w.window, &w.wmDeleteWindow, 1)
 
@@ -71,7 +82,11 @@ func platformNewWindow(w *Window) error {
 }
 
 func platformWindowSetTitle(w *Window, title string) {
-	C.XStoreName(w.display, w.window, C.CString(title))
+	if w.title != nil {
+		C.free(unsafe.Pointer(w.title))
+	}
+	w.title = C.CString(title)
+	C.XStoreName(w.display, w.window, w.title)
 }
 
 func platformWindowHasEvents(w *Window) bool {
@@ -144,6 +159,11 @@ func platformWindowGetEvents(w *Window, events []Event) (int, error) {
 			event.X = eventX
 			event.Y = eventY
 			consumed++
+		case C.LeaveNotify:
+			event.Type = MouseMoveEvent
+			event.X = w.Width + 1
+			event.Y = w.Height + 1
+			consumed++
 		}
 	}
 
@@ -176,6 +196,16 @@ func platformWindowDisplayPixels(w *Window, pixels []uint32, width int, height i
 	C.XInitImage(&image)
 	C.XPutImage(w.display, w.window, w.gc, &image, 0, 0, 0, 0, C.uint(width), C.uint(height))
 	pinner.Unpin()
+}
+
+func platformWindowEnableCursor(w *Window) {
+	C.XFixesShowCursor(w.display, w.window)
+	C.XFlush(w.display)
+}
+
+func platformWindowDisableCursor(w *Window) {
+	C.XFixesHideCursor(w.display, w.window)
+	C.XFlush(w.display)
 }
 
 func platformWindowClose(w *Window) {

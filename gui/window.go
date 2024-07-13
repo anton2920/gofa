@@ -8,32 +8,44 @@ import (
 type WindowFlags uint
 
 const (
-	WindowNone WindowFlags = iota << 1
+	WindowNone WindowFlags = 1 << iota
 	WindowHidden
 	WindowResizable
-	WindowMinimized
-	WindowMaximized
+	windowTransient
 )
 
 type Window struct {
 	platformWindow
+	Parent *Window
 
 	Title  string
 	Width  int
 	Height int
 	Flags  WindowFlags
 
+	CursorVisible bool
+
 	LastSync intel.Cycles
 }
 
 func NewWindow(title string, width, height int, flags WindowFlags) (*Window, error) {
-	w := Window{Title: title, Width: width, Height: height, Flags: flags}
+	w := Window{Title: title, Width: width, Height: height, Flags: flags, CursorVisible: true}
 
-	if err := platformNewWindow(&w); err != nil {
+	if err := platformNewWindow(&w, 0, 0); err != nil {
 		return nil, err
 	}
 
 	return &w, nil
+}
+
+func (w *Window) NewTransientWindow(title string, x, y, width, height int) (*Window, error) {
+	tw := Window{Parent: w, Title: title, Width: width, Height: height, Flags: windowTransient, CursorVisible: true}
+
+	if err := platformNewWindow(&tw, x, y); err != nil {
+		return nil, err
+	}
+
+	return &tw, nil
 }
 
 func (w *Window) SetTitle(title string) {
@@ -55,6 +67,20 @@ func (w *Window) Invalidate() {
 
 func (w *Window) DisplayPixels(pixels []uint32, width, height int) {
 	platformWindowDisplayPixels(w, pixels, width, height)
+}
+
+func (w *Window) ShowCursor() {
+	if !w.CursorVisible {
+		platformWindowEnableCursor(w)
+		w.CursorVisible = true
+	}
+}
+
+func (w *Window) HideCursor() {
+	if w.CursorVisible {
+		platformWindowDisableCursor(w)
+		w.CursorVisible = false
+	}
 }
 
 func (w *Window) SyncFPS(fps int) {

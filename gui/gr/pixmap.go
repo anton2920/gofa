@@ -39,13 +39,14 @@ func NewPixmap(width, height int, alpha AlphaType) Pixmap {
 	return pixmap
 }
 
-func NewPixmapFromImage(img *image.RGBA) Pixmap {
+func NewPixmapFromImage(img *image.RGBA, alpha AlphaType) Pixmap {
 	var pixmap Pixmap
 
 	pixmap.Pixels = unsafe.Slice((*color.Color)(unsafe.Pointer(unsafe.SliceData(img.Pix))), len(img.Pix)>>2)
 	pixmap.Width = img.Bounds().Max.X - img.Bounds().Min.X
 	pixmap.Height = img.Bounds().Max.Y - img.Bounds().Min.Y
 	pixmap.Stride = pixmap.Width
+	pixmap.Alpha = alpha
 
 	for i := 0; i < len(pixmap.Pixels); i++ {
 		clr := pixmap.Pixels[i]
