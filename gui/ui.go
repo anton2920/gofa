@@ -116,7 +116,7 @@ func (ui *UI) ButtonLogic(id ID, over bool) bool {
 			if ui.hot(id) {
 				result = true
 			}
-			ui.clearActive()
+			ui.ClearActive()
 		}
 	}
 
@@ -147,7 +147,7 @@ func (ui *UI) ButtonLogicDown(id ID, over bool) bool {
 			ui.setHot(id)
 		}
 		if ui.LeftUp {
-			ui.clearActive()
+			ui.ClearActive()
 		}
 	}
 
@@ -198,7 +198,7 @@ func (ui *UI) ButtonW(id ID, label string, width int) bool {
 	return ui.ButtonLogic(id, ui.inRect(p.X, p.Y, width, height))
 }
 
-func (ui *UI) clear() {
+func (ui *UI) Clear() {
 	ui.LeftDown = false
 	ui.LeftUp = false
 
@@ -209,13 +209,13 @@ func (ui *UI) clear() {
 	ui.RightUp = false
 }
 
-func (ui *UI) clearActive() {
+func (ui *UI) ClearActive() {
 	ui.Active.ID = nil
 	ui.Active.Index = 0
 	ui.Active.Parent = nil
 
 	/* Mark all UI for this frame as processed. */
-	ui.clear()
+	ui.Clear()
 }
 
 func (ui *UI) color(id ID) color.Color {
@@ -279,7 +279,7 @@ func (ui *UI) DragXY(id ID, x *int, width int, y *int, height int) bool {
 }
 
 func (ui *UI) End() {
-	ui.clear()
+	ui.Clear()
 }
 
 func (ui *UI) hot(id ID) bool {
