@@ -2,6 +2,13 @@ package util
 
 import "unsafe"
 
+func Bool2Int(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
 /* NOTE(anton2920): Noescape hides a pointer from escape analysis. Noescape is the identity function but escape analysis doesn't think the output depends on the input. Noescape is inlined and currently compiles down to zero instructions. */
 //go:nosplit
 func Noescape(p unsafe.Pointer) unsafe.Pointer {
