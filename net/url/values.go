@@ -1,12 +1,12 @@
 package url
 
 import (
-	"errors"
 	"strconv"
 	"unsafe"
 
 	"github.com/anton2920/gofa/arena"
 	"github.com/anton2920/gofa/database"
+	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/slices"
 )
 
@@ -24,9 +24,16 @@ func (vs *Values) Add(key string, value string) {
 			return
 		}
 	}
-
 	vs.Keys = append(vs.Keys, key)
-	vs.Values = append(vs.Values, []string{value})
+
+	if len(vs.Values) == cap(vs.Values) {
+		vs.Values = append(vs.Values, []string{value})
+		return
+	}
+	n := len(vs.Values)
+	vs.Values = vs.Values[:n+1]
+	vs.Values[n] = vs.Values[n][:0]
+	vs.Values[n] = append(vs.Values[n], value)
 }
 
 func (vs *Values) Get(key string) string {
@@ -76,12 +83,7 @@ func (vs *Values) Has(key string) bool {
 
 func (vs *Values) Reset() {
 	vs.Keys = vs.Keys[:0]
-
-	for i := 0; i < len(vs.Values); i++ {
-		vs.Values[i] = vs.Values[i][:0]
-	}
 	vs.Values = vs.Values[:0]
-
 	vs.Arena.Reset()
 }
 
@@ -93,9 +95,16 @@ func (vs *Values) Set(key string, value string) {
 			return
 		}
 	}
-
 	vs.Keys = append(vs.Keys, key)
-	vs.Values = append(vs.Values, []string{value})
+
+	if len(vs.Values) == cap(vs.Values) {
+		vs.Values = append(vs.Values, []string{value})
+		return
+	}
+	n := len(vs.Values)
+	vs.Values = vs.Values[:n+1]
+	vs.Values[n] = vs.Values[n][:0]
+	vs.Values[n] = append(vs.Values[n], value)
 }
 
 func (vs *Values) SetInt(key string, value int) {

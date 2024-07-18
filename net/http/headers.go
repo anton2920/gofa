@@ -12,9 +12,16 @@ func (hs *Headers) Add(key string, value string) {
 			return
 		}
 	}
-
 	hs.Keys = append(hs.Keys, key)
-	hs.Values = append(hs.Values, []string{value})
+
+	if len(hs.Values) == cap(hs.Values) {
+		hs.Values = append(hs.Values, []string{value})
+		return
+	}
+	n := len(hs.Values)
+	hs.Values = hs.Values[:n+1]
+	hs.Values[n] = hs.Values[n][:0]
+	hs.Values[n] = append(hs.Values[n], value)
 }
 
 func (hs *Headers) Get(key string) string {
@@ -49,10 +56,6 @@ func (hs *Headers) Has(key string) bool {
 
 func (hs *Headers) Reset() {
 	hs.Keys = hs.Keys[:0]
-
-	for i := 0; i < len(hs.Values); i++ {
-		hs.Values[i] = hs.Values[i][:0]
-	}
 	hs.Values = hs.Values[:0]
 }
 
@@ -64,7 +67,14 @@ func (hs *Headers) Set(key string, value string) {
 			return
 		}
 	}
-
 	hs.Keys = append(hs.Keys, key)
-	hs.Values = append(hs.Values, []string{value})
+
+	if len(hs.Values) == cap(hs.Values) {
+		hs.Values = append(hs.Values, []string{value})
+		return
+	}
+	n := len(hs.Values)
+	hs.Values = hs.Values[:n+1]
+	hs.Values[n] = hs.Values[n][:0]
+	hs.Values[n] = append(hs.Values[n], value)
 }
