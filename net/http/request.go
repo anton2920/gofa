@@ -3,15 +3,12 @@ package http
 import (
 	"unsafe"
 
-	"github.com/anton2920/gofa/arena"
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/net/url"
 	"github.com/anton2920/gofa/strings"
 )
 
 type Request struct {
-	Arena arena.Arena
-
 	RemoteAddr string
 
 	Method string
@@ -60,7 +57,7 @@ func (r *Request) ParseForm() error {
 		}
 		key, value, _ := strings.Cut(key, "=")
 
-		keyBuffer := r.Arena.NewSlice(len(key))
+		keyBuffer := r.Form.Arena.NewSlice(len(key))
 		n, ok := url.QueryDecode(keyBuffer, key)
 		if !ok {
 			if err == nil {
@@ -70,7 +67,7 @@ func (r *Request) ParseForm() error {
 		}
 		key = unsafe.String(unsafe.SliceData(keyBuffer), n)
 
-		valueBuffer := r.Arena.NewSlice(len(value))
+		valueBuffer := r.Form.Arena.NewSlice(len(value))
 		n, ok = url.QueryDecode(valueBuffer, value)
 		if !ok {
 			if err == nil {

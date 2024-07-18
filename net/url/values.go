@@ -81,6 +81,8 @@ func (vs *Values) Reset() {
 		vs.Values[i] = vs.Values[i][:0]
 	}
 	vs.Values = vs.Values[:0]
+
+	vs.Arena.Reset()
 }
 
 func (vs *Values) Set(key string, value string) {
