@@ -1,62 +1,41 @@
 package url
 
 import (
+	"errors"
 	"strconv"
+	"unsafe"
 
+	"github.com/anton2920/gofa/arena"
 	"github.com/anton2920/gofa/database"
-	"github.com/anton2920/gofa/errors"
+	"github.com/anton2920/gofa/slices"
 )
 
-type URL struct {
-	Path  string
-	Query string
-}
+type Values struct {
+	Arena arena.Arena
 
-type Value struct {
-	Key    string
-	Values []string
+	Keys   []string
+	Values [][]string
 }
-
-type Values []Value
 
 func (vs *Values) Add(key string, value string) {
-	if vs == nil {
-		*vs = append(*vs, Value{Key: key, Values: []string{value}})
-		return
-	}
-
-	for i := 0; i < len(*vs); i++ {
-		v := &(*vs)[i]
-		if key == v.Key {
-			v.Values = append(v.Values, value)
+	for i := 0; i < len(vs.Keys); i++ {
+		if key == vs.Keys[i] {
+			vs.Values[i] = append(vs.Values[i], value)
 			return
 		}
 	}
 
-	if len(*vs) >= cap(*vs) {
-		*vs = append(*vs, Value{Key: key, Values: []string{value}})
-		return
-	}
-
-	l := len(*vs)
-	*vs = (*vs)[:l+1]
-
-	v := &(*vs)[l]
-	v.Key = key
-	v.Values = v.Values[:0]
-	v.Values = append(v.Values, value)
+	vs.Keys = append(vs.Keys, key)
+	vs.Values = append(vs.Values, []string{value})
 }
 
-func (vs Values) Get(key string) string {
-	for i := 0; i < len(vs); i++ {
-		if key == vs[i].Key {
-			values := vs[i].Values
-			if len(values) == 0 {
-				return ""
-			}
-			return values[0]
+func (vs *Values) Get(key string) string {
+	for i := 0; i < len(vs.Keys); i++ {
+		if key == vs.Keys[i] {
+			return vs.Values[i][0]
 		}
 	}
+
 	return ""
 }
 
@@ -75,45 +54,50 @@ func (vs Values) GetID(key string) (database.ID, error) {
 	return database.ID(id), nil
 }
 
-func (vs Values) GetMany(key string) []string {
-	for i := 0; i < len(vs); i++ {
-		if key == vs[i].Key {
-			return vs[i].Values
+func (vs *Values) GetMany(key string) []string {
+	for i := 0; i < len(vs.Keys); i++ {
+		if key == vs.Keys[i] {
+			return vs.Values[i]
 		}
 	}
+
 	return nil
 }
 
-func (vs *Values) Set(key string, value string) {
-	if vs == nil {
-		*vs = append(*vs, Value{Key: key, Values: []string{value}})
-		return
+func (vs *Values) Has(key string) bool {
+	for i := 0; i < len(vs.Keys); i++ {
+		if key == vs.Keys[i] {
+			return true
+		}
 	}
 
-	for i := 0; i < len(*vs); i++ {
-		v := &(*vs)[i]
-		if key == v.Key {
-			v.Values = v.Values[:0]
-			v.Values = append(v.Values, value)
+	return false
+}
+
+func (vs *Values) Reset() {
+	vs.Keys = vs.Keys[:0]
+
+	for i := 0; i < len(vs.Values); i++ {
+		vs.Values[i] = vs.Values[i][:0]
+	}
+	vs.Values = vs.Values[:0]
+}
+
+func (vs *Values) Set(key string, value string) {
+	for i := 0; i < len(vs.Keys); i++ {
+		if key == vs.Keys[i] {
+			vs.Values[i] = vs.Values[i][:0]
+			vs.Values[i] = append(vs.Values[i], value)
 			return
 		}
 	}
 
-	if len(*vs) >= cap(*vs) {
-		*vs = append(*vs, Value{Key: key, Values: []string{value}})
-		return
-	}
-
-	l := len(*vs)
-	*vs = (*vs)[:l+1]
-
-	v := &(*vs)[l]
-	v.Key = key
-	v.Values = v.Values[:0]
-	v.Values = append(v.Values, value)
+	vs.Keys = append(vs.Keys, key)
+	vs.Values = append(vs.Values, []string{value})
 }
 
 func (vs *Values) SetInt(key string, value int) {
-	/* TODO(anton2920): change to arena allocation. */
-	vs.Set(key, strconv.Itoa(value))
+	buffer := vs.Arena.NewSlice(20)
+	n := slices.PutInt(buffer, value)
+	vs.Set(key, unsafe.String(&buffer[0], n))
 }
