@@ -5,7 +5,6 @@ import (
 
 	"github.com/anton2920/gofa/net/http"
 	"github.com/anton2920/gofa/slices"
-	"github.com/anton2920/gofa/syscall"
 	"github.com/anton2920/gofa/time"
 )
 
@@ -35,27 +34,38 @@ func FillResponses(ctx *http.Context, ws []http.Response, dateBuf []byte) {
 	for i := 0; i < len(ws); i++ {
 		w := &ws[i]
 
-		ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("HTTP/1.1"), syscall.Iovec(" "), syscall.Iovec(http.Status2String[w.StatusCode]), syscall.Iovec(" "), syscall.Iovec(http.Status2Reason[w.StatusCode]), syscall.Iovec("\r\n"))
+		/* TODO(anton2920): prepare an array of status lines. */
+		ctx.ResponseBuffer = append(ctx.ResponseBuffer, "HTTP/1.1"...)
+		ctx.ResponseBuffer = append(ctx.ResponseBuffer, " "...)
+		ctx.ResponseBuffer = append(ctx.ResponseBuffer, http.Status2String[w.StatusCode]...)
+		ctx.ResponseBuffer = append(ctx.ResponseBuffer, " "...)
+		ctx.ResponseBuffer = append(ctx.ResponseBuffer, http.Status2Reason[w.StatusCode]...)
+		ctx.ResponseBuffer = append(ctx.ResponseBuffer, "\r\n"...)
 
 		if !w.Headers.Has("Date") {
 			if dateBuf == nil {
-				dateBuf = make([]byte, 31)
+				dateBuf = make([]byte, time.RFC822Len)
 				time.PutTmRFC822(dateBuf, time.ToTm(time.Unix()))
 			}
-
-			ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("Date: "), syscall.IovecForByteSlice(dateBuf), syscall.Iovec("\r\n"))
+			ctx.ResponseBuffer = append(ctx.ResponseBuffer, "Date: "...)
+			ctx.ResponseBuffer = append(ctx.ResponseBuffer, dateBuf...)
+			ctx.ResponseBuffer = append(ctx.ResponseBuffer, "\r\n"...)
 		}
 
 		if !w.Headers.Has("Server") {
-			ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("Server: gofa/http\r\n"))
+			ctx.ResponseBuffer = append(ctx.ResponseBuffer, "Server: gofa/http\r\n"...)
 		}
 
 		if !w.Headers.Has("Content-Type") {
+			var contentType string
 			if http.ContentTypeHTML(w.Bodies) {
-				ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("Content-Type: text/html; charset=\"UTF-8\"\r\n"))
+				contentType = `text/html; charset="UTF-8"`
 			} else {
-				ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("Content-Type: text/plain; charset=\"UTF-8\"\r\n"))
+				contentType = `text/plain; charset="UTF-8"`
 			}
+			ctx.ResponseBuffer = append(ctx.ResponseBuffer, "Content-Type: "...)
+			ctx.ResponseBuffer = append(ctx.ResponseBuffer, contentType...)
+			ctx.ResponseBuffer = append(ctx.ResponseBuffer, "\r\n"...)
 		}
 
 		if !w.Headers.Has("Content-Length") {
@@ -67,24 +77,29 @@ func FillResponses(ctx *http.Context, ws []http.Response, dateBuf []byte) {
 			lengthBuf := w.Arena.NewSlice(20)
 			n := slices.PutInt(lengthBuf, length)
 
-			ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("Content-Length: "), syscall.IovecForByteSlice(lengthBuf[:n]), syscall.Iovec("\r\n"))
+			ctx.ResponseBuffer = append(ctx.ResponseBuffer, "Content-Length: "...)
+			ctx.ResponseBuffer = append(ctx.ResponseBuffer, lengthBuf[:n]...)
+			ctx.ResponseBuffer = append(ctx.ResponseBuffer, "\r\n"...)
 		}
 
 		for i := 0; i < len(w.Headers.Keys); i++ {
 			key := w.Headers.Keys[i]
-			ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec(key), syscall.Iovec(": "))
+			ctx.ResponseBuffer = append(ctx.ResponseBuffer, key...)
+			ctx.ResponseBuffer = append(ctx.ResponseBuffer, ": "...)
 			for j := 0; j < len(w.Headers.Values[i]); j++ {
 				value := w.Headers.Values[i][j]
 				if j > 0 {
-					ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec(", "))
+					ctx.ResponseBuffer = append(ctx.ResponseBuffer, ","...)
 				}
-				ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec(value))
+				ctx.ResponseBuffer = append(ctx.ResponseBuffer, value...)
 			}
-			ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("\r\n"))
+			ctx.ResponseBuffer = append(ctx.ResponseBuffer, "\r\n"...)
 		}
 
-		ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("\r\n"))
-		ctx.ResponseIovs = append(ctx.ResponseIovs, w.Bodies...)
+		ctx.ResponseBuffer = append(ctx.ResponseBuffer, "\r\n"...)
+		for i := 0; i < len(w.Bodies); i++ {
+			ctx.ResponseBuffer = append(ctx.ResponseBuffer, w.Bodies[i]...)
+		}
 		w.Reset()
 	}
 }

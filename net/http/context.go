@@ -5,7 +5,6 @@ import (
 
 	"github.com/anton2920/gofa/buffer"
 	"github.com/anton2920/gofa/net/tcp"
-	"github.com/anton2920/gofa/syscall"
 )
 
 type Context struct {
@@ -17,8 +16,8 @@ type Context struct {
 
 	RequestBuffer buffer.Circular
 
-	ResponseIovs []syscall.Iovec
-	ResponsePos  int
+	ResponseBuffer []byte
+	ResponsePos    int
 
 	/* TODO(anton2920): I don't like this. */
 	CloseAfterWrite bool
@@ -34,7 +33,7 @@ func NewContext(c int32, addr tcp.SockAddrIn, bufferSize int) (*Context, error) 
 	ctx := new(Context)
 	ctx.Connection = c
 	ctx.RequestBuffer = rb
-	ctx.ResponseIovs = make([]syscall.Iovec, 0, 1024)
+	ctx.ResponseBuffer = make([]byte, 0, 1024*1024)
 
 	buffer := make([]byte, 21)
 	n := tcp.PutAddress(buffer, addr.Addr, addr.Port)
@@ -66,5 +65,5 @@ func (ctx *Context) Reset() {
 	ctx.CloseAfterWrite = false
 	ctx.RequestBuffer.Reset()
 	ctx.ResponsePos = 0
-	ctx.ResponseIovs = ctx.ResponseIovs[:0]
+	ctx.ResponseBuffer = ctx.ResponseBuffer[:0]
 }
