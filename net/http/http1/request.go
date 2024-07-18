@@ -6,10 +6,7 @@ import (
 
 	"github.com/anton2920/gofa/log"
 	"github.com/anton2920/gofa/net/http"
-	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
-	"github.com/anton2920/gofa/syscall"
-	"github.com/anton2920/gofa/time"
 )
 
 type State int
@@ -99,12 +96,19 @@ func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remo
 				if lineEnd == -1 {
 					return i, nil
 				}
-				header := request[pos : pos+lineEnd]
-				r.Headers = append(r.Headers, header)
 
-				if strings.StartsWith(header, "Content-Length: ") {
-					header = header[len("Content-Length: "):]
-					contentLength, err = strconv.Atoi(header)
+				header := request[pos : pos+lineEnd]
+				colon := strings.FindChar(header, ':')
+				if colon == -1 {
+					return i, http.BadRequest("expected HTTP header, got %q", header)
+				}
+
+				key := header[:colon]
+				value := header[colon+2:]
+				r.Headers.Add(key, value)
+
+				if key == "Content-Length" {
+					contentLength, err = strconv.Atoi(value)
 					if err != nil {
 						return i, http.BadRequest("failed to parse Content-Length value: %v", err)
 					}
@@ -137,72 +141,4 @@ func ParseRequestsUnsafe(ctx *http.Context, rs []http.Request) (int, error) {
 	n, err := ParseRequestsUnsafeEx(rBuf.UnconsumedSlice(), &pos, rs, ctx.ClientAddress)
 	rBuf.Consume(pos)
 	return n, err
-}
-
-func FillResponses(ctx *http.Context, ws []http.Response, dateBuf []byte) {
-	for i := 0; i < len(ws); i++ {
-		w := &ws[i]
-
-		ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("HTTP/1.1"), syscall.Iovec(" "), syscall.Iovec(http.Status2String[w.StatusCode]), syscall.Iovec(" "), syscall.Iovec(http.Status2Reason[w.StatusCode]), syscall.Iovec("\r\n"))
-
-		if !w.Headers.OmitDate {
-			if dateBuf == nil {
-				dateBuf = make([]byte, 31)
-				time.PutTmRFC822(dateBuf, time.ToTm(time.Unix()))
-			}
-
-			ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("Date: "), syscall.IovecForByteSlice(dateBuf), syscall.Iovec("\r\n"))
-		}
-
-		if !w.Headers.OmitServer {
-			ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("Server: gofa/http\r\n"))
-		}
-
-		if !w.Headers.OmitContentType {
-			if http.ContentTypeHTML(w.Bodies) {
-				ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("Content-Type: text/html; charset=\"UTF-8\"\r\n"))
-			} else {
-				ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("Content-Type: text/plain; charset=\"UTF-8\"\r\n"))
-			}
-		}
-
-		if !w.Headers.OmitContentLength {
-			var length int
-			for i := 0; i < len(w.Bodies); i++ {
-				length += int(len(w.Bodies[i]))
-			}
-
-			lengthBuf := w.Arena.NewSlice(20)
-			n := slices.PutInt(lengthBuf, length)
-
-			ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("Content-Length: "), syscall.IovecForByteSlice(lengthBuf[:n]), syscall.Iovec("\r\n"))
-		}
-
-		ctx.ResponseIovs = append(ctx.ResponseIovs, w.Headers.Values...)
-		ctx.ResponseIovs = append(ctx.ResponseIovs, syscall.Iovec("\r\n"))
-		ctx.ResponseIovs = append(ctx.ResponseIovs, w.Bodies...)
-		w.Reset()
-	}
-}
-
-func FillError(ctx *http.Context, err error, dateBuf []byte) {
-	var w http.Response
-	var message string
-
-	switch err := err.(type) {
-	default:
-		w.StatusCode = http.StatusInternalServerError
-		message = err.Error()
-	case http.Error:
-		w.StatusCode = err.StatusCode
-		message = err.DisplayMessage
-	}
-
-	w.AppendString(http.Status2Reason[w.StatusCode])
-	w.AppendString(`: `)
-	w.WriteString(message)
-	w.AppendString("\r\n")
-
-	w.SetHeaderUnsafe("Connection", "close")
-	FillResponses(ctx, unsafe.Slice(&w, 1), dateBuf)
 }

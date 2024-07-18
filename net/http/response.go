@@ -36,7 +36,7 @@ func (w *Response) DelCookie(name string) {
 	n += copy(cookie[n:], name)
 	n += copy(cookie[n:], finisher)
 
-	w.SetHeaderUnsafe("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
+	w.Headers.Set("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
 }
 
 func (w *Response) SetCookie(name, value string, expiry int) {
@@ -56,7 +56,7 @@ func (w *Response) SetCookie(name, value string, expiry int) {
 	n += time.PutTmRFC822(cookie[n:], time.ToTm(expiry))
 	n += copy(cookie[n:], secure)
 
-	w.SetHeaderUnsafe("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
+	w.Headers.Set("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
 }
 
 /* SetCookieUnsafe is useful for debugging purposes. It's also more compatible with older browsers. */
@@ -75,38 +75,14 @@ func (w *Response) SetCookieUnsafe(name, value string, expiry int) {
 	n += copy(cookie[n:], expires)
 	n += time.PutTmRFC822(cookie[n:], time.ToTm(expiry))
 
-	w.SetHeaderUnsafe("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
-}
-
-/* SetHeaderUnsafe sets new 'value' for 'header' assuming that memory lives long enough. */
-func (w *Response) SetHeaderUnsafe(header string, value string) {
-	switch header {
-	case "Date":
-		w.Headers.OmitDate = true
-	case "Server":
-		w.Headers.OmitServer = true
-	case "Content-Type":
-		w.Headers.OmitContentType = true
-	case "Content-Length":
-		w.Headers.OmitContentLength = true
-	}
-
-	for i := 0; i < len(w.Headers.Values); i += 4 {
-		key := w.Headers.Values[i]
-		if header == string(key) {
-			w.Headers.Values[i+2] = syscall.Iovec(value)
-			return
-		}
-	}
-
-	w.Headers.Values = append(w.Headers.Values, syscall.Iovec(header), syscall.Iovec(": "), syscall.Iovec(value), syscall.Iovec("\r\n"))
+	w.Headers.Set("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
 }
 
 func (w *Response) Redirect(path string, code Status) {
 	pathBuf := w.Arena.NewSlice(len(path))
 	copy(pathBuf, path)
 
-	w.SetHeaderUnsafe("Location", unsafe.String(unsafe.SliceData(pathBuf), len(pathBuf)))
+	w.Headers.Set("Location", unsafe.String(unsafe.SliceData(pathBuf), len(pathBuf)))
 	w.Bodies = w.Bodies[:0]
 	w.StatusCode = code
 }
@@ -116,7 +92,7 @@ func (w *Response) RedirectID(prefix string, id database.ID, code Status) {
 	n := copy(buffer, prefix)
 	n += slices.PutInt(buffer[n:], int(id))
 
-	w.SetHeaderUnsafe("Location", unsafe.String(unsafe.SliceData(buffer), n))
+	w.Headers.Set("Location", unsafe.String(unsafe.SliceData(buffer), n))
 	w.Bodies = w.Bodies[:0]
 	w.StatusCode = code
 }
@@ -182,11 +158,7 @@ func (w *Response) WriteHTMLString(s string) {
 
 func (w *Response) Reset() {
 	w.StatusCode = StatusOK
-	w.Headers.Values = w.Headers.Values[:0]
-	w.Headers.OmitDate = false
-	w.Headers.OmitServer = false
-	w.Headers.OmitContentType = false
-	w.Headers.OmitContentLength = false
+	w.Headers.Reset()
 	w.Bodies = w.Bodies[:0]
 	w.Arena.Reset()
 }

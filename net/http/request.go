@@ -18,25 +18,22 @@ type Request struct {
 	URL    url.URL
 	Proto  string
 
-	Headers []string
+	Headers Headers
 	Body    []byte
 
 	Form url.Values
 }
 
 func (r *Request) Cookie(name string) string {
-	for i := 0; i < len(r.Headers); i++ {
-		header := r.Headers[i]
-		if strings.StartsWith(header, "Cookie: ") {
-			cookie := header[len("Cookie: "):]
-			if strings.StartsWith(cookie, name) {
-				cookie = cookie[len(name):]
-				if cookie[0] != '=' {
-					return ""
-				}
-				return cookie[1:]
+	cookies := r.Headers.GetMany("Cookie")
+	for i := 0; i < len(cookies); i++ {
+		cookie := cookies[i]
+		if strings.StartsWith(cookie, name) {
+			cookie = cookie[len(name):]
+			if cookie[0] != '=' {
+				return ""
 			}
-
+			return cookie[1:]
 		}
 	}
 
@@ -46,7 +43,7 @@ func (r *Request) Cookie(name string) string {
 func (r *Request) ParseForm() error {
 	var err error
 
-	if len(r.Form) != 0 {
+	if len(r.Form.Keys) != 0 {
 		return nil
 	}
 
@@ -90,8 +87,7 @@ func (r *Request) ParseForm() error {
 }
 
 func (r *Request) Reset() {
-	r.Headers = r.Headers[:0]
+	r.Headers.Reset()
 	r.Body = r.Body[:0]
-	r.Form = r.Form[:0]
-	r.Arena.Reset()
+	r.Form.Reset()
 }
