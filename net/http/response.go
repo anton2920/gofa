@@ -7,7 +7,6 @@ import (
 	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/net/html"
 	"github.com/anton2920/gofa/slices"
-	"github.com/anton2920/gofa/syscall"
 	"github.com/anton2920/gofa/time"
 )
 
@@ -16,15 +15,15 @@ type Response struct {
 
 	StatusCode Status
 	Headers    Headers
-	Bodies     []syscall.Iovec
+	Body       []byte
 }
 
 func (w *Response) Append(b []byte) {
-	w.Bodies = append(w.Bodies, syscall.IovecForByteSlice(b))
+	w.Write(b)
 }
 
 func (w *Response) AppendString(s string) {
-	w.Bodies = append(w.Bodies, syscall.Iovec(s))
+	w.WriteString(s)
 }
 
 func (w *Response) DelCookie(name string) {
@@ -83,7 +82,7 @@ func (w *Response) Redirect(path string, code Status) {
 	copy(pathBuf, path)
 
 	w.Headers.Set("Location", unsafe.String(unsafe.SliceData(pathBuf), len(pathBuf)))
-	w.Bodies = w.Bodies[:0]
+	w.Body = w.Body[:0]
 	w.StatusCode = code
 }
 
@@ -93,19 +92,12 @@ func (w *Response) RedirectID(prefix string, id database.ID, code Status) {
 	n += slices.PutInt(buffer[n:], int(id))
 
 	w.Headers.Set("Location", unsafe.String(unsafe.SliceData(buffer), n))
-	w.Bodies = w.Bodies[:0]
+	w.Body = w.Body[:0]
 	w.StatusCode = code
 }
 
 func (w *Response) Write(b []byte) (int, error) {
-	if len(b) == 0 {
-		return 0, nil
-	}
-
-	buffer := w.Arena.NewSlice(len(b))
-	copy(buffer, b)
-	w.Append(buffer)
-
+	w.Body = append(w.Body, b...)
 	return len(b), nil
 }
 
@@ -138,7 +130,7 @@ func (w *Response) WriteHTML(b []byte) {
 }
 
 func (w *Response) WriteInt(i int) (int, error) {
-	buffer := w.Arena.NewSlice(20)
+	buffer := make([]byte, 20)
 	n := slices.PutInt(buffer, i)
 	w.Append(buffer[:n])
 	return n, nil
@@ -159,6 +151,6 @@ func (w *Response) WriteHTMLString(s string) {
 func (w *Response) Reset() {
 	w.StatusCode = StatusOK
 	w.Headers.Reset()
-	w.Bodies = w.Bodies[:0]
+	w.Body = w.Body[:0]
 	w.Arena.Reset()
 }

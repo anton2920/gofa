@@ -6,7 +6,6 @@ import (
 
 	"github.com/anton2920/gofa/buffer"
 	"github.com/anton2920/gofa/event"
-	"github.com/anton2920/gofa/net/html"
 	"github.com/anton2920/gofa/net/tcp"
 	"github.com/anton2920/gofa/syscall"
 )
@@ -34,10 +33,6 @@ func AddClientToQueue(q *event.Queue, ctx *Context, request event.Request, trigg
 	/* TODO(anton2920): switch to pinning inside platform methods. */
 	q.Pinner.Pin(ctx)
 	return q.AddSocket(ctx.Connection, request, trigger, ctx.Pointer())
-}
-
-func ContentTypeHTML(bodies []syscall.Iovec) bool {
-	return (len(bodies) > 0) && (bodies[0] == html.Header)
 }
 
 func Read(ctx *Context) (int, error) {

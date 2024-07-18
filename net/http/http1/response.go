@@ -8,6 +8,21 @@ import (
 	"github.com/anton2920/gofa/time"
 )
 
+var StatusLines = [...]string{
+	0:                                "HTTP/1.1 200 OK\r\n",
+	http.StatusOK:                    "HTTP/1.1 200 OK\r\n",
+	http.StatusSeeOther:              "HTTP/1.1 303 See Other\r\n",
+	http.StatusBadRequest:            "HTTP/1.1 400 Bad Request\r\n",
+	http.StatusUnauthorized:          "HTTP/1.1 401 Unauthorized\r\n",
+	http.StatusForbidden:             "HTTP/1.1 403 Forbidden\r\n",
+	http.StatusNotFound:              "HTTP/1.1 404 Not Found\r\n",
+	http.StatusMethodNotAllowed:      "HTTP/1.1 405 Method Not Allowed\r\n",
+	http.StatusRequestTimeout:        "HTTP/1.1 408 Request Timeout\r\n",
+	http.StatusConflict:              "HTTP/1.1 409 Conflict\r\n",
+	http.StatusRequestEntityTooLarge: "HTTP/1.1 413 Request Entity Too Large\r\n",
+	http.StatusInternalServerError:   "HTTP/1.1 500 Internal Server Error\r\n",
+}
+
 func FillError(ctx *http.Context, err error, dateBuf []byte) {
 	var w http.Response
 	var message string
@@ -34,13 +49,7 @@ func FillResponses(ctx *http.Context, ws []http.Response, dateBuf []byte) {
 	for i := 0; i < len(ws); i++ {
 		w := &ws[i]
 
-		/* TODO(anton2920): prepare an array of status lines. */
-		ctx.ResponseBuffer = append(ctx.ResponseBuffer, "HTTP/1.1"...)
-		ctx.ResponseBuffer = append(ctx.ResponseBuffer, " "...)
-		ctx.ResponseBuffer = append(ctx.ResponseBuffer, http.Status2String[w.StatusCode]...)
-		ctx.ResponseBuffer = append(ctx.ResponseBuffer, " "...)
-		ctx.ResponseBuffer = append(ctx.ResponseBuffer, http.Status2Reason[w.StatusCode]...)
-		ctx.ResponseBuffer = append(ctx.ResponseBuffer, "\r\n"...)
+		ctx.ResponseBuffer = append(ctx.ResponseBuffer, StatusLines[w.StatusCode]...)
 
 		if !w.Headers.Has("Date") {
 			if dateBuf == nil {
@@ -57,25 +66,12 @@ func FillResponses(ctx *http.Context, ws []http.Response, dateBuf []byte) {
 		}
 
 		if !w.Headers.Has("Content-Type") {
-			var contentType string
-			if http.ContentTypeHTML(w.Bodies) {
-				contentType = `text/html; charset="UTF-8"`
-			} else {
-				contentType = `text/plain; charset="UTF-8"`
-			}
-			ctx.ResponseBuffer = append(ctx.ResponseBuffer, "Content-Type: "...)
-			ctx.ResponseBuffer = append(ctx.ResponseBuffer, contentType...)
-			ctx.ResponseBuffer = append(ctx.ResponseBuffer, "\r\n"...)
+			ctx.ResponseBuffer = append(ctx.ResponseBuffer, "Content-Type: text/plain; charset=\"UTF-8\"\r\n"...)
 		}
 
 		if !w.Headers.Has("Content-Length") {
-			var length int
-			for i := 0; i < len(w.Bodies); i++ {
-				length += int(len(w.Bodies[i]))
-			}
-
-			lengthBuf := w.Arena.NewSlice(20)
-			n := slices.PutInt(lengthBuf, length)
+			lengthBuf := make([]byte, 20)
+			n := slices.PutInt(lengthBuf, len(w.Body))
 
 			ctx.ResponseBuffer = append(ctx.ResponseBuffer, "Content-Length: "...)
 			ctx.ResponseBuffer = append(ctx.ResponseBuffer, lengthBuf[:n]...)
@@ -97,9 +93,7 @@ func FillResponses(ctx *http.Context, ws []http.Response, dateBuf []byte) {
 		}
 
 		ctx.ResponseBuffer = append(ctx.ResponseBuffer, "\r\n"...)
-		for i := 0; i < len(w.Bodies); i++ {
-			ctx.ResponseBuffer = append(ctx.ResponseBuffer, w.Bodies[i]...)
-		}
+		ctx.ResponseBuffer = append(ctx.ResponseBuffer, w.Body...)
 		w.Reset()
 	}
 }
