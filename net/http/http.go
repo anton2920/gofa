@@ -63,9 +63,9 @@ func Write(ctx *Context) (int, error) {
 	if ctx.ResponsePos == len(ctx.ResponseBuffer) {
 		ctx.ResponseBuffer = ctx.ResponseBuffer[:0]
 		ctx.ResponsePos = 0
-	}
-	if ctx.CloseAfterWrite {
-		Close(ctx)
+		if ctx.CloseAfterWrite {
+			Close(ctx)
+		}
 	}
 	return written, nil
 }
