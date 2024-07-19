@@ -9,8 +9,6 @@ import (
 )
 
 type Request struct {
-	RemoteAddr string
-
 	Method string
 	URL    url.URL
 	Proto  string

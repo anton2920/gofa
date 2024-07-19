@@ -15,8 +15,6 @@ func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remo
 	var i int
 	for i = 0; i < len(rs); i++ {
 		r := &rs[i]
-
-		r.RemoteAddr = remoteAddr
 		r.Reset()
 
 		/* Parsing request line. */
