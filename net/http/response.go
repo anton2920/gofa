@@ -18,14 +18,6 @@ type Response struct {
 	Body       []byte
 }
 
-func (w *Response) Append(b []byte) {
-	w.Write(b)
-}
-
-func (w *Response) AppendString(s string) {
-	w.WriteString(s)
-}
-
 func (w *Response) DelCookie(name string) {
 	const finisher = "=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict"
 
@@ -123,7 +115,7 @@ func (w *Response) WriteHTML(b []byte) {
 			continue
 		}
 		w.Write(b[last:i])
-		w.AppendString(seq)
+		w.WriteString(seq)
 		last = i + 1
 	}
 	w.Write(b[last:])
@@ -132,7 +124,7 @@ func (w *Response) WriteHTML(b []byte) {
 func (w *Response) WriteInt(i int) (int, error) {
 	buffer := make([]byte, 20)
 	n := slices.PutInt(buffer, i)
-	w.Append(buffer[:n])
+	w.Write(buffer[:n])
 	return n, nil
 }
 

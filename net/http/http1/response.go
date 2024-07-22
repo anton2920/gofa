@@ -36,10 +36,10 @@ func FillError(ctx *http.Context, err error, dateBuf []byte) {
 		message = err.DisplayMessage
 	}
 
-	w.AppendString(http.Status2Reason[w.StatusCode])
-	w.AppendString(`: `)
+	w.WriteString(http.Status2Reason[w.StatusCode])
+	w.WriteString(`: `)
 	w.WriteString(message)
-	w.AppendString("\r\n")
+	w.WriteString("\r\n")
 
 	w.Headers.Set("Connection", "close")
 	FillResponses(ctx, unsafe.Slice(&w, 1), dateBuf)
