@@ -5,6 +5,7 @@ import (
 
 	"github.com/anton2920/gofa/buffer"
 	"github.com/anton2920/gofa/net/tcp"
+	"github.com/anton2920/gofa/syscall"
 )
 
 type Context struct {
@@ -14,7 +15,7 @@ type Context struct {
 	Connection    int32
 	ClientAddress string
 
-	RequestBuffer buffer.Circular
+	RequestBuffer *buffer.Circular
 
 	ResponseBuffer []byte
 	ResponsePos    int
@@ -23,8 +24,7 @@ type Context struct {
 	CloseAfterWrite bool
 }
 
-//go:norace
-func NewContext(c int32, addr tcp.SockAddrIn, bufferSize int) (*Context, error) {
+func NewContext(c int32, addr syscall.SockAddrIn, bufferSize int) (*Context, error) {
 	rb, err := buffer.NewCircular(bufferSize)
 	if err != nil {
 		return nil, err
@@ -42,6 +42,7 @@ func NewContext(c int32, addr tcp.SockAddrIn, bufferSize int) (*Context, error) 
 	return ctx, nil
 }
 
+/* TODO(anton2920): maybe also test for some magic? */
 func GetContextFromPointer(ptr unsafe.Pointer) (*Context, bool) {
 	if ptr == nil {
 		return nil, false
@@ -54,7 +55,6 @@ func GetContextFromPointer(ptr unsafe.Pointer) (*Context, bool) {
 	return ctx, ctx.Check == int32(check)
 }
 
-//go:norace
 func (ctx *Context) Pointer() unsafe.Pointer {
 	return unsafe.Pointer(uintptr(unsafe.Pointer(ctx)) | uintptr(ctx.Check))
 }

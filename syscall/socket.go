@@ -1,0 +1,19 @@
+package syscall
+
+const (
+	/* From <sys/socket.h>. */
+	AF_INET = 2
+	PF_INET = AF_INET
+
+	SOCK_STREAM = 1
+
+	SOL_SOCKET = 0xFFFF
+
+	SO_REUSEADDR    = 0x00000004
+	SO_REUSEPORT    = 0x00000200
+	SO_REUSEPORT_LB = 0x00010000
+	SO_RCVTIMEO     = 0x00001006
+
+	SHUT_RD = 0
+	SHUT_WR = 1
+)

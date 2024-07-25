@@ -4,61 +4,43 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/syscall"
+	"github.com/anton2920/gofa/util"
 )
 
 type Circular struct {
-	SourceBuffer unsafe.Pointer
-
 	Buf  []byte
 	Head int
 	Tail int
 }
 
-const (
-	/* See <sys/mman.h>. */
-	PROT_NONE  = 0x00
-	PROT_READ  = 0x01
-	PROT_WRITE = 0x02
-
-	MAP_SHARED  = 0x0001
-	MAP_PRIVATE = 0x0002
-
-	MAP_FIXED = 0x0010
-	MAP_ANON  = 0x1000
-)
-
-var SHM_ANON = unsafe.String((*byte)(unsafe.Pointer(uintptr(1))), 8)
-var NULL = unsafe.String(nil, 0)
-
-func NewCircular(size int) (Circular, error) {
+func NewCircular(size int) (*Circular, error) {
 	var c Circular
 
-	/* NOTE(anton2920): rounding up to the page boundary. */
-	size = (size + (4096 - 1)) & ^(4096 - 1)
+	const pageSize = 4096
+	size = util.RoundUp(size, pageSize)
 
-	fd, err := syscall.ShmOpen2(SHM_ANON, syscall.O_RDWR, 0, 0, NULL)
+	fd, err := syscall.ShmOpen2(syscall.SHM_ANON, syscall.O_RDWR, 0, 0, syscall.NULL)
 	if err != nil {
-		return c, err
+		return nil, err
 	}
 	defer syscall.Close(fd)
 
 	if err := syscall.Ftruncate(fd, int64(size)); err != nil {
-		return c, err
+		return nil, err
 	}
 
-	buffer, err := syscall.Mmap(nil, 2*uint64(size), PROT_NONE, MAP_PRIVATE|MAP_ANON, -1, 0)
+	buffer, err := syscall.Mmap(nil, 2*uint64(size), syscall.PROT_NONE, syscall.MAP_PRIVATE|syscall.MAP_ANON, -1, 0)
 	if err != nil {
-		return c, err
+		return nil, err
 	}
 
-	if _, err := syscall.Mmap(buffer, uint64(size), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_FIXED, fd, 0); err != nil {
-		return c, err
+	if _, err := syscall.Mmap(buffer, uint64(size), syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED|syscall.MAP_FIXED, fd, 0); err != nil {
+		return nil, err
 	}
-	if _, err := syscall.Mmap(unsafe.Add(buffer, size), uint64(size), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_FIXED, fd, 0); err != nil {
-		return c, err
+	if _, err := syscall.Mmap(unsafe.Add(buffer, size), uint64(size), syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED|syscall.MAP_FIXED, fd, 0); err != nil {
+		return nil, err
 	}
 
-	c.SourceBuffer = buffer
 	c.Buf = unsafe.Slice((*byte)(buffer), 2*size)
 
 	/* NOTE(anton2920): sanity checks. */
@@ -67,7 +49,7 @@ func NewCircular(size int) (Circular, error) {
 	c.Buf[size] = '\x00'
 	c.Buf[2*size-1] = '\x00'
 
-	return c, nil
+	return &c, nil
 }
 
 func (c *Circular) Consume(n int) {
@@ -109,5 +91,4 @@ func (c *Circular) UnconsumedString() string {
 
 func FreeCircular(c *Circular) {
 	syscall.Munmap(unsafe.Pointer(unsafe.SliceData(c.Buf)), uint64(len(c.Buf)))
-	syscall.Munmap(c.SourceBuffer, uint64(len(c.Buf)))
 }

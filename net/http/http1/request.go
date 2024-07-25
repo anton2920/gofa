@@ -99,7 +99,7 @@ func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remo
 
 /* ParseRequestsUnsafe fills slice of requests with data from (*http.Context).RequestBuffer. Data in buffer must live for as long as requests are needed. */
 func ParseRequestsUnsafe(ctx *http.Context, rs []http.Request) (int, error) {
-	rBuf := &ctx.RequestBuffer
+	rBuf := ctx.RequestBuffer
 	var pos int
 
 	n, err := ParseRequestsUnsafeEx(rBuf.UnconsumedSlice(), &pos, rs, ctx.ClientAddress)

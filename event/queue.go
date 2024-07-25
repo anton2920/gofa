@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/intel"
+	"github.com/anton2920/gofa/net/http"
 	"github.com/anton2920/gofa/syscall"
 	"github.com/anton2920/gofa/time"
 )
@@ -36,6 +37,11 @@ func NewQueue() (*Queue, error) {
 		return nil, err
 	}
 	return q, nil
+}
+
+func (q *Queue) AddHTTP(ctx *http.Context, request Request, trigger Trigger) error {
+	q.Pinner.Pin(ctx)
+	return platformQueueAddSocket(q, ctx.Connection, request, trigger, ctx.Pointer())
 }
 
 func (q *Queue) AddSocket(sock int32, request Request, trigger Trigger, userData unsafe.Pointer) error {

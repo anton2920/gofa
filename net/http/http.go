@@ -5,13 +5,11 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/buffer"
-	"github.com/anton2920/gofa/event"
-	"github.com/anton2920/gofa/net/tcp"
 	"github.com/anton2920/gofa/syscall"
 )
 
 func Accept(l int32, bufferSize int) (*Context, error) {
-	var addr tcp.SockAddrIn
+	var addr syscall.SockAddrIn
 	var addrLen uint32 = uint32(unsafe.Sizeof(addr))
 
 	c, err := syscall.Accept(l, (*syscall.Sockaddr)(unsafe.Pointer(&addr)), &addrLen)
@@ -28,15 +26,8 @@ func Accept(l int32, bufferSize int) (*Context, error) {
 	return ctx, nil
 }
 
-//go:norace
-func AddClientToQueue(q *event.Queue, ctx *Context, request event.Request, trigger event.Trigger) error {
-	/* TODO(anton2920): switch to pinning inside platform methods. */
-	q.Pinner.Pin(ctx)
-	return q.AddSocket(ctx.Connection, request, trigger, ctx.Pointer())
-}
-
 func Read(ctx *Context) (int, error) {
-	rBuf := &ctx.RequestBuffer
+	rBuf := ctx.RequestBuffer
 	buf := rBuf.RemainingSlice()
 
 	if len(buf) == 0 {
@@ -72,7 +63,7 @@ func Write(ctx *Context) (int, error) {
 
 func Close(ctx *Context) error {
 	ctx.Reset()
-	buffer.FreeCircular(&ctx.RequestBuffer)
+	buffer.FreeCircular(ctx.RequestBuffer)
 	return syscall.Close(ctx.Connection)
 }
 

@@ -2,6 +2,7 @@ package util
 
 import "unsafe"
 
+//go:nosplit
 func Bool2Int(b bool) int {
 	if b {
 		return 1
@@ -43,4 +44,9 @@ func RemoveAtIndex[T any](ts []T, i int) []T {
 		copy(ts[i:], ts[i+1:])
 	}
 	return ts[:len(ts)-1]
+}
+
+//go:nosplit
+func SwapBytesInWord(x uint16) uint16 {
+	return ((x << 8) & 0xFF00) | (x >> 8)
 }
