@@ -13,6 +13,7 @@ type Circular struct {
 	Tail int
 }
 
+//go:norace
 func NewCircular(size int) (*Circular, error) {
 	var c Circular
 
