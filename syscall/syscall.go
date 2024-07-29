@@ -1,6 +1,8 @@
 package syscall
 
-import "unsafe"
+import (
+	"unsafe"
+)
 
 const (
 	/* See <sys/syscall.h>. */
@@ -274,12 +276,12 @@ func Unmount(path string, flags int32) error {
 	return NewError("unmount", errno)
 }
 
-func Write(fd int32, buf []byte) (int64, error) {
+func Write(fd int32, buf []byte) (int, error) {
 	r1, _, errno := Syscall(SYS_write, uintptr(fd), uintptr(unsafe.Pointer(unsafe.SliceData(buf))), uintptr(len(buf)))
-	return int64(r1), NewError("write", errno)
+	return int(r1), NewError("write", errno)
 }
 
-func Writev(fd int32, iov []Iovec) (int64, error) {
+func Writev(fd int32, iov []Iovec) (int, error) {
 	r1, _, errno := Syscall(SYS_writev, uintptr(fd), uintptr(unsafe.Pointer(unsafe.SliceData(iov))), uintptr(len(iov)))
-	return int64(r1), NewError("writev", errno)
+	return int(r1), NewError("writev", errno)
 }
