@@ -6,6 +6,7 @@ import (
 
 	"github.com/anton2920/gofa/buffer"
 	"github.com/anton2920/gofa/syscall"
+	"github.com/anton2920/gofa/trace"
 )
 
 func Accept(l int32, bufferSize int) (*Context, error) {
@@ -27,6 +28,8 @@ func Accept(l int32, bufferSize int) (*Context, error) {
 }
 
 func Read(ctx *Context) (int, error) {
+	defer trace.End(trace.Start(""))
+
 	rBuf := ctx.RequestBuffer
 	buf := rBuf.RemainingSlice()
 
@@ -43,6 +46,8 @@ func Read(ctx *Context) (int, error) {
 }
 
 func Write(ctx *Context) (int, error) {
+	defer trace.End(trace.Start(""))
+
 	var written int
 
 	n, err := syscall.Write(ctx.Connection, ctx.ResponseBuffer[ctx.ResponsePos:])
