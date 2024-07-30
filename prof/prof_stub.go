@@ -5,11 +5,11 @@ package prof
 func BeginProfile() {
 }
 
-func Begin(label string) Block {
-	return Block{}
+func Begin(_ string) int {
+	return 0
 }
 
-func End(b Block) {}
+func End(_ int) {}
 
 func EndAndPrintProfile() {
 }
