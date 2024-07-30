@@ -7,6 +7,7 @@ import (
 	"github.com/anton2920/gofa/arena"
 	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/errors"
+	"github.com/anton2920/gofa/prof"
 	"github.com/anton2920/gofa/slices"
 )
 
@@ -18,6 +19,8 @@ type Values struct {
 }
 
 func (vs *Values) Add(key string, value string) {
+	defer prof.End(prof.Begin(""))
+
 	for i := 0; i < len(vs.Keys); i++ {
 		if key == vs.Keys[i] {
 			vs.Values[i] = append(vs.Values[i], value)
@@ -36,7 +39,10 @@ func (vs *Values) Add(key string, value string) {
 	vs.Values[n] = append(vs.Values[n], value)
 }
 
+//go:nosplit
 func (vs *Values) Get(key string) string {
+	defer prof.End(prof.Begin(""))
+
 	for i := 0; i < len(vs.Keys); i++ {
 		if key == vs.Keys[i] {
 			return vs.Values[i][0]
@@ -46,11 +52,17 @@ func (vs *Values) Get(key string) string {
 	return ""
 }
 
+//go:nosplit
 func (vs Values) GetInt(key string) (int, error) {
+	defer prof.End(prof.Begin(""))
+
 	return strconv.Atoi(vs.Get(key))
 }
 
+//go:nosplit
 func (vs Values) GetID(key string) (database.ID, error) {
+	defer prof.End(prof.Begin(""))
+
 	id, err := strconv.Atoi(vs.Get(key))
 	if err != nil {
 		return -1, err
@@ -61,7 +73,10 @@ func (vs Values) GetID(key string) (database.ID, error) {
 	return database.ID(id), nil
 }
 
+//go:nosplit
 func (vs *Values) GetMany(key string) []string {
+	defer prof.End(prof.Begin(""))
+
 	for i := 0; i < len(vs.Keys); i++ {
 		if key == vs.Keys[i] {
 			return vs.Values[i]
@@ -71,7 +86,10 @@ func (vs *Values) GetMany(key string) []string {
 	return nil
 }
 
+//go:nosplit
 func (vs *Values) Has(key string) bool {
+	defer prof.End(prof.Begin(""))
+
 	for i := 0; i < len(vs.Keys); i++ {
 		if key == vs.Keys[i] {
 			return true
@@ -81,13 +99,19 @@ func (vs *Values) Has(key string) bool {
 	return false
 }
 
+//go:nosplit
 func (vs *Values) Reset() {
+	defer prof.End(prof.Begin(""))
+
 	vs.Keys = vs.Keys[:0]
 	vs.Values = vs.Values[:0]
 	vs.Arena.Reset()
 }
 
+//go:nosplit
 func (vs *Values) Set(key string, value string) {
+	defer prof.End(prof.Begin(""))
+
 	for i := 0; i < len(vs.Keys); i++ {
 		if key == vs.Keys[i] {
 			vs.Values[i] = vs.Values[i][:0]
@@ -107,7 +131,10 @@ func (vs *Values) Set(key string, value string) {
 	vs.Values[n] = append(vs.Values[n], value)
 }
 
+//go:nosplit
 func (vs *Values) SetInt(key string, value int) {
+	defer prof.End(prof.Begin(""))
+
 	buffer := vs.Arena.NewSlice(20)
 	n := slices.PutInt(buffer, value)
 	vs.Set(key, unsafe.String(&buffer[0], n))

@@ -1,7 +1,11 @@
 package url
 
+import "github.com/anton2920/gofa/prof"
+
 /* CharToByte returns ASCII-decoded character. For example, 'A' yields '\x0A'. */
 func CharToByte(c byte) (byte, bool) {
+	defer prof.End(prof.Begin(""))
+
 	if c >= '0' && c <= '9' {
 		return c - '0', true
 	} else if c >= 'A' && c <= 'F' {
@@ -12,6 +16,8 @@ func CharToByte(c byte) (byte, bool) {
 }
 
 func QueryDecode(decoded []byte, encoded string) (int, bool) {
+	defer prof.End(prof.Begin(""))
+
 	var hi, lo byte
 	var ok bool
 	var n int
