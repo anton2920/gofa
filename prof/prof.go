@@ -80,6 +80,11 @@ func End(b Block) {
 }
 
 //go:nosplit
+func CyclesToNsec(c intel.Cycles) float64 {
+	return 1_000_000_000 * float64(c) / float64(intel.CpuHz)
+}
+
+//go:nosplit
 func CyclesToMsec(c intel.Cycles) float64 {
 	return 1000 * float64(c) / float64(intel.CpuHz)
 }
@@ -87,10 +92,10 @@ func CyclesToMsec(c intel.Cycles) float64 {
 func PrintTimeElapsed(label string, totalElapsed, elapsedCyclesExclusive, elapsedCyclesInclusive intel.Cycles, hitCount int) {
 	percent := 100 * (float64(elapsedCyclesExclusive) / float64(totalElapsed))
 
-	fmt.Printf("[gofa/prof]: \t %s[%d]: flat: [%.4fms %.2f%%]", label, hitCount, CyclesToMsec(elapsedCyclesExclusive), percent)
+	fmt.Printf("[gofa/prof]: \t %s[%d]: flat: [%.4fms %.2f%% %.2fns/op]", label, hitCount, CyclesToMsec(elapsedCyclesExclusive), percent, CyclesToNsec(elapsedCyclesExclusive)/float64(hitCount))
 	if elapsedCyclesInclusive > elapsedCyclesExclusive {
 		percentWidthChildren := 100 * (float64(elapsedCyclesInclusive) / float64(totalElapsed))
-		fmt.Printf(", cum [%.4fms %.2f%%]", CyclesToMsec(elapsedCyclesInclusive), percentWidthChildren)
+		fmt.Printf(", cum [%.4fms %.2f%% %.2fns/op]", CyclesToMsec(elapsedCyclesInclusive), percentWidthChildren, CyclesToNsec(elapsedCyclesInclusive)/float64(hitCount))
 	}
 	fmt.Printf("\n")
 }
@@ -145,5 +150,7 @@ func EndAndPrintProfile() {
 			totalHits += anchor.HitCount
 		}
 	}
-	PrintTimeElapsed("= Grand total", totalElapsed, totalCycles, 0, totalHits)
+	if totalHits > 0 {
+		PrintTimeElapsed("= Grand total", totalElapsed, totalCycles, 0, totalHits)
+	}
 }
