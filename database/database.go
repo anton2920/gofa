@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/errors"
+	"github.com/anton2920/gofa/prof"
 	"github.com/anton2920/gofa/syscall"
 	"github.com/anton2920/gofa/util"
 )
@@ -125,6 +126,8 @@ func Drop(db *DB) error {
 }
 
 func GetNextID(db *DB) (ID, error) {
+	defer prof.End(prof.Begin(""))
+
 	var id ID
 
 	_, err := syscall.Pread(db.FD, unsafe.Slice((*byte)(unsafe.Pointer(&id)), unsafe.Sizeof(id)), NextIDOffset)
@@ -137,6 +140,8 @@ func GetNextID(db *DB) (ID, error) {
 
 /* TODO(anton2920): make that atomic. */
 func IncrementNextID(db *DB) (ID, error) {
+	defer prof.End(prof.Begin(""))
+
 	id, err := GetNextID(db)
 	if err != nil {
 		return -1, err
@@ -148,6 +153,8 @@ func IncrementNextID(db *DB) (ID, error) {
 }
 
 func SetNextID(db *DB, id ID) error {
+	defer prof.End(prof.Begin(""))
+
 	_, err := syscall.Pwrite(db.FD, unsafe.Slice((*byte)(unsafe.Pointer(&id)), unsafe.Sizeof(id)), NextIDOffset)
 	if err != nil {
 		return fmt.Errorf("failed to write next ID: %w", err)
@@ -156,6 +163,8 @@ func SetNextID(db *DB, id ID) error {
 }
 
 func Read[T any](db *DB, id ID, t *T) error {
+	defer prof.End(prof.Begin(""))
+
 	size := int(unsafe.Sizeof(*t))
 	offset := int64(int(id)*size) + DataOffset
 
@@ -171,6 +180,8 @@ func Read[T any](db *DB, id ID, t *T) error {
 }
 
 func ReadMany[T any](db *DB, pos *int64, ts []T) (int, error) {
+	defer prof.End(prof.Begin(""))
+
 	if *pos < DataOffset {
 		*pos = DataOffset
 	}
@@ -186,6 +197,8 @@ func ReadMany[T any](db *DB, pos *int64, ts []T) (int, error) {
 }
 
 func Write[T any](db *DB, id ID, t *T) error {
+	defer prof.End(prof.Begin(""))
+
 	size := int(unsafe.Sizeof(*t))
 	offset := int64(int(id)*size) + DataOffset
 
