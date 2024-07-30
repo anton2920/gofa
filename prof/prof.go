@@ -14,7 +14,6 @@ import (
 type Profiler struct {
 	Anchors       [64 * 1024]Anchor
 	CurrentParent int32
-	LastAnchor    int32
 
 	StartCycles intel.Cycles
 	EndCycles   intel.Cycles
@@ -29,6 +28,7 @@ func anchorIndexForPC(pc uintptr) int32 {
 //go:nosplit
 func BeginProfile() {
 	clear(GlobalProfiler.Anchors[:])
+	GlobalProfiler.CurrentParent = 0
 	GlobalProfiler.StartCycles = intel.RDTSC()
 }
 
