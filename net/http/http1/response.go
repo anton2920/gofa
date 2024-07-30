@@ -25,7 +25,7 @@ var StatusLines = [...]string{
 }
 
 func FillError(ctx *http.Context, err error, dateBuf []byte) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	var w http.Response
 	var message string
@@ -46,10 +46,12 @@ func FillError(ctx *http.Context, err error, dateBuf []byte) {
 
 	w.Headers.Set("Connection", "close")
 	FillResponses(ctx, unsafe.Slice(&w, 1), dateBuf)
+
+	prof.End(p)
 }
 
 func FillResponses(ctx *http.Context, ws []http.Response, dateBuf []byte) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	for i := 0; i < len(ws); i++ {
 		w := &ws[i]
@@ -101,4 +103,6 @@ func FillResponses(ctx *http.Context, ws []http.Response, dateBuf []byte) {
 		ctx.ResponseBuffer = append(ctx.ResponseBuffer, w.Body...)
 		w.Reset()
 	}
+
+	prof.End(p)
 }

@@ -20,7 +20,7 @@ type Response struct {
 }
 
 func (w *Response) DelCookie(name string) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	const finisher = "=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict"
 
@@ -31,10 +31,12 @@ func (w *Response) DelCookie(name string) {
 	n += copy(cookie[n:], finisher)
 
 	w.Headers.Set("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
+
+	prof.End(p)
 }
 
 func (w *Response) SetCookie(name, value string, expiry int) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	const secure = "; HttpOnly; Secure; SameSite=Strict"
 	const expires = "; Expires="
@@ -53,11 +55,13 @@ func (w *Response) SetCookie(name, value string, expiry int) {
 	n += copy(cookie[n:], secure)
 
 	w.Headers.Set("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
+
+	prof.End(p)
 }
 
 /* SetCookieUnsafe is useful for debugging purposes. It's also more compatible with older browsers. */
 func (w *Response) SetCookieUnsafe(name, value string, expiry int) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	const expires = "; Expires="
 	const path = "; Path=/"
@@ -74,10 +78,12 @@ func (w *Response) SetCookieUnsafe(name, value string, expiry int) {
 	n += time.PutTmRFC822(cookie[n:], time.ToTm(expiry))
 
 	w.Headers.Set("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
+
+	prof.End(p)
 }
 
 func (w *Response) Redirect(path string, code Status) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	pathBuf := w.Arena.NewSlice(len(path))
 	copy(pathBuf, path)
@@ -85,10 +91,12 @@ func (w *Response) Redirect(path string, code Status) {
 	w.Headers.Set("Location", unsafe.String(unsafe.SliceData(pathBuf), len(pathBuf)))
 	w.Body = w.Body[:0]
 	w.StatusCode = code
+
+	prof.End(p)
 }
 
 func (w *Response) RedirectID(prefix string, id database.ID, code Status) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	buffer := w.Arena.NewSlice(len(prefix) + 20)
 	n := copy(buffer, prefix)
@@ -97,20 +105,24 @@ func (w *Response) RedirectID(prefix string, id database.ID, code Status) {
 	w.Headers.Set("Location", unsafe.String(unsafe.SliceData(buffer), n))
 	w.Body = w.Body[:0]
 	w.StatusCode = code
+
+	prof.End(p)
 }
 
 //go:nosplit
 func (w *Response) Write(b []byte) (int, error) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	w.Body = append(w.Body, b...)
+
+	prof.End(p)
 	return len(b), nil
 }
 
 /* WriteHTML writes to w the escaped html. equivalent of the plain text data b. */
 //go:nosplit
 func (w *Response) WriteHTML(b []byte) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	last := 0
 	for i, c := range b {
@@ -136,44 +148,54 @@ func (w *Response) WriteHTML(b []byte) {
 		last = i + 1
 	}
 	w.Write(b[last:])
+
+	prof.End(p)
 }
 
-func (w *Response) WriteInt(i int) (int, error) {
-	defer prof.End(prof.Begin(""))
+func (w *Response) WriteInt(i int) {
+	p := prof.Begin("")
 
 	buffer := make([]byte, 20)
 	n := slices.PutInt(buffer, i)
-
 	w.Write(buffer[:n])
-	return n, nil
+
+	prof.End(p)
 }
 
-func (w *Response) WriteID(id database.ID) (int, error) {
-	defer prof.End(prof.Begin(""))
+func (w *Response) WriteID(id database.ID) {
+	p := prof.Begin("")
 
-	return w.WriteInt(int(id))
+	w.WriteInt(int(id))
+
+	prof.End(p)
 }
 
 //go:nosplit
 func (w *Response) WriteString(s string) (int, error) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	w.Body = append(w.Body, s...)
+
+	prof.End(p)
 	return len(s), nil
 }
 
 func (w *Response) WriteHTMLString(s string) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	w.WriteHTML(unsafe.Slice(unsafe.StringData(s), len(s)))
+
+	prof.End(p)
 }
 
 //go:nosplit
 func (w *Response) Reset() {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	w.StatusCode = StatusOK
 	w.Headers.Reset()
 	w.Body = w.Body[:0]
 	w.Arena.Reset()
+
+	prof.End(p)
 }

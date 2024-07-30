@@ -10,7 +10,7 @@ import (
 )
 
 func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remoteAddr string) (int, error) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	request := unsafe.String(unsafe.SliceData(buffer), len(buffer))
 	pos := *consumed
@@ -23,11 +23,13 @@ func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remo
 		/* Parsing request line. */
 		lineEnd := strings.FindChar(request[pos:], '\r')
 		if lineEnd == -1 {
+			prof.End(p)
 			return i, nil
 		}
 
 		sp := strings.FindChar(request[pos:pos+lineEnd], ' ')
 		if sp == -1 {
+			prof.End(p)
 			return i, http.BadRequest("expected method, found %q", request[pos:])
 		}
 		r.Method = request[pos : pos+sp]
@@ -36,6 +38,7 @@ func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remo
 
 		uriEnd := strings.FindChar(request[pos:pos+lineEnd], ' ')
 		if uriEnd == -1 {
+			prof.End(p)
 			return i, http.BadRequest("expected space after URI, found %q", request[pos:pos+lineEnd])
 		}
 
@@ -51,6 +54,7 @@ func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remo
 		lineEnd -= len(r.URL.Path) + len(r.URL.Query) + 1
 
 		if request[pos:pos+len("HTTP/")] != "HTTP/" {
+			prof.End(p)
 			return i, http.BadRequest("expected version prefix, found %q", request[pos:pos+lineEnd])
 		}
 		r.Proto = request[pos : pos+lineEnd]
@@ -60,6 +64,7 @@ func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remo
 		for {
 			lineEnd := strings.FindChar(request[pos:], '\r')
 			if lineEnd == -1 {
+				prof.End(p)
 				return i, nil
 			} else if lineEnd == 0 {
 				pos += len("\r\n")
@@ -69,6 +74,7 @@ func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remo
 			header := request[pos : pos+lineEnd]
 			colon := strings.FindChar(header, ':')
 			if colon == -1 {
+				prof.End(p)
 				return i, http.BadRequest("expected HTTP header, got %q", header)
 			}
 
@@ -83,10 +89,12 @@ func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remo
 		if r.Headers.Has("Content-Length") {
 			contentLength, err := strconv.Atoi(r.Headers.Get("Content-Length"))
 			if (err != nil) || (contentLength < 0) {
+				prof.End(p)
 				return i, http.BadRequest("invalid Content-Length value: %q", r.Headers.Get("Content-Length"))
 			}
 
 			if len(request[pos:]) < contentLength {
+				prof.End(p)
 				return i, nil
 			}
 
@@ -97,17 +105,20 @@ func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remo
 		*consumed = pos
 	}
 
+	prof.End(p)
 	return i, nil
 }
 
 /* ParseRequestsUnsafe fills slice of requests with data from (*http.Context).RequestBuffer. Data in buffer must live for as long as requests are needed. */
 func ParseRequestsUnsafe(ctx *http.Context, rs []http.Request) (int, error) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	rBuf := ctx.RequestBuffer
 	var pos int
 
 	n, err := ParseRequestsUnsafeEx(rBuf.UnconsumedSlice(), &pos, rs, ctx.ClientAddress)
 	rBuf.Consume(pos)
+
+	prof.End(p)
 	return n, err
 }

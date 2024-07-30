@@ -29,31 +29,35 @@ func Accept(l int32, bufferSize int) (*Context, error) {
 
 //go:nosplit
 func Read(ctx *Context) (int, error) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	rBuf := ctx.RequestBuffer
 	buf := rBuf.RemainingSlice()
 
 	if len(buf) == 0 {
+		prof.End(p)
 		return 0, NoSpaceLeft
 	}
 	n, err := syscall.Read(ctx.Connection, buf)
 	if err != nil {
+		prof.End(p)
 		return 0, err
 	}
 	rBuf.Produce(int(n))
 
+	prof.End(p)
 	return n, nil
 }
 
 //go:nosplit
 func Write(ctx *Context) (int, error) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	var written int
 	if len(ctx.ResponseBuffer[ctx.ResponsePos:]) > 0 {
 		n, err := syscall.Write(ctx.Connection, ctx.ResponseBuffer[ctx.ResponsePos:])
 		if err != nil {
+			prof.End(p)
 			return 0, err
 		}
 		ctx.ResponsePos += int(n)
@@ -66,6 +70,8 @@ func Write(ctx *Context) (int, error) {
 			}
 		}
 	}
+
+	prof.End(p)
 	return written, nil
 }
 

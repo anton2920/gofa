@@ -4,19 +4,22 @@ import "github.com/anton2920/gofa/prof"
 
 /* CharToByte returns ASCII-decoded character. For example, 'A' yields '\x0A'. */
 func CharToByte(c byte) (byte, bool) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	if c >= '0' && c <= '9' {
+		prof.End(p)
 		return c - '0', true
 	} else if c >= 'A' && c <= 'F' {
+		prof.End(p)
 		return 10 + c - 'A', true
 	} else {
+		prof.End(p)
 		return '\x00', false
 	}
 }
 
 func QueryDecode(decoded []byte, encoded string) (int, bool) {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	var hi, lo byte
 	var ok bool
@@ -27,12 +30,14 @@ func QueryDecode(decoded []byte, encoded string) (int, bool) {
 			hi = encoded[i+1]
 			hi, ok = CharToByte(hi)
 			if !ok {
+				prof.End(p)
 				return 0, false
 			}
 
 			lo = encoded[i+2]
 			lo, ok = CharToByte(lo)
 			if !ok {
+				prof.End(p)
 				return 0, false
 			}
 
@@ -45,5 +50,7 @@ func QueryDecode(decoded []byte, encoded string) (int, bool) {
 		}
 		n++
 	}
+
+	prof.End(p)
 	return n, true
 }

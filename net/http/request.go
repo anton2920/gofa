@@ -21,7 +21,7 @@ type Request struct {
 }
 
 func (r *Request) Cookie(name string) string {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	cookies := r.Headers.GetMany("Cookie")
 	for i := 0; i < len(cookies); i++ {
@@ -29,21 +29,24 @@ func (r *Request) Cookie(name string) string {
 		if strings.StartsWith(cookie, name) {
 			cookie = cookie[len(name):]
 			if cookie[0] != '=' {
+				prof.End(p)
 				return ""
 			}
 			return cookie[1:]
 		}
 	}
 
+	prof.End(p)
 	return ""
 }
 
 func (r *Request) ParseForm() error {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	var err error
 
 	if len(r.Form.Keys) != 0 {
+		prof.End(p)
 		return nil
 	}
 
@@ -83,14 +86,17 @@ func (r *Request) ParseForm() error {
 		r.Form.Add(key, value)
 	}
 
+	prof.End(p)
 	return err
 }
 
 //go:nosplit
 func (r *Request) Reset() {
-	defer prof.End(prof.Begin(""))
+	p := prof.Begin("")
 
 	r.Headers.Reset()
 	r.Body = r.Body[:0]
 	r.Form.Reset()
+
+	prof.End(p)
 }
