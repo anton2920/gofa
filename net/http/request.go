@@ -5,8 +5,8 @@ import (
 
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/net/url"
+	"github.com/anton2920/gofa/prof"
 	"github.com/anton2920/gofa/strings"
-	"github.com/anton2920/gofa/trace"
 )
 
 type Request struct {
@@ -21,7 +21,7 @@ type Request struct {
 }
 
 func (r *Request) Cookie(name string) string {
-	defer trace.End(trace.Start(""))
+	defer prof.End(prof.Begin(""))
 
 	cookies := r.Headers.GetMany("Cookie")
 	for i := 0; i < len(cookies); i++ {
@@ -39,7 +39,7 @@ func (r *Request) Cookie(name string) string {
 }
 
 func (r *Request) ParseForm() error {
-	defer trace.End(trace.Start(""))
+	defer prof.End(prof.Begin(""))
 
 	var err error
 
@@ -86,8 +86,9 @@ func (r *Request) ParseForm() error {
 	return err
 }
 
+//go:nosplit
 func (r *Request) Reset() {
-	defer trace.End(trace.Start(""))
+	defer prof.End(prof.Begin(""))
 
 	r.Headers.Reset()
 	r.Body = r.Body[:0]

@@ -5,12 +5,12 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/net/http"
+	"github.com/anton2920/gofa/prof"
 	"github.com/anton2920/gofa/strings"
-	"github.com/anton2920/gofa/trace"
 )
 
 func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remoteAddr string) (int, error) {
-	defer trace.End(trace.Start(""))
+	defer prof.End(prof.Begin(""))
 
 	request := unsafe.String(unsafe.SliceData(buffer), len(buffer))
 	pos := *consumed
@@ -39,10 +39,10 @@ func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remo
 			return i, http.BadRequest("expected space after URI, found %q", request[pos:pos+lineEnd])
 		}
 
-		queryStart := strings.FindChar(request[pos:pos+uriEnd], '?')
-		if queryStart != -1 {
-			r.URL.Path = request[pos : pos+queryStart]
-			r.URL.Query = request[pos+queryStart+1 : pos+uriEnd]
+		queryBegin := strings.FindChar(request[pos:pos+uriEnd], '?')
+		if queryBegin != -1 {
+			r.URL.Path = request[pos : pos+queryBegin]
+			r.URL.Query = request[pos+queryBegin+1 : pos+uriEnd]
 		} else {
 			r.URL.Path = request[pos : pos+uriEnd]
 			r.URL.Query = ""
@@ -102,7 +102,7 @@ func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remo
 
 /* ParseRequestsUnsafe fills slice of requests with data from (*http.Context).RequestBuffer. Data in buffer must live for as long as requests are needed. */
 func ParseRequestsUnsafe(ctx *http.Context, rs []http.Request) (int, error) {
-	defer trace.End(trace.Start(""))
+	defer prof.End(prof.Begin(""))
 
 	rBuf := ctx.RequestBuffer
 	var pos int

@@ -1,14 +1,15 @@
 package http
 
-import "github.com/anton2920/gofa/trace"
+import "github.com/anton2920/gofa/prof"
 
 type Headers struct {
 	Keys   []string
 	Values [][]string
 }
 
+//go:nosplit
 func (hs *Headers) Add(key string, value string) {
-	defer trace.End(trace.Start(""))
+	defer prof.End(prof.Begin(""))
 
 	for i := 0; i < len(hs.Keys); i++ {
 		if key == hs.Keys[i] {
@@ -28,8 +29,9 @@ func (hs *Headers) Add(key string, value string) {
 	hs.Values[n] = append(hs.Values[n], value)
 }
 
+//go:nosplit
 func (hs *Headers) Get(key string) string {
-	defer trace.End(trace.Start(""))
+	defer prof.End(prof.Begin(""))
 
 	for i := 0; i < len(hs.Keys); i++ {
 		if key == hs.Keys[i] {
@@ -40,8 +42,9 @@ func (hs *Headers) Get(key string) string {
 	return ""
 }
 
+//go:nosplit
 func (hs *Headers) GetMany(key string) []string {
-	defer trace.End(trace.Start(""))
+	defer prof.End(prof.Begin(""))
 
 	for i := 0; i < len(hs.Keys); i++ {
 		if key == hs.Keys[i] {
@@ -52,8 +55,9 @@ func (hs *Headers) GetMany(key string) []string {
 	return nil
 }
 
+//go:nosplit
 func (hs *Headers) Has(key string) bool {
-	defer trace.End(trace.Start(""))
+	defer prof.End(prof.Begin(""))
 
 	for i := 0; i < len(hs.Keys); i++ {
 		if key == hs.Keys[i] {
@@ -64,15 +68,17 @@ func (hs *Headers) Has(key string) bool {
 	return false
 }
 
+//go:nosplit
 func (hs *Headers) Reset() {
-	defer trace.End(trace.Start(""))
+	defer prof.End(prof.Begin(""))
 
 	hs.Keys = hs.Keys[:0]
 	hs.Values = hs.Values[:0]
 }
 
+//go:nosplit
 func (hs *Headers) Set(key string, value string) {
-	defer trace.End(trace.Start(""))
+	defer prof.End(prof.Begin(""))
 
 	for i := 0; i < len(hs.Keys); i++ {
 		if key == hs.Keys[i] {

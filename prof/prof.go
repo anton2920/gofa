@@ -1,6 +1,6 @@
-//go:build trace
+//go:build gofaprof
 
-package trace
+package prof
 
 import (
 	"fmt"
@@ -22,27 +22,28 @@ type Profiler struct {
 
 var GlobalProfiler Profiler
 
+func anchorIndexForPC(pc uintptr) int32 {
+	return int32(int(pc) & (len(GlobalProfiler.Anchors) - 1))
+}
+
+//go:nosplit
 func BeginProfile() {
 	clear(GlobalProfiler.Anchors[:])
 	GlobalProfiler.StartCycles = intel.RDTSC()
 }
 
-func AnchorIndexForPC(pc uintptr) int32 {
-	return int32(int(pc) & (len(GlobalProfiler.Anchors) - 1))
-}
-
 //go:nosplit
-func Start(label string) Block {
+func Begin(label string) Block {
 	intel.LFENCE()
 	pc := *((*uintptr)(unsafe.Add(unsafe.Pointer(&label), -8)))
-	return start(pc, label)
+	return begin(pc, label)
 }
 
 //go:nosplit
-func start(pc uintptr, label string) Block {
+func begin(pc uintptr, label string) Block {
 	var b Block
 
-	index := AnchorIndexForPC(pc)
+	index := anchorIndexForPC(pc)
 	b.ParentIndex = GlobalProfiler.CurrentParent
 	GlobalProfiler.CurrentParent = index
 
@@ -78,16 +79,17 @@ func End(b Block) {
 	anchor.Label = b.Label
 }
 
-func CyclesToMsec(c intel.Cycles) float32 {
-	return 1000 * float32(c) / float32(intel.CpuHz)
+//go:nosplit
+func CyclesToMsec(c intel.Cycles) float64 {
+	return 1000 * float64(c) / float64(intel.CpuHz)
 }
 
 func PrintTimeElapsed(label string, totalElapsed, elapsedCyclesExclusive, elapsedCyclesInclusive intel.Cycles, hitCount int) {
-	percent := 100 * (float32(elapsedCyclesExclusive) / float32(totalElapsed))
+	percent := 100 * (float64(elapsedCyclesExclusive) / float64(totalElapsed))
 
-	fmt.Printf("[gofa/trace]: \t %s[%d]: flat: [%.4fms %.2f%%]", label, hitCount, CyclesToMsec(elapsedCyclesExclusive), percent)
+	fmt.Printf("[gofa/prof]: \t %s[%d]: flat: [%.4fms %.2f%%]", label, hitCount, CyclesToMsec(elapsedCyclesExclusive), percent)
 	if elapsedCyclesInclusive > elapsedCyclesExclusive {
-		percentWidthChildren := 100 * (float32(elapsedCyclesInclusive) / float32(totalElapsed))
+		percentWidthChildren := 100 * (float64(elapsedCyclesInclusive) / float64(totalElapsed))
 		fmt.Printf(", cum [%.4fms %.2f%%]", CyclesToMsec(elapsedCyclesInclusive), percentWidthChildren)
 	}
 	fmt.Printf("\n")
@@ -100,14 +102,33 @@ func EndAndPrintProfile() {
 	var totalCycles intel.Cycles
 	var totalHits int
 
-	fmt.Printf("[gofa/trace]: Total time: %.4fms\n", CyclesToMsec(totalElapsed))
+	fmt.Printf("[gofa/prof]: Total time: %.4fms\n", CyclesToMsec(totalElapsed))
 
-	/* NOTE(anton2920): sort by flat time in descending order. */
 	slices.SortFunc(GlobalProfiler.Anchors[1:], func(a, b Anchor) int {
-		if a.ElapsedCyclesExclusive > b.ElapsedCyclesExclusive {
-			return -1
+		if (a.ElapsedCyclesInclusive > 0) && (b.ElapsedCyclesInclusive > 0) {
+			if a.ElapsedCyclesInclusive < b.ElapsedCyclesInclusive {
+				return 1
+			} else {
+				return -1
+			}
+		} else if a.ElapsedCyclesInclusive > 0 {
+			if a.ElapsedCyclesInclusive < b.ElapsedCyclesExclusive {
+				return 1
+			} else {
+				return -1
+			}
+		} else if b.ElapsedCyclesInclusive > 0 {
+			if a.ElapsedCyclesExclusive < b.ElapsedCyclesInclusive {
+				return 1
+			} else {
+				return -1
+			}
 		} else {
-			return 1
+			if a.ElapsedCyclesExclusive < b.ElapsedCyclesExclusive {
+				return 1
+			} else {
+				return -1
+			}
 		}
 	})
 

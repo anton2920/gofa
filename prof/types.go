@@ -1,4 +1,4 @@
-package trace
+package prof
 
 import "github.com/anton2920/gofa/intel"
 

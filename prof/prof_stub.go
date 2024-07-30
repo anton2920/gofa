@@ -1,11 +1,11 @@
-//go:build !trace
+//go:build !gofaprof
 
-package trace
+package prof
 
 func BeginProfile() {
 }
 
-func Start(label string) Block {
+func Begin(label string) Block {
 	return Block{}
 }
 
