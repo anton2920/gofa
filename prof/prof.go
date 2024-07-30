@@ -109,7 +109,7 @@ func EndAndPrintProfile() {
 
 	fmt.Printf("[gofa/prof]: Total time: %.4fms\n", CyclesToMsec(totalElapsed))
 
-	slices.SortFunc(GlobalProfiler.Anchors[1:], func(a, b Anchor) int {
+	slices.SortFunc(GlobalProfiler.Anchors[:], func(a, b Anchor) int {
 		if (a.ElapsedCyclesInclusive > 0) && (b.ElapsedCyclesInclusive > 0) {
 			if a.ElapsedCyclesInclusive < b.ElapsedCyclesInclusive {
 				return 1
@@ -137,10 +137,10 @@ func EndAndPrintProfile() {
 		}
 	})
 
-	for i := 1; i < len(GlobalProfiler.Anchors); i++ {
+	for i := 0; i < len(GlobalProfiler.Anchors); i++ {
 		anchor := &GlobalProfiler.Anchors[i]
 
-		if anchor.ElapsedCyclesExclusive > 0 {
+		if anchor.HitCount > 0 {
 			label := anchor.Label
 			if len(label) == 0 {
 				label = runtime.FuncForPC(anchor.PC).Name()
