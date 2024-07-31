@@ -1,12 +1,39 @@
 package time
 
-import "github.com/anton2920/gofa/syscall"
+import (
+	"github.com/anton2920/gofa/intel"
+	"github.com/anton2920/gofa/syscall"
+)
 
 const (
 	MsecPerSec = 1000
 	UsecPerSec = MsecPerSec * 1000
 	NsecPerSec = UsecPerSec * 1000
 )
+
+func init() {
+	if intel.CPUHz == 0 {
+		const osHz = int64(1 * NsecPerSec)
+		const millisecondsToWait = 10
+
+		cpuStart := intel.RDTSC()
+		osStart := UnixNsec()
+
+		osEnd := UnixNsec()
+		osElapsed := int64(0)
+		osWaitTime := osHz * millisecondsToWait / MsecPerSec
+
+		for osElapsed < osWaitTime {
+			osEnd = UnixNsec()
+			osElapsed = osEnd - osStart
+		}
+
+		cpuEnd := intel.RDTSC()
+		cpuElapsed := int64(cpuEnd - cpuStart)
+		intel.CPUHz = intel.Cycles(cpuElapsed * osHz / osElapsed)
+		println("[gofa/time]:", "CPU Frequency", intel.CPUHz, "Hz")
+	}
+}
 
 func Unix() int {
 	var tp syscall.Timespec

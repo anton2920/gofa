@@ -100,14 +100,12 @@ func End(b Block) {
 	anchor.Label = b.Label
 }
 
-//go:nosplit
 func CyclesToNsec(c intel.Cycles) float64 {
-	return 1_000_000_000 * float64(c) / float64(intel.CpuHz)
+	return 1_000_000_000 * float64(c) / float64(intel.CPUHz)
 }
 
-//go:nosplit
 func CyclesToMsec(c intel.Cycles) float64 {
-	return 1000 * float64(c) / float64(intel.CpuHz)
+	return 1_000 * float64(c) / float64(intel.CPUHz)
 }
 
 func PrintTimeElapsed(label string, totalElapsed, elapsedCyclesExclusive, elapsedCyclesInclusive intel.Cycles, hitCount int) {

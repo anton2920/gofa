@@ -11,7 +11,7 @@ TEXT ·RawSyscall6(SB), NOSPLIT, $0-80
 	MOVQ	a5+40(FP), R8
 	MOVQ	a6+48(FP), R9
 	SYSCALL
-	JCC RawSyscall6OK
+	JCC	RawSyscall6OK
 	MOVQ	$-1, r1+56(FP)
 	MOVQ	$0, r2+64(FP)
 	MOVQ	AX, errno+72(FP)
@@ -29,7 +29,7 @@ TEXT ·RawSyscall(SB), NOSPLIT, $0-56
 	MOVQ	a2+16(FP), SI
 	MOVQ	a3+24(FP), DX
 	SYSCALL
-	JCC RawSyscallOK
+	JCC	RawSyscallOK
 	MOVQ	$-1, r1+32(FP)
 	MOVQ	$0, r2+40(FP)
 	MOVQ	AX, errno+48(FP)
