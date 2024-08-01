@@ -1,6 +1,10 @@
 package intel
 
-import "unsafe"
+import (
+	"unsafe"
+
+	"github.com/anton2920/gofa/debug"
+)
 
 var (
 	HighestBasicFunction    uint32
@@ -11,7 +15,7 @@ var (
 	Stepping      int
 	Model         int /* NOTE(anton2920): this contains both Model and ExtendedModel fields. */
 	Family        int /* NOTE(anton2920): this contains both Family and ExtendedFamily fields. */
-	ProcessorType int /* NOTE(anton2920): 00 - , 01 - , 10 - , 11 - */
+	ProcessorType int /* NOTE(anton2920): 00 - Original OEM Processor, 01 - Intel OverDrive® Processor, 10 - Dual processor. */
 
 	BrandIndex  int
 	BrandString string
@@ -43,7 +47,7 @@ func init() {
 			Model += (int((info>>16)&0xF) << 4)
 		}
 		ProcessorType = int((info >> 12) & 0x3)
-		println("[gofa/intel]:", VendorString, "Family", Family, "Model", Model, "Stepping", Stepping, "Type", ProcessorType)
+		debug.Printf("[gofa/intel]: %s Family %X Model %X Stepping %X Type %b", VendorString, Family, Model, Stepping, ProcessorType)
 
 		BrandIndex = int(index & 0xFF)
 	}
@@ -63,7 +67,7 @@ func init() {
 			}
 			BrandString = string(unsafe.Slice((*byte)(unsafe.Pointer(&brand[0])), len(brand)*int(unsafe.Sizeof(brand[0]))))
 		}
-		println("[gofa/intel]:", BrandString)
+		debug.Printf("[gofa/intel]: %s", BrandString)
 	}
 
 	{
@@ -81,6 +85,8 @@ func init() {
 				CPUHz = (Cycles(19_200_000) * Cycles(numerator)) / Cycles(denominator)
 			}
 		}
-		println("[gofa/intel]:", "CPU Frequency", CPUHz, "Hz")
+		if CPUHz != 0 {
+			debug.Printf("[gofa/intel]: CPU Frequency %dHz", CPUHz)
+		}
 	}
 }

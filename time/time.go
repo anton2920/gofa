@@ -1,6 +1,7 @@
 package time
 
 import (
+	"github.com/anton2920/gofa/debug"
 	"github.com/anton2920/gofa/intel"
 	"github.com/anton2920/gofa/syscall"
 )
@@ -31,7 +32,7 @@ func init() {
 		cpuEnd := intel.RDTSC()
 		cpuElapsed := int64(cpuEnd - cpuStart)
 		intel.CPUHz = intel.Cycles(cpuElapsed * osHz / osElapsed)
-		println("[gofa/time]:", "CPU Frequency", intel.CPUHz, "Hz")
+		debug.Printf("[gofa/time]: CPU Frequency %dHz", intel.CPUHz)
 	}
 }
 
