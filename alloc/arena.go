@@ -1,4 +1,4 @@
-package arena
+package alloc
 
 type Arena struct {
 	Buffer []byte
