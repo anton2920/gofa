@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"unsafe"
 
-	"github.com/anton2920/gofa/arena"
+	"github.com/anton2920/gofa/alloc"
 	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/prof"
@@ -12,7 +12,7 @@ import (
 )
 
 type Values struct {
-	Arena arena.Arena
+	Arena alloc.Arena
 
 	Keys   []string
 	Values [][]string

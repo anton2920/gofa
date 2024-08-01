@@ -9,25 +9,25 @@ import (
 	"github.com/anton2920/gofa/syscall"
 )
 
-func Accept(l int32, bufferSize int) (*Context, error) {
+func Accept(l int32, ctx *Context, bufferSize int) error {
 	var addr syscall.SockAddrIn
 	var addrLen uint32 = uint32(unsafe.Sizeof(addr))
 
 	c, err := syscall.Accept(l, (*syscall.Sockaddr)(unsafe.Pointer(&addr)), &addrLen)
 	if err != nil {
-		return nil, fmt.Errorf("failed to accept incoming connection: %w", err)
+		return fmt.Errorf("failed to accept incoming connection: %w", err)
 	}
 
-	ctx, err := NewContext(c, addr, bufferSize)
+	rb, err := buffer.NewCircular(bufferSize)
 	if err != nil {
 		syscall.Close(c)
-		return nil, fmt.Errorf("failed to create new  context: %w", err)
+		return fmt.Errorf("failed to create new request buffer: %w", err)
 	}
 
-	return ctx, nil
+	InitContext(ctx, c, addr, rb)
+	return nil
 }
 
-//go:nosplit
 func Read(ctx *Context) (int, error) {
 	p := prof.Begin("")
 
@@ -49,7 +49,6 @@ func Read(ctx *Context) (int, error) {
 	return n, nil
 }
 
-//go:nosplit
 func Write(ctx *Context) (int, error) {
 	p := prof.Begin("")
 
@@ -75,14 +74,13 @@ func Write(ctx *Context) (int, error) {
 	return written, nil
 }
 
-//go:nosplit
 func Close(ctx *Context) error {
-	ctx.Reset()
+	ctx.Check = 1 - ctx.Check
+	ctx.CloseAfterWrite = false
 	buffer.FreeCircular(ctx.RequestBuffer)
 	return syscall.Close(ctx.Connection)
 }
 
-//go:nosplit
 func CloseAfterWrite(ctx *Context) {
 	ctx.CloseAfterWrite = true
 }

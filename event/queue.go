@@ -1,7 +1,6 @@
 package event
 
 import (
-	"runtime"
 	"unsafe"
 
 	"github.com/anton2920/gofa/intel"
@@ -13,7 +12,6 @@ import (
 type Queue struct {
 	platformEventQueue
 
-	Pinner   runtime.Pinner
 	LastSync intel.Cycles
 }
 
@@ -40,7 +38,6 @@ func NewQueue() (*Queue, error) {
 }
 
 func (q *Queue) AddHTTP(ctx *http.Context, request Request, trigger Trigger) error {
-	q.Pinner.Pin(ctx)
 	return platformQueueAddSocket(q, ctx.Connection, request, trigger, ctx.Pointer())
 }
 
@@ -66,7 +63,6 @@ func (q *Queue) AppendEvent(event Event) {
 }
 
 func (q *Queue) Close() error {
-	q.Pinner.Unpin()
 	return platformQueueClose(q)
 }
 

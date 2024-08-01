@@ -9,7 +9,7 @@ import (
 )
 
 type Context struct {
-	/* Check must be the same as the last pointer's bit, if context is in use. */
+	/* NOTE(anton2920): Check must be the same as the last pointer's bit, if context is in use. */
 	Check int32
 
 	Connection    int32
@@ -25,13 +25,7 @@ type Context struct {
 }
 
 //go:norace
-func NewContext(c int32, addr syscall.SockAddrIn, bufferSize int) (*Context, error) {
-	rb, err := buffer.NewCircular(bufferSize)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := new(Context)
+func InitContext(ctx *Context, c int32, addr syscall.SockAddrIn, rb *buffer.Circular) {
 	ctx.Connection = c
 	ctx.RequestBuffer = rb
 	ctx.ResponseBuffer = make([]byte, 0, 1024*1024)
@@ -39,11 +33,8 @@ func NewContext(c int32, addr syscall.SockAddrIn, bufferSize int) (*Context, err
 	buffer := make([]byte, 21)
 	n := tcp.PutAddress(buffer, addr.Addr, addr.Port)
 	ctx.ClientAddress = string(buffer[:n])
-
-	return ctx, nil
 }
 
-/* TODO(anton2920): maybe also test for some magic? */
 func GetContextFromPointer(ptr unsafe.Pointer) (*Context, bool) {
 	if ptr == nil {
 		return nil, false
@@ -59,13 +50,4 @@ func GetContextFromPointer(ptr unsafe.Pointer) (*Context, bool) {
 //go:norace
 func (ctx *Context) Pointer() unsafe.Pointer {
 	return unsafe.Pointer(uintptr(unsafe.Pointer(ctx)) | uintptr(ctx.Check))
-}
-
-/* TODO(anton2920): maybe remove this altogether? */
-func (ctx *Context) Reset() {
-	ctx.Check = 1 - ctx.Check
-	ctx.CloseAfterWrite = false
-	ctx.RequestBuffer.Reset()
-	ctx.ResponsePos = 0
-	ctx.ResponseBuffer = ctx.ResponseBuffer[:0]
 }

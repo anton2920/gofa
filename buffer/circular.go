@@ -92,4 +92,5 @@ func (c *Circular) UnconsumedString() string {
 
 func FreeCircular(c *Circular) {
 	syscall.Munmap(unsafe.Pointer(unsafe.SliceData(c.Buf)), uint64(len(c.Buf)))
+	c.Buf = nil
 }

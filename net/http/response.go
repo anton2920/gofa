@@ -3,7 +3,7 @@ package http
 import (
 	"unsafe"
 
-	"github.com/anton2920/gofa/arena"
+	"github.com/anton2920/gofa/alloc"
 	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/net/html"
 	"github.com/anton2920/gofa/prof"
@@ -12,7 +12,7 @@ import (
 )
 
 type Response struct {
-	Arena arena.Arena
+	Arena alloc.Arena
 
 	StatusCode Status
 	Headers    Headers
