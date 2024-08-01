@@ -22,6 +22,7 @@ var StatusLines = [...]string{
 	http.StatusConflict:              "HTTP/1.1 409 Conflict\r\n",
 	http.StatusRequestEntityTooLarge: "HTTP/1.1 413 Request Entity Too Large\r\n",
 	http.StatusInternalServerError:   "HTTP/1.1 500 Internal Server Error\r\n",
+	http.StatusServiceUnavailable:    "HTTP/1.1 503 Service Unavailable\r\n",
 }
 
 func FillError(ctx *http.Context, err error, dateBuf []byte) {

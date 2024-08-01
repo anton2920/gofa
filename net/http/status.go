@@ -14,6 +14,7 @@ const (
 	StatusConflict                     = 409
 	StatusRequestEntityTooLarge        = 413
 	StatusInternalServerError          = 500
+	StatusServiceUnavailable           = 503
 )
 
 var Status2String = [...]string{
@@ -29,6 +30,7 @@ var Status2String = [...]string{
 	StatusConflict:              "409",
 	StatusRequestEntityTooLarge: "413",
 	StatusInternalServerError:   "500",
+	StatusServiceUnavailable:    "503",
 }
 
 var Status2Reason = [...]string{
@@ -44,6 +46,7 @@ var Status2Reason = [...]string{
 	StatusConflict:              "Conflict",
 	StatusRequestEntityTooLarge: "Request Entity Too Large",
 	StatusInternalServerError:   "Internal Server Error",
+	StatusServiceUnavailable:    "Service Unavailable",
 }
 
 func (s Status) String() string {
