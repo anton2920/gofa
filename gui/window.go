@@ -2,6 +2,7 @@ package gui
 
 import (
 	"github.com/anton2920/gofa/intel"
+	"github.com/anton2920/gofa/prof"
 	"github.com/anton2920/gofa/time"
 )
 
@@ -54,36 +55,64 @@ func (w *Window) SetTitle(title string) {
 }
 
 func (w *Window) HasEvents() bool {
-	return platformWindowHasEvents(w)
+	p := prof.Begin("")
+
+	has := platformWindowHasEvents(w)
+
+	prof.End(p)
+	return has
 }
 
 func (w *Window) GetEvents(events []Event) (int, error) {
-	return platformWindowGetEvents(w, events)
+	p := prof.Begin("")
+
+	n, err := platformWindowGetEvents(w, events)
+
+	prof.End(p)
+	return n, err
 }
 
 func (w *Window) Invalidate() {
+	p := prof.Begin("")
+
 	platformWindowInvalidate(w)
+
+	prof.End(p)
 }
 
 func (w *Window) DisplayPixels(pixels []uint32, width, height int) {
+	p := prof.Begin("")
+
 	platformWindowDisplayPixels(w, pixels, width, height)
+
+	prof.End(p)
 }
 
 func (w *Window) ShowCursor() {
+	p := prof.Begin("")
+
 	if !w.CursorVisible {
 		platformWindowEnableCursor(w)
 		w.CursorVisible = true
 	}
+
+	prof.End(p)
 }
 
 func (w *Window) HideCursor() {
+	p := prof.Begin("")
+
 	if w.CursorVisible {
 		platformWindowDisableCursor(w)
 		w.CursorVisible = false
 	}
+
+	prof.End(p)
 }
 
 func (w *Window) SyncFPS(fps int) {
+	p := prof.Begin("")
+
 	now := intel.RDTSC()
 	durationBetweenPauses := now - w.LastSync
 	targetRate := int64(time.MsecPerSec / float64(fps) * (time.NsecPerSec / time.MsecPerSec))
@@ -95,6 +124,8 @@ func (w *Window) SyncFPS(fps int) {
 	}
 	// println(int(time.MsecPerSec/float64(durationBetweenPauses.ToMsec())), "FPS")
 	w.LastSync = now
+
+	prof.End(p)
 }
 
 func (w *Window) Close() {
