@@ -90,13 +90,8 @@ func (r *Request) ParseForm() error {
 	return err
 }
 
-//go:nosplit
 func (r *Request) Reset() {
-	p := prof.Begin("")
-
 	r.Headers.Reset()
 	r.Body = r.Body[:0]
 	r.Form.Reset()
-
-	prof.End(p)
 }

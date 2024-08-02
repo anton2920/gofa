@@ -43,7 +43,6 @@ func (vs *Values) Add(key string, value string) {
 	prof.End(p)
 }
 
-//go:nosplit
 func (vs *Values) Get(key string) string {
 	p := prof.Begin("")
 
@@ -58,7 +57,6 @@ func (vs *Values) Get(key string) string {
 	return ""
 }
 
-//go:nosplit
 func (vs Values) GetInt(key string) (int, error) {
 	p := prof.Begin("")
 
@@ -68,7 +66,6 @@ func (vs Values) GetInt(key string) (int, error) {
 	return n, err
 }
 
-//go:nosplit
 func (vs Values) GetID(key string) (database.ID, error) {
 	p := prof.Begin("")
 
@@ -86,7 +83,6 @@ func (vs Values) GetID(key string) (database.ID, error) {
 	return database.ID(id), nil
 }
 
-//go:nosplit
 func (vs *Values) GetMany(key string) []string {
 	p := prof.Begin("")
 
@@ -101,7 +97,6 @@ func (vs *Values) GetMany(key string) []string {
 	return nil
 }
 
-//go:nosplit
 func (vs *Values) Has(key string) bool {
 	p := prof.Begin("")
 
@@ -116,18 +111,12 @@ func (vs *Values) Has(key string) bool {
 	return false
 }
 
-//go:nosplit
 func (vs *Values) Reset() {
-	p := prof.Begin("")
-
 	vs.Keys = vs.Keys[:0]
 	vs.Values = vs.Values[:0]
 	vs.Arena.Reset()
-
-	prof.End(p)
 }
 
-//go:nosplit
 func (vs *Values) Set(key string, value string) {
 	p := prof.Begin("")
 
@@ -154,7 +143,6 @@ func (vs *Values) Set(key string, value string) {
 	prof.End(p)
 }
 
-//go:nosplit
 func (vs *Values) SetInt(key string, value int) {
 	p := prof.Begin("")
 

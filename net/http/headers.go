@@ -7,7 +7,6 @@ type Headers struct {
 	Values [][]string
 }
 
-//go:nosplit
 func (hs *Headers) Add(key string, value string) {
 	p := prof.Begin("")
 
@@ -33,7 +32,6 @@ func (hs *Headers) Add(key string, value string) {
 	prof.End(p)
 }
 
-//go:nosplit
 func (hs *Headers) Get(key string) string {
 	p := prof.Begin("")
 
@@ -48,7 +46,6 @@ func (hs *Headers) Get(key string) string {
 	return ""
 }
 
-//go:nosplit
 func (hs *Headers) GetMany(key string) []string {
 	p := prof.Begin("")
 
@@ -63,7 +60,6 @@ func (hs *Headers) GetMany(key string) []string {
 	return nil
 }
 
-//go:nosplit
 func (hs *Headers) Has(key string) bool {
 	p := prof.Begin("")
 
@@ -78,17 +74,11 @@ func (hs *Headers) Has(key string) bool {
 	return false
 }
 
-//go:nosplit
 func (hs *Headers) Reset() {
-	p := prof.Begin("")
-
 	hs.Keys = hs.Keys[:0]
 	hs.Values = hs.Values[:0]
-
-	prof.End(p)
 }
 
-//go:nosplit
 func (hs *Headers) Set(key string, value string) {
 	p := prof.Begin("")
 
