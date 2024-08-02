@@ -10,6 +10,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/intel"
+	"github.com/anton2920/gofa/util"
 )
 
 type Anchor struct {
@@ -44,10 +45,10 @@ type Profiler struct {
 var GlobalProfiler Profiler
 
 func anchorIndexForPC(pc uintptr) int32 {
-	return int32(int(pc) & (len(GlobalProfiler.Anchors) - 1))
+	idx := int32(int(pc) & (len(GlobalProfiler.Anchors) - 1))
+	return idx + int32(util.Bool2Int(idx == 0))
 }
 
-//go:nosplit
 func BeginProfile() {
 	clear(GlobalProfiler.Anchors[:])
 	GlobalProfiler.CurrentParent = 0
@@ -57,8 +58,7 @@ func BeginProfile() {
 //go:nosplit
 func Begin(label string) Block {
 	intel.LFENCE()
-	pc := *((*uintptr)(unsafe.Add(unsafe.Pointer(&label), -8)))
-	return begin(pc, label)
+	return begin(util.GetCallerPC(unsafe.Pointer(&label)), label)
 }
 
 //go:nosplit
