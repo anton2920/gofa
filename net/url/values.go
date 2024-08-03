@@ -9,13 +9,59 @@ import (
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/prof"
 	"github.com/anton2920/gofa/slices"
+	"github.com/anton2920/gofa/strings"
 )
 
 type Values struct {
-	Arena alloc.Arena
+	KeysArena   alloc.Arena
+	ValuesArena alloc.Arena
 
 	Keys   []string
 	Values [][]string
+}
+
+func ParseQuery(vs *Values, query string) error {
+	p := prof.Begin("")
+
+	var err error
+
+	for query != "" {
+		var key string
+		key, query, _ = strings.Cut(query, "&")
+		if strings.FindChar(key, ';') != -1 {
+			err = errors.New("invalid semicolon separator in query")
+			continue
+		}
+		if key == "" {
+			continue
+		}
+		key, value, _ := strings.Cut(key, "=")
+
+		keyBuffer := vs.KeysArena.NewSlice(len(key))
+		n, ok := QueryDecode(keyBuffer, key)
+		if !ok {
+			if err == nil {
+				err = errors.New("invalid key")
+			}
+			continue
+		}
+		key = unsafe.String(unsafe.SliceData(keyBuffer), n)
+
+		valueBuffer := vs.ValuesArena.NewSlice(len(value))
+		n, ok = QueryDecode(valueBuffer, value)
+		if !ok {
+			if err == nil {
+				err = errors.New("invalid value")
+			}
+			continue
+		}
+		value = unsafe.String(unsafe.SliceData(valueBuffer), n)
+
+		vs.Add(key, value)
+	}
+
+	prof.End(p)
+	return err
 }
 
 func (vs *Values) Add(key string, value string) {
@@ -24,6 +70,7 @@ func (vs *Values) Add(key string, value string) {
 	for i := 0; i < len(vs.Keys); i++ {
 		if key == vs.Keys[i] {
 			vs.Values[i] = append(vs.Values[i], value)
+
 			prof.End(p)
 			return
 		}
@@ -32,6 +79,7 @@ func (vs *Values) Add(key string, value string) {
 
 	if len(vs.Values) == cap(vs.Values) {
 		vs.Values = append(vs.Values, []string{value})
+
 		prof.End(p)
 		return
 	}
@@ -113,8 +161,9 @@ func (vs *Values) Has(key string) bool {
 
 func (vs *Values) Reset() {
 	vs.Keys = vs.Keys[:0]
+	vs.KeysArena.Reset()
 	vs.Values = vs.Values[:0]
-	vs.Arena.Reset()
+	vs.ValuesArena.Reset()
 }
 
 func (vs *Values) Set(key string, value string) {
@@ -124,6 +173,7 @@ func (vs *Values) Set(key string, value string) {
 		if key == vs.Keys[i] {
 			vs.Values[i] = vs.Values[i][:0]
 			vs.Values[i] = append(vs.Values[i], value)
+
 			prof.End(p)
 			return
 		}
@@ -132,6 +182,7 @@ func (vs *Values) Set(key string, value string) {
 
 	if len(vs.Values) == cap(vs.Values) {
 		vs.Values = append(vs.Values, []string{value})
+
 		prof.End(p)
 		return
 	}
@@ -146,7 +197,7 @@ func (vs *Values) Set(key string, value string) {
 func (vs *Values) SetInt(key string, value int) {
 	p := prof.Begin("")
 
-	buffer := vs.Arena.NewSlice(20)
+	buffer := vs.ValuesArena.NewSlice(20)
 	n := slices.PutInt(buffer, value)
 	vs.Set(key, unsafe.String(&buffer[0], n))
 
