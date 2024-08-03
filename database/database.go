@@ -155,6 +155,11 @@ func SetNextID(db *DB, id ID) error {
 	return nil
 }
 
+func GetOffsetForID[T any](id ID) int64 {
+	var t T
+	return int64(int(id)*int(unsafe.Sizeof(t))) + DataOffset
+}
+
 func Read[T any](db *DB, id ID, t *T) error {
 	size := int(unsafe.Sizeof(*t))
 	offset := int64(int(id)*size) + DataOffset
