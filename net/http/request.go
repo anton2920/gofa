@@ -55,6 +55,7 @@ func (r *Request) ParseForm() error {
 }
 
 func (r *Request) Reset() {
+	r.URL.Query.Reset()
 	r.Headers.Reset()
 	r.Body = r.Body[:0]
 	r.Form.Reset()

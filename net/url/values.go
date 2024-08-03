@@ -13,8 +13,7 @@ import (
 )
 
 type Values struct {
-	KeysArena   alloc.Arena
-	ValuesArena alloc.Arena
+	Arena alloc.Arena
 
 	Keys   []string
 	Values [][]string
@@ -37,7 +36,7 @@ func ParseQuery(vs *Values, query string) error {
 		}
 		key, value, _ := strings.Cut(key, "=")
 
-		keyBuffer := vs.KeysArena.NewSlice(len(key))
+		keyBuffer := vs.Arena.NewSlice(len(key))
 		n, ok := QueryDecode(keyBuffer, key)
 		if !ok {
 			if err == nil {
@@ -47,7 +46,7 @@ func ParseQuery(vs *Values, query string) error {
 		}
 		key = unsafe.String(unsafe.SliceData(keyBuffer), n)
 
-		valueBuffer := vs.ValuesArena.NewSlice(len(value))
+		valueBuffer := vs.Arena.NewSlice(len(value))
 		n, ok = QueryDecode(valueBuffer, value)
 		if !ok {
 			if err == nil {
@@ -161,9 +160,8 @@ func (vs *Values) Has(key string) bool {
 
 func (vs *Values) Reset() {
 	vs.Keys = vs.Keys[:0]
-	vs.KeysArena.Reset()
 	vs.Values = vs.Values[:0]
-	vs.ValuesArena.Reset()
+	vs.Arena.Reset()
 }
 
 func (vs *Values) Set(key string, value string) {
@@ -197,7 +195,7 @@ func (vs *Values) Set(key string, value string) {
 func (vs *Values) SetInt(key string, value int) {
 	p := prof.Begin("")
 
-	buffer := vs.ValuesArena.NewSlice(20)
+	buffer := vs.Arena.NewSlice(20)
 	n := slices.PutInt(buffer, value)
 	vs.Set(key, unsafe.String(&buffer[0], n))
 

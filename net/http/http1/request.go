@@ -45,13 +45,15 @@ func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remo
 		queryBegin := strings.FindChar(request[pos:pos+uriEnd], '?')
 		if queryBegin != -1 {
 			r.URL.Path = request[pos : pos+queryBegin]
-			r.URL.Query = request[pos+queryBegin+1 : pos+uriEnd]
+			r.URL.RawQuery = request[pos+queryBegin+1 : pos+uriEnd]
+			pos += len(r.URL.Path) + len(r.URL.RawQuery) + 2
+			lineEnd -= len(r.URL.Path) + len(r.URL.RawQuery) + 2
 		} else {
 			r.URL.Path = request[pos : pos+uriEnd]
-			r.URL.Query = ""
+			r.URL.RawQuery = ""
+			pos += len(r.URL.Path) + 1
+			lineEnd -= len(r.URL.Path) + 1
 		}
-		pos += len(r.URL.Path) + len(r.URL.Query) + 1
-		lineEnd -= len(r.URL.Path) + len(r.URL.Query) + 1
 
 		if request[pos:pos+len("HTTP/")] != "HTTP/" {
 			prof.End(p)
