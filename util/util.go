@@ -9,6 +9,17 @@ func Bool2Int(b bool) int {
 	return 0
 }
 
+/* Clamp returns number clamped into a range from l inclusive to r exclusive. */
+func Clamp(x int, l int, r int) int {
+	if x > r-1 {
+		x = r - 1
+	}
+	if x < l {
+		x = l
+	}
+	return x
+}
+
 /* GetCallerPC returns a value of %IP register that is going to be used by RET instruction. arg0 is the address of the first agrument function of interest accepts. */
 func GetCallerPC(arg0 unsafe.Pointer) uintptr {
 	return *((*uintptr)(unsafe.Add(arg0, -8)))
