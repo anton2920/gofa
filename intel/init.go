@@ -74,7 +74,7 @@ func init() {
 		denominator, numerator, coreHz, _ := CPUID(0x15, 0)
 		if (numerator != 0) && (coreHz != 0) {
 			CPUHz = (Cycles(coreHz) * Cycles(numerator)) / Cycles(denominator)
-		} else if coreHz == 0 {
+		} else if (denominator != 0) && (coreHz == 0) {
 			signature := (Family << 8) | (Model)
 			switch signature {
 			case 0x0655: /* Intel® Xeon® Scalable Processor Family. */
