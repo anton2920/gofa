@@ -21,6 +21,28 @@ type Sigaction_t struct {
 	Mask    Sigset
 }
 
+type Sigval unsafe.Pointer
+
+type Sigevent struct {
+	Notify     int32  /* Notification type */
+	Kqueue     int32  /* Signal number */
+	SigevValue Sigval /* Signal value */
+
+	/* NOTE(anton2920): sizeof _sigev_un == 8 * sizeof uintptr_t. */
+	KeventFlags uint16
+	_           [6]byte
+	_           [7]uintptr
+}
+
+const (
+	/* From <sys/signal.h>. */
+	SIGEV_NONE      = 0 /* No async notification. */
+	SIGEV_SIGNAL    = 1 /* Generate a queued signal. */
+	SIGEV_THREAD    = 2 /* Call back from another pthread. */
+	SIGEV_KEVENT    = 3 /* Generate a kevent. */
+	SIGEV_THREAD_ID = 4 /* Send signal to a kernel thread. */
+)
+
 const (
 	/* From <sys/signal.h>. */
 	SIGHUP    = Signal(1)  /*  hangup  */

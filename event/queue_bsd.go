@@ -22,6 +22,7 @@ type Type int16
 const (
 	Read   = syscall.EVFILT_READ
 	Write  = syscall.EVFILT_WRITE
+	Aio    = syscall.EVFILT_AIO
 	Signal = syscall.EVFILT_SIGNAL
 	Timer  = syscall.EVFILT_TIMER
 )

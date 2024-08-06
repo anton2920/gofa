@@ -57,7 +57,7 @@ func Read(ctx *Context) (int, error) {
 		trace.End(t)
 		return 0, err
 	}
-	rBuf.Produce(int(n))
+	rBuf.Produce(n)
 
 	trace.End(t)
 	return n, nil
@@ -73,7 +73,7 @@ func Write(ctx *Context) (int, error) {
 			trace.End(t)
 			return 0, err
 		}
-		ctx.ResponsePos += int(n)
+		ctx.ResponsePos += n
 
 		if ctx.ResponsePos == len(ctx.ResponseBuffer) {
 			ctx.ResponseBuffer = ctx.ResponseBuffer[:0]

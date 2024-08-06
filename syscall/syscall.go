@@ -1,13 +1,17 @@
 package syscall
 
-import (
-	"unsafe"
-)
+import "unsafe"
 
 const (
-	/* See <sys/syscall.h>. */
+	/* From <sys/syscall.h>. */
 	SYS_accept           = 30
 	SYS_access           = 33
+	SYS_aio_cancel       = 316
+	SYS_aio_error        = 317
+	SYS_aio_read         = 255
+	SYS_aio_return       = 314
+	SYS_aio_suspend      = 315
+	SYS_aio_write        = 256
 	SYS_bind             = 104
 	SYS_clock_gettime    = 232
 	SYS_close            = 6
@@ -77,11 +81,26 @@ func Accept(s int32, addr *Sockaddr, addrlen *uint32) (int32, error) {
 }
 
 func Access(path string, mode int32) error {
-	buffer := make([]byte, PATH_MAX)
+	buffer := make([]byte, PATH_MAX+1)
 	n := copy(buffer, path)
 
 	_, _, errno := RawSyscall(SYS_access, uintptr(unsafe.Pointer(unsafe.SliceData(buffer[:n+1]))), uintptr(mode), 0)
 	return NewError("access", errno)
+}
+
+func AioRead(aiocb *Aiocb) error {
+	_, _, errno := RawSyscall(SYS_aio_read, uintptr(unsafe.Pointer(aiocb)), 0, 0)
+	return NewError("aio_read", errno)
+}
+
+func AioReturn(aiocb *Aiocb) (int, error) {
+	r1, _, errno := RawSyscall(SYS_aio_return, uintptr(unsafe.Pointer(aiocb)), 0, 0)
+	return int(r1), NewError("aio_return", errno)
+}
+
+func AioWrite(aiocb *Aiocb) error {
+	_, _, errno := RawSyscall(SYS_aio_write, uintptr(unsafe.Pointer(aiocb)), 0, 0)
+	return NewError("aio_write", errno)
 }
 
 func Bind(s int32, addr *Sockaddr, addrlen uint32) error {
@@ -159,7 +178,7 @@ func Lseek(fd int32, offset int64, whence int32) (int64, error) {
 }
 
 func Mkdir(path string, mode int16) error {
-	buffer := make([]byte, PATH_MAX)
+	buffer := make([]byte, PATH_MAX+1)
 	n := copy(buffer, path)
 
 	_, _, errno := RawSyscall(SYS_mkdir, uintptr(unsafe.Pointer(unsafe.SliceData(buffer[:n+1]))), uintptr(mode), 0)
@@ -187,7 +206,7 @@ func Nmount(iovs []Iovec, flags int32) error {
 }
 
 func Open(path string, flags int32, mode uint16) (int32, error) {
-	buffer := make([]byte, PATH_MAX)
+	buffer := make([]byte, PATH_MAX+1)
 	n := copy(buffer, path)
 
 	r1, _, errno := Syscall(SYS_open, uintptr(unsafe.Pointer(unsafe.SliceData(buffer[:n+1]))), uintptr(flags), uintptr(mode))
@@ -220,7 +239,7 @@ func Read(fd int32, buf []byte) (int, error) {
 }
 
 func Rmdir(path string) error {
-	buffer := make([]byte, PATH_MAX)
+	buffer := make([]byte, PATH_MAX+1)
 	n := copy(buffer, path)
 
 	_, _, errno := RawSyscall(SYS_rmdir, uintptr(unsafe.Pointer(unsafe.SliceData(buffer[:n+1]))), 0, 0)
@@ -253,7 +272,7 @@ func Socket(domain, typ, protocol int32) (int32, error) {
 }
 
 func Stat(path string, sb *Stat_t) error {
-	buffer := make([]byte, PATH_MAX)
+	buffer := make([]byte, PATH_MAX+1)
 	n := copy(buffer, path)
 
 	_, _, errno := RawSyscall(SYS_stat, uintptr(unsafe.Pointer(unsafe.SliceData(buffer[:n+1]))), uintptr(unsafe.Pointer(sb)), 0)
@@ -261,7 +280,7 @@ func Stat(path string, sb *Stat_t) error {
 }
 
 func Unlink(path string) error {
-	buffer := make([]byte, PATH_MAX)
+	buffer := make([]byte, PATH_MAX+1)
 	n := copy(buffer, path)
 
 	_, _, errno := RawSyscall(SYS_unlink, uintptr(unsafe.Pointer(unsafe.SliceData(buffer[:n+1]))), 0, 0)
@@ -269,7 +288,7 @@ func Unlink(path string) error {
 }
 
 func Unmount(path string, flags int32) error {
-	buffer := make([]byte, PATH_MAX)
+	buffer := make([]byte, PATH_MAX+1)
 	n := copy(buffer, path)
 
 	_, _, errno := RawSyscall(SYS_unmount, uintptr(unsafe.Pointer(unsafe.SliceData(buffer[:n+1]))), uintptr(flags), 0)
