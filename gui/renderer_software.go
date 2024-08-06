@@ -5,7 +5,7 @@ import (
 
 	"github.com/anton2920/gofa/gui/color"
 	"github.com/anton2920/gofa/gui/gr"
-	"github.com/anton2920/gofa/prof"
+	"github.com/anton2920/gofa/trace"
 	"github.com/anton2920/gofa/util"
 )
 
@@ -27,23 +27,23 @@ func NewSoftwareRenderer(window *Window) *SoftwareRenderer {
 }
 
 func (r *SoftwareRenderer) Clear(clr color.Color) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	util.Memset(r.Pixmap.Pixels, clr)
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (r *SoftwareRenderer) Present() {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	r.Window.DisplayPixels(unsafe.Slice((*uint32)(unsafe.Pointer(unsafe.SliceData(r.Pixmap.Pixels))), len(r.Pixmap.Pixels)), r.Pixmap.Width, r.Pixmap.Height)
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (r *SoftwareRenderer) Resize(width int, height int) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	if (width > r.Pixmap.Width) || (height > r.Pixmap.Height) {
 		r.Pixmap = gr.NewPixmap(width, height, gr.AlphaOpaque)
@@ -55,11 +55,11 @@ func (r *SoftwareRenderer) Resize(width int, height int) {
 	}
 	r.Active = Rect{0, 0, r.Pixmap.Width, r.Pixmap.Height}
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (r *SoftwareRenderer) RenderPoint(x, y, size int, clr color.Color) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	if size <= 1 {
 		gr.DrawPoint(r.Pixmap, r.Active, x, y, clr)
@@ -67,69 +67,69 @@ func (r *SoftwareRenderer) RenderPoint(x, y, size int, clr color.Color) {
 		gr.DrawRectSolid(r.Pixmap, r.Active, x-size, y-size, x+size, y+size, clr)
 	}
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (r *SoftwareRenderer) RenderLine(x0, y0, x1, y1 int, clr color.Color) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	gr.DrawLine(r.Pixmap, r.Active, x0, y0, x1, y1, clr)
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (r *SoftwareRenderer) RenderRect(x0, y0, x1, y1 int, clr color.Color) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	gr.DrawRectOutline(r.Pixmap, r.Active, x0, y0, x1, y1, clr)
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (r *SoftwareRenderer) RenderRectWH(x, y, width, height int, clr color.Color) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	gr.DrawRectOutlineWH(r.Pixmap, r.Active, x, y, width, height, clr)
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (r *SoftwareRenderer) RenderSolidRect(x0, y0, x1, y1 int, clr color.Color) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	gr.DrawRectSolid(r.Pixmap, r.Active, x0, y0, x1, y1, clr)
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (r *SoftwareRenderer) RenderSolidRectWH(x, y, width, height int, clr color.Color) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	gr.DrawRectSolidWH(r.Pixmap, r.Active, x, y, width, height, clr)
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (r *SoftwareRenderer) RenderCircle(x0, y0, radius int, clr color.Color) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	gr.DrawCircle(r.Pixmap, r.Active, x0, y0, radius, clr)
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (r *SoftwareRenderer) RenderText(text string, font Font, x, y int, clr color.Color) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	gr.DrawText(r.Pixmap, r.Active, text, font, x, y, clr)
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (r *SoftwareRenderer) RenderPixmap(pixmap gr.Pixmap, x, y int) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	gr.DrawPixmap(r.Pixmap, r.Active, x, y, pixmap)
 
-	prof.End(p)
+	trace.End(t)
 }

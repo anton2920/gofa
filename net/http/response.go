@@ -6,9 +6,9 @@ import (
 	"github.com/anton2920/gofa/alloc"
 	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/net/html"
-	"github.com/anton2920/gofa/prof"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/time"
+	"github.com/anton2920/gofa/trace"
 )
 
 type Response struct {
@@ -20,7 +20,7 @@ type Response struct {
 }
 
 func (w *Response) DelCookie(name string) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	const finisher = "=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict"
 
@@ -32,11 +32,11 @@ func (w *Response) DelCookie(name string) {
 
 	w.Headers.Set("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (w *Response) SetCookie(name, value string, expiry int) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	const secure = "; HttpOnly; Secure; SameSite=Strict"
 	const expires = "; Expires="
@@ -56,12 +56,12 @@ func (w *Response) SetCookie(name, value string, expiry int) {
 
 	w.Headers.Set("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
 
-	prof.End(p)
+	trace.End(t)
 }
 
 /* SetCookieUnsafe is useful for debugging purposes. It's also more compatible with older browsers. */
 func (w *Response) SetCookieUnsafe(name, value string, expiry int) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	const expires = "; Expires="
 	const path = "; Path=/"
@@ -79,11 +79,11 @@ func (w *Response) SetCookieUnsafe(name, value string, expiry int) {
 
 	w.Headers.Set("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (w *Response) Redirect(path string, code Status) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	pathBuf := w.Arena.NewSlice(len(path))
 	copy(pathBuf, path)
@@ -92,11 +92,11 @@ func (w *Response) Redirect(path string, code Status) {
 	w.Body = w.Body[:0]
 	w.StatusCode = code
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (w *Response) RedirectID(prefix string, id database.ID, code Status) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	buffer := w.Arena.NewSlice(len(prefix) + 20)
 	n := copy(buffer, prefix)
@@ -106,7 +106,7 @@ func (w *Response) RedirectID(prefix string, id database.ID, code Status) {
 	w.Body = w.Body[:0]
 	w.StatusCode = code
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (w *Response) Write(b []byte) (int, error) {

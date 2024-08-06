@@ -1,6 +1,6 @@
-//go:build !gofaprof
+//go:build !gofatrace
 
-package prof
+package trace
 
 func BeginProfile() {
 }

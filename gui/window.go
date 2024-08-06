@@ -2,8 +2,8 @@ package gui
 
 import (
 	"github.com/anton2920/gofa/intel"
-	"github.com/anton2920/gofa/prof"
 	"github.com/anton2920/gofa/time"
+	"github.com/anton2920/gofa/trace"
 )
 
 type WindowFlags uint
@@ -55,63 +55,63 @@ func (w *Window) SetTitle(title string) {
 }
 
 func (w *Window) HasEvents() bool {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	has := platformWindowHasEvents(w)
 
-	prof.End(p)
+	trace.End(t)
 	return has
 }
 
 func (w *Window) GetEvents(events []Event) (int, error) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	n, err := platformWindowGetEvents(w, events)
 
-	prof.End(p)
+	trace.End(t)
 	return n, err
 }
 
 func (w *Window) Invalidate() {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	platformWindowInvalidate(w)
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (w *Window) DisplayPixels(pixels []uint32, width, height int) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	platformWindowDisplayPixels(w, pixels, width, height)
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (w *Window) ShowCursor() {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	if !w.CursorVisible {
 		platformWindowEnableCursor(w)
 		w.CursorVisible = true
 	}
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (w *Window) HideCursor() {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	if w.CursorVisible {
 		platformWindowDisableCursor(w)
 		w.CursorVisible = false
 	}
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (w *Window) SyncFPS(fps int) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	now := intel.RDTSC()
 	durationBetweenPauses := now - w.LastSync
@@ -125,7 +125,7 @@ func (w *Window) SyncFPS(fps int) {
 	// println(int(time.MsecPerSec/float64(durationBetweenPauses.ToMsec())), "FPS")
 	w.LastSync = now
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func (w *Window) Close() {

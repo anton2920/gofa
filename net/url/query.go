@@ -1,25 +1,25 @@
 package url
 
-import "github.com/anton2920/gofa/prof"
+import "github.com/anton2920/gofa/trace"
 
 /* CharToByte returns ASCII-decoded character. For example, 'A' yields '\x0A'. */
 func CharToByte(c byte) (byte, bool) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	if c >= '0' && c <= '9' {
-		prof.End(p)
+		trace.End(t)
 		return c - '0', true
 	} else if c >= 'A' && c <= 'F' {
-		prof.End(p)
+		trace.End(t)
 		return 10 + c - 'A', true
 	} else {
-		prof.End(p)
+		trace.End(t)
 		return '\x00', false
 	}
 }
 
 func QueryDecode(decoded []byte, encoded string) (int, bool) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	var hi, lo byte
 	var ok bool
@@ -30,14 +30,14 @@ func QueryDecode(decoded []byte, encoded string) (int, bool) {
 			hi = encoded[i+1]
 			hi, ok = CharToByte(hi)
 			if !ok {
-				prof.End(p)
+				trace.End(t)
 				return 0, false
 			}
 
 			lo = encoded[i+2]
 			lo, ok = CharToByte(lo)
 			if !ok {
-				prof.End(p)
+				trace.End(t)
 				return 0, false
 			}
 
@@ -51,6 +51,6 @@ func QueryDecode(decoded []byte, encoded string) (int, bool) {
 		n++
 	}
 
-	prof.End(p)
+	trace.End(t)
 	return n, true
 }

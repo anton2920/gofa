@@ -1,6 +1,6 @@
-//go:build gofaprof
+//go:build gofatrace
 
-package prof
+package trace
 
 import (
 	"fmt"
@@ -112,7 +112,7 @@ func CyclesToMsec(c intel.Cycles) float64 {
 func PrintTimeElapsed(label string, totalElapsed, elapsedCyclesExclusive, elapsedCyclesInclusive intel.Cycles, hitCount int) {
 	percent := 100 * (float64(elapsedCyclesExclusive) / float64(totalElapsed))
 
-	fmt.Fprintf(os.Stderr, "[gofa/prof]: \t %s[%d]: flat: [%.4fms %.2f%% %.2fns/op]", label, hitCount, CyclesToMsec(elapsedCyclesExclusive), percent, CyclesToNsec(elapsedCyclesExclusive)/float64(hitCount))
+	fmt.Fprintf(os.Stderr, "[gofa/trace]: \t %s[%d]: flat: [%.4fms %.2f%% %.2fns/op]", label, hitCount, CyclesToMsec(elapsedCyclesExclusive), percent, CyclesToNsec(elapsedCyclesExclusive)/float64(hitCount))
 	if elapsedCyclesInclusive > elapsedCyclesExclusive {
 		percentWidthChildren := 100 * (float64(elapsedCyclesInclusive) / float64(totalElapsed))
 		fmt.Fprintf(os.Stderr, ", cum [%.4fms %.2f%% %.2fns/op]", CyclesToMsec(elapsedCyclesInclusive), percentWidthChildren, CyclesToNsec(elapsedCyclesInclusive)/float64(hitCount))
@@ -127,7 +127,7 @@ func EndAndPrintProfile() {
 	var totalCycles intel.Cycles
 	var totalHits int
 
-	fmt.Fprintf(os.Stderr, "[gofa/prof]: Total time: %.4fms\n", CyclesToMsec(totalElapsed))
+	fmt.Fprintf(os.Stderr, "[gofa/trace]: Total time: %.4fms\n", CyclesToMsec(totalElapsed))
 
 	slices.SortFunc(GlobalProfiler.Anchors[:], func(a, b Anchor) int {
 		if (a.ElapsedCyclesInclusive > 0) && (b.ElapsedCyclesInclusive > 0) {

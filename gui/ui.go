@@ -13,7 +13,7 @@ import (
 	"github.com/anton2920/gofa/gui/color"
 	"github.com/anton2920/gofa/gui/fonts"
 	"github.com/anton2920/gofa/gui/gr"
-	"github.com/anton2920/gofa/prof"
+	"github.com/anton2920/gofa/trace"
 )
 
 type Point struct {
@@ -96,7 +96,7 @@ func (ui *UI) Begin() {
 }
 
 func (ui *UI) ButtonLogic(id ID, over bool) bool {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	var result bool
 
@@ -127,12 +127,12 @@ func (ui *UI) ButtonLogic(id ID, over bool) bool {
 		ui.IsHot = true
 	}
 
-	prof.End(p)
+	trace.End(t)
 	return result
 }
 
 func (ui *UI) ButtonLogicDown(id ID, over bool) bool {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	var result bool
 
@@ -161,30 +161,30 @@ func (ui *UI) ButtonLogicDown(id ID, over bool) bool {
 		ui.IsHot = true
 	}
 
-	prof.End(p)
+	trace.End(t)
 	return result
 }
 
 func (ui *UI) ButtonLogicRect(id ID, x, y, width, height int) bool {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	result := ui.ButtonLogic(id, ui.inRect(x, y, width, height))
 
-	prof.End(p)
+	trace.End(t)
 	return result
 }
 
 func (ui *UI) Button(id ID, label string) bool {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	result := ui.ButtonW(id, label, ui.Font.TextWidth(label)+ui.Layout.ButtonPaddingWidth*2)
 
-	prof.End(p)
+	trace.End(t)
 	return result
 }
 
 func (ui *UI) ButtonToggle(labelUnchecked, labelChecked string, checked *bool) bool {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	widthUnchecked := ui.Font.TextWidth(labelUnchecked)
 	widthChecked := ui.Font.TextWidth(labelChecked)
@@ -201,12 +201,12 @@ func (ui *UI) ButtonToggle(labelUnchecked, labelChecked string, checked *bool) b
 		*checked = !*checked
 	}
 
-	prof.End(p)
+	trace.End(t)
 	return result
 }
 
 func (ui *UI) ButtonW(id ID, label string, width int) bool {
-	pr := prof.Begin("")
+	t := trace.Begin("")
 
 	height := ui.Font.CharHeight('g') + ui.Layout.ButtonPaddingHeight*2
 	p := ui.Layout.Put(&width, &height)
@@ -220,7 +220,7 @@ func (ui *UI) ButtonW(id ID, label string, width int) bool {
 
 	result := ui.ButtonLogic(id, ui.inRect(p.X, p.Y, width, height))
 
-	prof.End(pr)
+	trace.End(t)
 	return result
 }
 
@@ -255,7 +255,7 @@ func (ui *UI) color(id ID) color.Color {
 }
 
 func (ui *UI) DragX(id ID, x *int, width int, y0, y1 int) bool {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	if y1 < y0 {
 		y0, y1 = y1, y0
@@ -267,17 +267,17 @@ func (ui *UI) DragX(id ID, x *int, width int, y0, y1 int) bool {
 		if ui.MouseX != *x {
 			*x = ui.MouseX
 
-			prof.End(p)
+			trace.End(t)
 			return true
 		}
 	}
 
-	prof.End(p)
+	trace.End(t)
 	return false
 }
 
 func (ui *UI) DragY(id ID, y *int, height int, x0, x1 int) bool {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	if x1 < x0 {
 		x0, x1 = x1, x0
@@ -289,18 +289,18 @@ func (ui *UI) DragY(id ID, y *int, height int, x0, x1 int) bool {
 		if ui.MouseY != *y {
 			*y = ui.MouseY
 
-			prof.End(p)
+			trace.End(t)
 			return true
 		}
 	}
 
-	prof.End(p)
+	trace.End(t)
 	return false
 }
 
 /* DragXY is a generic draggable rectangle... If you want its position clamped, do so yourself. */
 func (ui *UI) DragXY(id ID, x *int, width int, y *int, height int) bool {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	if ui.ButtonLogicDown(id, ui.inRect(*x-width/2, *y-height/2, width, height)) {
 		ui.dragX = *x - ui.MouseX
@@ -312,12 +312,12 @@ func (ui *UI) DragXY(id ID, x *int, width int, y *int, height int) bool {
 			*x = ui.MouseX + ui.dragX
 			*y = ui.MouseY + ui.dragY
 
-			prof.End(p)
+			trace.End(t)
 			return true
 		}
 	}
 
-	prof.End(p)
+	trace.End(t)
 	return false
 }
 
@@ -395,28 +395,28 @@ func (ui *UI) setHot(id ID) {
 }
 
 func (ui *UI) Slider(label string, valueMin, valueMax float32, value *float32) bool {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	result := ui.SliderRaw(ID(value), label, valueMin, valueMax, value, false)
 
-	prof.End(p)
+	trace.End(t)
 	return result
 }
 
 func (ui *UI) SliderDisplay(label string, valueMin, valueMax float32, value *float32, display bool) bool {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	if display {
 		label = fmt.Sprintf("%s = %g", label, *value)
 	}
 	result := ui.Slider(label, valueMin, valueMax, value)
 
-	prof.End(p)
+	trace.End(t)
 	return result
 }
 
 func (ui *UI) SliderInt(label string, valueMin, valueMax int, value *int) bool {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	oldValue := *value
 	z := float32(*value)
@@ -424,31 +424,31 @@ func (ui *UI) SliderInt(label string, valueMin, valueMax int, value *int) bool {
 	if ui.SliderRaw(ID(value), label, float32(valueMin), float32(valueMax), &z, true) {
 		*value = int(math.Round(float64(z)))
 
-		prof.End(p)
+		trace.End(t)
 		return oldValue != *value
 	}
 
-	prof.End(p)
+	trace.End(t)
 	return false
 }
 
 func (ui *UI) SliderIntDisplay(label string, valueMin, valueMax int, value *int, display bool) bool {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	if display {
 		label = fmt.Sprintf("%s = %d", label, *value)
 	}
 	result := ui.SliderInt(label, valueMin, valueMax, value)
 
-	prof.End(p)
+	trace.End(t)
 	return result
 }
 
 func (ui *UI) SliderRaw(id ID, label string, valueMin, valueMax float32, value *float32, drawDots bool) bool {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	var labelWidth int
-	var pt Point
+	var p Point
 
 	if valueMax < valueMin {
 		valueMin, valueMax = valueMax, valueMin
@@ -464,8 +464,8 @@ func (ui *UI) SliderRaw(id ID, label string, valueMin, valueMax float32, value *
 	if label != "" {
 		labelHeight := ui.Font.CharHeight('g') - ui.Layout.SpacingHeight + 1
 		labelWidth = ui.Font.TextWidth(label) + labelWidthAdjustment
-		pt = ui.Layout.Put(&labelWidth, &labelHeight)
-		ui.Renderer.RenderText(label, ui.Font, pt.X, pt.Y, ui.Layout.Foreground)
+		p = ui.Layout.Put(&labelWidth, &labelHeight)
+		ui.Renderer.RenderText(label, ui.Font, p.X, p.Y, ui.Layout.Foreground)
 	}
 
 	if sliderWidth == WidthAuto {
@@ -479,30 +479,30 @@ func (ui *UI) SliderRaw(id ID, label string, valueMin, valueMax float32, value *
 		}
 	}
 
-	pt = ui.Layout.Put(&sliderWidth, &tabHeight)
+	p = ui.Layout.Put(&sliderWidth, &tabHeight)
 
 	/* Compute location of left edge of tab. */
-	pos := int(float32(pt.X) + (*value-valueMin)/(valueMax-valueMin)*float32(sliderWidth) - float32(tabWidth)/2)
+	pos := int(float32(p.X) + (*value-valueMin)/(valueMax-valueMin)*float32(sliderWidth) - float32(tabWidth)/2)
 
-	ui.rectOutlined(pt.X, pt.Y+(tabHeight-sliderHeight)*3/4, sliderWidth, sliderHeight, ui.color(id), ui.Layout.BackgroundDark)
+	ui.rectOutlined(p.X, p.Y+(tabHeight-sliderHeight)*3/4, sliderWidth, sliderHeight, ui.color(id), ui.Layout.BackgroundDark)
 
 	if drawDots {
 		n := int(valueMax - valueMin + 1)
 		if sliderWidth >= ui.Layout.SliderDotSpacing*n {
 			for i := 0; i < n; i++ {
-				pos := pt.X + i*int(float32(sliderWidth)/(valueMax-valueMin))
-				ui.Renderer.RenderPoint(pos, pt.Y+(tabHeight-sliderHeight)/4, 1, ui.Layout.BackgroundDark)
+				pos := p.X + i*int(float32(sliderWidth)/(valueMax-valueMin))
+				ui.Renderer.RenderPoint(pos, p.Y+(tabHeight-sliderHeight)/4, 1, ui.Layout.BackgroundDark)
 			}
 		}
 	}
 
-	ui.rectOutlined(pos, pt.Y, tabWidth, tabHeight, ui.Layout.BackgroundLite, ui.Layout.BackgroundDark)
+	ui.rectOutlined(pos, p.Y, tabWidth, tabHeight, ui.Layout.BackgroundLite, ui.Layout.BackgroundDark)
 
-	ui.ButtonLogic(id, ui.inRectPlus(pt.X, pt.Y+(tabHeight-sliderHeight)/2, sliderWidth, sliderHeight+(tabHeight-sliderHeight)/4, 2) || ui.inRectPlus(pos, pt.Y, tabWidth, tabHeight, 1))
+	ui.ButtonLogic(id, ui.inRectPlus(p.X, p.Y+(tabHeight-sliderHeight)/2, sliderWidth, sliderHeight+(tabHeight-sliderHeight)/4, 2) || ui.inRectPlus(pos, p.Y, tabWidth, tabHeight, 1))
 
 	if ui.active(id) {
 		oldValue := *value
-		z := float32(ui.MouseX-pt.X)*(valueMax-valueMin)/float32(sliderWidth) + valueMin
+		z := float32(ui.MouseX-p.X)*(valueMax-valueMin)/float32(sliderWidth) + valueMin
 		if z < valueMin {
 			z = valueMin
 		} else if z > valueMax {
@@ -512,11 +512,11 @@ func (ui *UI) SliderRaw(id ID, label string, valueMin, valueMax float32, value *
 
 		ui.setHot(id) /* sliders are always hot while active. */
 
-		prof.End(p)
+		trace.End(t)
 		return *value != oldValue
 	}
 
-	prof.End(p)
+	trace.End(t)
 	return false
 }
 

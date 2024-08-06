@@ -4,9 +4,9 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/net/http"
-	"github.com/anton2920/gofa/prof"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/time"
+	"github.com/anton2920/gofa/trace"
 )
 
 var StatusLines = [...]string{
@@ -26,7 +26,7 @@ var StatusLines = [...]string{
 }
 
 func FillError(ctx *http.Context, err error, dateBuf []byte) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	var w http.Response
 	var message string
@@ -48,11 +48,11 @@ func FillError(ctx *http.Context, err error, dateBuf []byte) {
 	w.Headers.Set("Connection", "close")
 	FillResponses(ctx, unsafe.Slice(&w, 1), dateBuf)
 
-	prof.End(p)
+	trace.End(t)
 }
 
 func FillResponses(ctx *http.Context, ws []http.Response, dateBuf []byte) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	for i := 0; i < len(ws); i++ {
 		w := &ws[i]
@@ -105,5 +105,5 @@ func FillResponses(ctx *http.Context, ws []http.Response, dateBuf []byte) {
 		w.Reset()
 	}
 
-	prof.End(p)
+	trace.End(t)
 }

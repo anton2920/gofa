@@ -6,8 +6,8 @@ import (
 
 	"github.com/anton2920/gofa/alloc"
 	"github.com/anton2920/gofa/buffer"
-	"github.com/anton2920/gofa/prof"
 	"github.com/anton2920/gofa/syscall"
+	"github.com/anton2920/gofa/trace"
 )
 
 func Accept(l int32, ctxPool *alloc.SyncPool[Context], bufferSize int) (*Context, error) {
@@ -43,34 +43,34 @@ func Accept(l int32, ctxPool *alloc.SyncPool[Context], bufferSize int) (*Context
 }
 
 func Read(ctx *Context) (int, error) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	rBuf := ctx.RequestBuffer
 	buf := rBuf.RemainingSlice()
 
 	if len(buf) == 0 {
-		prof.End(p)
+		trace.End(t)
 		return 0, NoSpaceLeft
 	}
 	n, err := syscall.Read(ctx.Connection, buf)
 	if err != nil {
-		prof.End(p)
+		trace.End(t)
 		return 0, err
 	}
 	rBuf.Produce(int(n))
 
-	prof.End(p)
+	trace.End(t)
 	return n, nil
 }
 
 func Write(ctx *Context) (int, error) {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	var written int
 	if len(ctx.ResponseBuffer[ctx.ResponsePos:]) > 0 {
 		n, err := syscall.Write(ctx.Connection, ctx.ResponseBuffer[ctx.ResponsePos:])
 		if err != nil {
-			prof.End(p)
+			trace.End(t)
 			return 0, err
 		}
 		ctx.ResponsePos += int(n)
@@ -84,7 +84,7 @@ func Write(ctx *Context) (int, error) {
 		}
 	}
 
-	prof.End(p)
+	trace.End(t)
 	return written, nil
 }
 

@@ -1,6 +1,6 @@
 package url
 
-import "github.com/anton2920/gofa/prof"
+import "github.com/anton2920/gofa/trace"
 
 type URL struct {
 	Path     string
@@ -10,15 +10,15 @@ type URL struct {
 }
 
 func (u *URL) ParseQuery() error {
-	p := prof.Begin("")
+	t := trace.Begin("")
 
 	if len(u.Query.Keys) != 0 {
-		prof.End(p)
+		trace.End(t)
 		return nil
 	}
 
 	err := ParseQuery(&u.Query, u.RawQuery)
 
-	prof.End(p)
+	trace.End(t)
 	return err
 }
