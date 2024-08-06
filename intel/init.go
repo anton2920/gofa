@@ -47,7 +47,7 @@ func init() {
 			Model += (int((info>>16)&0xF) << 4)
 		}
 		ProcessorType = int((info >> 12) & 0x3)
-		debug.Printf("[gofa/intel]: %s Family %X Model %X Stepping %X Type %b", VendorString, Family, Model, Stepping, ProcessorType)
+		debug.Printf("[gofa/intel]: %s Family %X Model %X Stepping %X Type %.2b", VendorString, Family, Model, Stepping, ProcessorType)
 
 		BrandIndex = int(index & 0xFF)
 	}
@@ -66,6 +66,11 @@ func init() {
 				base++
 			}
 			BrandString = string(unsafe.Slice((*byte)(unsafe.Pointer(&brand[0])), len(brand)*int(unsafe.Sizeof(brand[0]))))
+
+			/* NOTE(anton2920): eliding \x00 bytes at the end. */
+			for BrandString[len(BrandString)-1] == '\x00' {
+				BrandString = BrandString[:len(BrandString)-1]
+			}
 		}
 		debug.Printf("[gofa/intel]: %s", BrandString)
 	}
