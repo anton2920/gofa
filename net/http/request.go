@@ -31,6 +31,7 @@ func (r *Request) Cookie(name string) string {
 				trace.End(t)
 				return ""
 			}
+			trace.End(t)
 			return cookie[1:]
 		}
 	}
