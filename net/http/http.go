@@ -105,6 +105,7 @@ func Close(ctx *Context) error {
 	return syscall.Close(c)
 }
 
+//go:norace
 func CloseAfterWrite(ctx *Context) {
 	ctx.CloseAfterWrite = true
 }
