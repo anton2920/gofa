@@ -1,4 +1,5 @@
 //go:build gofatrace
+// +build gofatrace
 
 package trace
 
@@ -6,7 +7,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"slices"
+	"sort"
 	"unsafe"
 
 	"github.com/anton2920/gofa/intel"
@@ -34,8 +35,10 @@ type Block struct {
 	OldElapsedCyclesInclusive intel.Cycles
 }
 
+type Anchors []Anchor
+
 type Profiler struct {
-	Anchors       [64 * 1024]Anchor
+	Anchors       Anchors
 	CurrentParent int32
 
 	StartCycles intel.Cycles
@@ -44,13 +47,58 @@ type Profiler struct {
 
 var GlobalProfiler Profiler
 
+func init() {
+	GlobalProfiler.Anchors = make(Anchors, 64*1024)
+}
+
+func (as Anchors) Len() int {
+	return len(as)
+}
+
+func (as Anchors) Less(i, j int) bool {
+	a := &as[i]
+	b := &as[j]
+
+	if (a.ElapsedCyclesInclusive > 0) && (b.ElapsedCyclesInclusive > 0) {
+		if a.ElapsedCyclesInclusive < b.ElapsedCyclesInclusive {
+			return false
+		} else {
+			return true
+		}
+	} else if a.ElapsedCyclesInclusive > 0 {
+		if a.ElapsedCyclesInclusive < b.ElapsedCyclesExclusive {
+			return false
+		} else {
+			return true
+		}
+	} else if b.ElapsedCyclesInclusive > 0 {
+		if a.ElapsedCyclesExclusive < b.ElapsedCyclesInclusive {
+			return false
+		} else {
+			return true
+		}
+	} else {
+		if a.ElapsedCyclesExclusive < b.ElapsedCyclesExclusive {
+			return false
+		} else {
+			return true
+		}
+	}
+}
+
+func (as Anchors) Swap(i, j int) {
+	as[i], as[j] = as[j], as[i]
+}
+
 func anchorIndexForPC(pc uintptr) int32 {
 	idx := int32(int(pc) & (len(GlobalProfiler.Anchors) - 1))
 	return idx + int32(util.Bool2Int(idx == 0))
 }
 
 func BeginProfile() {
-	clear(GlobalProfiler.Anchors[:])
+	for i := 0; i < len(GlobalProfiler.Anchors); i++ {
+		GlobalProfiler.Anchors[i] = Anchor{}
+	}
 	GlobalProfiler.CurrentParent = 0
 	GlobalProfiler.StartCycles = intel.RDTSC()
 }
@@ -95,6 +143,7 @@ func End(b Block) {
 
 	if (anchor.PC > 0) && (anchor.PC != b.PC) {
 		/* NOTE(anton2920): LOL. */
+		println("anchor.PC", anchor.PC, "b.PC", b.PC)
 		panic("PC collision, you're f**cked!")
 	}
 	anchor.PC = b.PC
@@ -102,11 +151,11 @@ func End(b Block) {
 }
 
 func CyclesToNsec(c intel.Cycles) float64 {
-	return 1_000_000_000 * float64(c) / float64(intel.CPUHz)
+	return 1000000000 * float64(c) / float64(intel.CPUHz)
 }
 
 func CyclesToMsec(c intel.Cycles) float64 {
-	return 1_000 * float64(c) / float64(intel.CPUHz)
+	return 1000 * float64(c) / float64(intel.CPUHz)
 }
 
 func PrintTimeElapsed(label string, totalElapsed, elapsedCyclesExclusive, elapsedCyclesInclusive intel.Cycles, hitCount int) {
@@ -129,33 +178,7 @@ func EndAndPrintProfile() {
 
 	fmt.Fprintf(os.Stderr, "[gofa/trace]: Total time: %.4fms\n", CyclesToMsec(totalElapsed))
 
-	slices.SortFunc(GlobalProfiler.Anchors[:], func(a, b Anchor) int {
-		if (a.ElapsedCyclesInclusive > 0) && (b.ElapsedCyclesInclusive > 0) {
-			if a.ElapsedCyclesInclusive < b.ElapsedCyclesInclusive {
-				return 1
-			} else {
-				return -1
-			}
-		} else if a.ElapsedCyclesInclusive > 0 {
-			if a.ElapsedCyclesInclusive < b.ElapsedCyclesExclusive {
-				return 1
-			} else {
-				return -1
-			}
-		} else if b.ElapsedCyclesInclusive > 0 {
-			if a.ElapsedCyclesExclusive < b.ElapsedCyclesInclusive {
-				return 1
-			} else {
-				return -1
-			}
-		} else {
-			if a.ElapsedCyclesExclusive < b.ElapsedCyclesExclusive {
-				return 1
-			} else {
-				return -1
-			}
-		}
-	})
+	sort.Sort(GlobalProfiler.Anchors)
 
 	for i := 0; i < len(GlobalProfiler.Anchors); i++ {
 		anchor := &GlobalProfiler.Anchors[i]

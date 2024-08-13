@@ -4,17 +4,18 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/anton2920/gofa/alloc"
 	"github.com/anton2920/gofa/buffer"
 	"github.com/anton2920/gofa/syscall"
 	"github.com/anton2920/gofa/trace"
 )
 
-func Accept(l int32, ctxPool *alloc.SyncPool[Context], bufferSize int) (*Context, error) {
+const DefaultMaxActiveClients = 16384
+
+var CtxPool = NewContextPool(DefaultMaxActiveClients)
+
+func Accept(l int32, bufferSize int) (*Context, error) {
 	var addr syscall.SockAddrIn
 	var addrLen uint32 = uint32(unsafe.Sizeof(addr))
-	var ctx *Context
-	var err error
 
 	c, err := syscall.Accept(l, (*syscall.Sockaddr)(unsafe.Pointer(&addr)), &addrLen)
 	if err != nil {
@@ -27,18 +28,13 @@ func Accept(l int32, ctxPool *alloc.SyncPool[Context], bufferSize int) (*Context
 		return nil, fmt.Errorf("failed to create new request buffer: %w", err)
 	}
 
-	if ctxPool == nil {
+	ctx, err := CtxPool.Get()
+	if err != nil {
 		ctx = new(Context)
-	} else {
-		ctx, err = ctxPool.Get()
-		if err != nil {
-			ctx = new(Context)
-			err = TooManyClients
-			ctxPool = nil
-		}
+		err = TooManyClients
 	}
+	InitContext(ctx, c, addr, rb)
 
-	InitContext(ctx, c, addr, rb, ctxPool)
 	return ctx, err
 }
 
@@ -63,6 +59,7 @@ func Read(ctx *Context) (int, error) {
 	return n, nil
 }
 
+//go:norace
 func Write(ctx *Context) (int, error) {
 	t := trace.Begin("")
 
@@ -98,11 +95,10 @@ func Close(ctx *Context) error {
 	ctx.RequestBuffer = nil
 	ctx.ResponseBuffer = nil
 
-	c := ctx.Connection
-	if ctx.Pool != nil {
-		ctx.Pool.Put(ctx)
-	}
-	return syscall.Close(c)
+	err := syscall.Close(ctx.Connection)
+
+	CtxPool.Put(ctx)
+	return err
 }
 
 //go:norace

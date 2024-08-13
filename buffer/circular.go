@@ -1,6 +1,7 @@
 package buffer
 
 import (
+	"reflect"
 	"unsafe"
 
 	"github.com/anton2920/gofa/syscall"
@@ -18,12 +19,14 @@ func NewCircular(size int) (*Circular, error) {
 	var c Circular
 
 	const pageSize = 4096
-	size = util.RoundUp(size, pageSize)
+	size = util.AlignUp(size, pageSize)
 
-	fd, err := syscall.ShmOpen2(syscall.SHM_ANON, syscall.O_RDWR, 0, 0, syscall.NULL)
+	/* NOTE(anton2920): first argument is SHM_ANON, cannot have that as a variable as Go's checkptr doesn't like it. */
+	fd, err := syscall.ShmOpen2(*(*string)(unsafe.Pointer(&reflect.StringHeader{Data: 1, Len: 8})), syscall.O_RDWR, 0, 0, syscall.NULL)
 	if err != nil {
 		return nil, err
 	}
+
 	defer syscall.Close(fd)
 
 	if err := syscall.Ftruncate(fd, int64(size)); err != nil {
@@ -38,11 +41,10 @@ func NewCircular(size int) (*Circular, error) {
 	if _, err := syscall.Mmap(buffer, uint64(size), syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED|syscall.MAP_FIXED, fd, 0); err != nil {
 		return nil, err
 	}
-	if _, err := syscall.Mmap(unsafe.Add(buffer, size), uint64(size), syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED|syscall.MAP_FIXED, fd, 0); err != nil {
+	if _, err := syscall.Mmap(util.PtrAdd(buffer, size), uint64(size), syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED|syscall.MAP_FIXED, fd, 0); err != nil {
 		return nil, err
 	}
-
-	c.Buf = unsafe.Slice((*byte)(buffer), 2*size)
+	c.Buf = *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(buffer), Len: 2 * size, Cap: 2 * size}))
 
 	/* NOTE(anton2920): sanity checks. */
 	c.Buf[0] = '\x00'
@@ -83,14 +85,14 @@ func (c *Circular) UnconsumedLen() int {
 }
 
 func (c *Circular) UnconsumedSlice() []byte {
-	return unsafe.Slice(&c.Buf[c.Head], c.UnconsumedLen())
+	return *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&c.Buf[c.Head])), Len: c.UnconsumedLen(), Cap: c.UnconsumedLen()}))
 }
 
 func (c *Circular) UnconsumedString() string {
-	return unsafe.String(&c.Buf[c.Head], c.UnconsumedLen())
+	return *(*string)(unsafe.Pointer(&reflect.StringHeader{Data: uintptr(unsafe.Pointer(&c.Buf[c.Head])), Len: c.UnconsumedLen()}))
 }
 
 func FreeCircular(c *Circular) {
-	syscall.Munmap(unsafe.Pointer(unsafe.SliceData(c.Buf)), uint64(len(c.Buf)))
+	syscall.Munmap(unsafe.Pointer(&c.Buf[0]), uint64(len(c.Buf)))
 	c.Buf = nil
 }

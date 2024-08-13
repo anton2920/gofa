@@ -2,7 +2,6 @@ package url
 
 import (
 	"strconv"
-	"unsafe"
 
 	"github.com/anton2920/gofa/alloc"
 	"github.com/anton2920/gofa/database"
@@ -10,6 +9,7 @@ import (
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/util"
 )
 
 type Values struct {
@@ -44,7 +44,7 @@ func ParseQuery(vs *Values, query string) error {
 			}
 			continue
 		}
-		key = unsafe.String(unsafe.SliceData(keyBuffer), n)
+		key = util.Slice2String(keyBuffer[:n])
 
 		valueBuffer := vs.Arena.NewSlice(len(value))
 		n, ok = QueryDecode(valueBuffer, value)
@@ -54,7 +54,7 @@ func ParseQuery(vs *Values, query string) error {
 			}
 			continue
 		}
-		value = unsafe.String(unsafe.SliceData(valueBuffer), n)
+		value = util.Slice2String(valueBuffer[:n])
 
 		vs.Add(key, value)
 	}
@@ -197,7 +197,7 @@ func (vs *Values) SetInt(key string, value int) {
 
 	buffer := vs.Arena.NewSlice(20)
 	n := slices.PutInt(buffer, value)
-	vs.Set(key, unsafe.String(&buffer[0], n))
+	vs.Set(key, util.Slice2String(buffer[:n]))
 
 	trace.End(t)
 }

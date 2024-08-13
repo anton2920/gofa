@@ -45,5 +45,5 @@ func Unix() int {
 func UnixNsec() int64 {
 	var tp syscall.Timespec
 	syscall.ClockGettime(syscall.CLOCK_REALTIME, &tp)
-	return tp.Sec*1_000_000_000 + tp.Nsec
+	return tp.Sec*1000000000 + tp.Nsec
 }

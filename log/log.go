@@ -1,6 +1,7 @@
 package log
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"sync/atomic"
@@ -36,23 +37,24 @@ func Logf(level Level, format string, args ...interface{}) {
 		return
 	}
 
-	buffer := make([]byte, 0, 512)
-	buffer = time.Now().AppendFormat(buffer, "2006/01/02 15:04:05")
-	buffer = fmt.Appendf(buffer, " %5s ", Level2String[level])
-	buffer = fmt.Appendf(buffer, format, args...)
+	var buffer bytes.Buffer
+
+	buffer.WriteString(time.Now().Format("2006/01/02 15:04:05"))
+	fmt.Fprintf(&buffer, " %5s ", Level2String[level])
+	fmt.Fprintf(&buffer, format, args...)
 	if format[len(format)-1] != '\n' {
-		buffer = append(buffer, '\n')
+		buffer.WriteRune('\n')
 	}
 
 	switch level {
 	default:
 		/* TODO(anton2920): are race-conditions possible? */
-		syscall.Write(2, buffer)
+		syscall.Write(2, buffer.Bytes())
 	case LevelFatal:
-		syscall.Write(2, buffer)
+		syscall.Write(2, buffer.Bytes())
 		os.Exit(1)
 	case LevelPanic:
-		panic(string(buffer))
+		panic(buffer.String())
 	}
 }
 

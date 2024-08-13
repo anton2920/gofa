@@ -1,6 +1,9 @@
 package gr
 
-import "github.com/anton2920/gofa/gui/color"
+import (
+	"github.com/anton2920/gofa/gui/color"
+	"github.com/anton2920/gofa/util"
+)
 
 type Font struct {
 	fontChars []Pixmap
@@ -30,7 +33,7 @@ func DecompressFont(font []uint32) Font {
 	result.startChar = start
 
 	font = font[1:]
-	for i := 0; i < len(chars); i++ {
+	for i := uint(0); i < uint(len(chars)); i++ {
 		width := int((font[i>>2] >> ((i & 3) << 3)) & 0xFF)
 		chars[i] = NewPixmap(width, height, AlphaFont)
 	}
@@ -93,7 +96,7 @@ func (f *Font) TextHeight(text string) int {
 	var height int
 
 	for i := 0; i < len(text); i++ {
-		height = max(height, f.CharHeight(text[i]))
+		height = util.Max(height, f.CharHeight(text[i]))
 	}
 
 	return height

@@ -1,14 +1,13 @@
 package http
 
 import (
-	"unsafe"
-
 	"github.com/anton2920/gofa/alloc"
 	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/net/html"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/time"
 	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/util"
 )
 
 type Response struct {
@@ -30,7 +29,7 @@ func (w *Response) DelCookie(name string) {
 	n += copy(cookie[n:], name)
 	n += copy(cookie[n:], finisher)
 
-	w.Headers.Set("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
+	w.Headers.Set("Set-Cookie", util.Slice2String(cookie[:n]))
 
 	trace.End(t)
 }
@@ -54,7 +53,7 @@ func (w *Response) SetCookie(name, value string, expiry int) {
 	n += time.PutTmRFC822(cookie[n:], time.ToTm(expiry))
 	n += copy(cookie[n:], secure)
 
-	w.Headers.Set("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
+	w.Headers.Set("Set-Cookie", util.Slice2String(cookie[:n]))
 
 	trace.End(t)
 }
@@ -77,7 +76,7 @@ func (w *Response) SetCookieUnsafe(name, value string, expiry int) {
 	n += copy(cookie[n:], expires)
 	n += time.PutTmRFC822(cookie[n:], time.ToTm(expiry))
 
-	w.Headers.Set("Set-Cookie", unsafe.String(unsafe.SliceData(cookie), n))
+	w.Headers.Set("Set-Cookie", util.Slice2String(cookie[:n]))
 
 	trace.End(t)
 }
@@ -88,7 +87,7 @@ func (w *Response) Redirect(path string, code Status) {
 	pathBuf := w.Arena.NewSlice(len(path))
 	copy(pathBuf, path)
 
-	w.Headers.Set("Location", unsafe.String(unsafe.SliceData(pathBuf), len(pathBuf)))
+	w.Headers.Set("Location", util.Slice2String(pathBuf))
 	w.Body = w.Body[:0]
 	w.StatusCode = code
 
@@ -102,7 +101,7 @@ func (w *Response) RedirectID(prefix string, id database.ID, code Status) {
 	n := copy(buffer, prefix)
 	n += slices.PutInt(buffer[n:], int(id))
 
-	w.Headers.Set("Location", unsafe.String(unsafe.SliceData(buffer), n))
+	w.Headers.Set("Location", util.Slice2String(buffer[:n]))
 	w.Body = w.Body[:0]
 	w.StatusCode = code
 

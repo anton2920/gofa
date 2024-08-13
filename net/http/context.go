@@ -3,7 +3,6 @@ package http
 import (
 	"unsafe"
 
-	"github.com/anton2920/gofa/alloc"
 	"github.com/anton2920/gofa/buffer"
 	"github.com/anton2920/gofa/net/tcp"
 	"github.com/anton2920/gofa/syscall"
@@ -21,15 +20,12 @@ type Context struct {
 	ResponseBuffer []byte
 	ResponsePos    int
 
-	/* NOTE(anton2920): if context was allocated from the pool, we need to put it back after close. */
-	Pool *alloc.SyncPool[Context]
-
 	/* TODO(anton2920): I don't like this. */
 	CloseAfterWrite bool
 }
 
 //go:norace
-func InitContext(ctx *Context, c int32, addr syscall.SockAddrIn, rb *buffer.Circular, ctxPool *alloc.SyncPool[Context]) {
+func InitContext(ctx *Context, c int32, addr syscall.SockAddrIn, rb *buffer.Circular) {
 	ctx.Connection = c
 	ctx.RequestBuffer = rb
 	ctx.ResponseBuffer = make([]byte, 0, len(rb.Buf))
@@ -37,18 +33,15 @@ func InitContext(ctx *Context, c int32, addr syscall.SockAddrIn, rb *buffer.Circ
 	buffer := make([]byte, 21)
 	n := tcp.PutAddress(buffer, addr.Addr, addr.Port)
 	ctx.ClientAddress = string(buffer[:n])
-
-	ctx.Pool = ctxPool
 }
 
 func GetContextFromPointer(ptr unsafe.Pointer) (*Context, bool) {
 	if ptr == nil {
 		return nil, false
 	}
-	uptr := uintptr(ptr)
 
-	check := uptr & 0x1
-	ctx := (*Context)(unsafe.Pointer(uptr - check))
+	check := uintptr(ptr) & 0x1
+	ctx := (*Context)(unsafe.Pointer(uintptr(ptr) - check))
 
 	return ctx, ctx.Check == int32(check)
 }

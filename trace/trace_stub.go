@@ -1,4 +1,5 @@
 //go:build !gofatrace
+// +build !gofatrace
 
 package trace
 

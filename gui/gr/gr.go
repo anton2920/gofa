@@ -2,6 +2,7 @@ package gr
 
 import (
 	"github.com/anton2920/gofa/gui/color"
+	"github.com/anton2920/gofa/util"
 )
 
 var blacktext [256]color.Color
@@ -43,11 +44,11 @@ func DrawCircle(pixmap Pixmap, bounds Rect, x0, y0, radius int, clr color.Color)
 	cx := x0 + radius
 	cy := y0 + radius
 
-	x0 = max(x0, bounds.X0)
-	x1 = min(x1, bounds.X1-1)
+	x0 = util.Max(x0, bounds.X0)
+	x1 = util.Min(x1, bounds.X1-1)
 
-	y0 = max(y0, bounds.Y0)
-	y1 = min(y1, bounds.Y1-1)
+	y0 = util.Max(y0, bounds.Y0)
+	y1 = util.Min(y1, bounds.Y1-1)
 
 	if clr.Opaque() {
 		for y := y0; y < y1; y++ {
@@ -84,10 +85,10 @@ func DrawLine(pixmap Pixmap, bounds Rect, x0, y0, x1, y1 int, clr color.Color) {
 		y := y0
 
 		var tmp Rect
-		tmp.X0 = min(x0, x1)
-		tmp.Y0 = min(y0, y1)
-		tmp.X1 = max(x0, x1) + 1
-		tmp.Y1 = max(y0, y1) + 1
+		tmp.X0 = util.Min(x0, x1)
+		tmp.Y0 = util.Min(y0, y1)
+		tmp.X1 = util.Max(x0, x1) + 1
+		tmp.Y1 = util.Max(y0, y1) + 1
 
 		if (tmp.X0 >= bounds.X1) || (tmp.X1 <= bounds.X0) {
 			return
@@ -100,7 +101,7 @@ func DrawLine(pixmap Pixmap, bounds Rect, x0, y0, x1, y1 int, clr color.Color) {
 		}
 
 		opaque := clr.Opaque()
-		maxLen := max(abs(dx), abs(dy))
+		maxLen := util.Max(abs(dx), abs(dy))
 		invLen := float32(0xFFFF) / float32(maxLen)
 
 		dx = int(float32(dx) * invLen)
@@ -159,8 +160,8 @@ func DrawHLine(pixmap Pixmap, bounds Rect, y, x0, x1 int, clr color.Color) {
 		return
 	}
 
-	x0 = max(x0, bounds.X0)
-	x1 = min(x1, bounds.X1-1)
+	x0 = util.Max(x0, bounds.X0)
+	x1 = util.Min(x1, bounds.X1-1)
 
 	n := x1 - x0 + 1
 
@@ -190,8 +191,8 @@ func DrawVLine(pixmap Pixmap, bounds Rect, x, y0, y1 int, clr color.Color) {
 		return
 	}
 
-	y0 = max(y0, bounds.Y0)
-	y1 = min(y1, bounds.Y1-1)
+	y0 = util.Max(y0, bounds.Y0)
+	y1 = util.Min(y1, bounds.Y1-1)
 
 	n := y1 - y0 + 1
 

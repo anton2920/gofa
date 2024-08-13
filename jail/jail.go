@@ -1,13 +1,12 @@
 package jail
 
 import (
-	"errors"
 	"fmt"
 	"sync/atomic"
-	"unsafe"
 
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/syscall"
+	"github.com/anton2920/gofa/util"
 )
 
 type Jail struct {
@@ -136,17 +135,17 @@ func New(template string, wd string) (Jail, error) {
 	n = PutEnv(env, j)
 	env = env[:n+1]
 
-	if err := syscall.Access(unsafe.String(unsafe.SliceData(tmpl), len(tmpl)), 0); err != nil {
+	if err := syscall.Access(util.Slice2String(tmpl), 0); err != nil {
 		return Jail{}, fmt.Errorf("provided template is not valid BSD userland: %w", err)
 	}
 
-	if err := syscall.Mkdir(unsafe.String(unsafe.SliceData(path), len(path)), 0755); err != nil {
+	if err := syscall.Mkdir(util.Slice2String(path), 0755); err != nil {
 		if err.(syscall.Error).Errno != syscall.EEXIST {
 			return Jail{}, fmt.Errorf("failed to create path: %w", err)
 		}
 	}
 
-	if err := syscall.Mkdir(unsafe.String(unsafe.SliceData(env), len(env)), 0755); err != nil {
+	if err := syscall.Mkdir(util.Slice2String(env), 0755); err != nil {
 		if err.(syscall.Error).Errno != syscall.EEXIST {
 			return Jail{}, fmt.Errorf("failed to create environment directory: %w", err)
 		}
@@ -167,7 +166,7 @@ func New(template string, wd string) (Jail, error) {
 		syscall.Iovec("fstype\x00"), syscall.Iovec("nullfs\x00"),
 		syscall.Iovec("rw\x00"), syscall.IovecZ,
 	}, 0); err != nil {
-		syscall.Unmount(unsafe.String(unsafe.SliceData(path), len(path)), 0)
+		syscall.Unmount(util.Slice2String(path), 0)
 		return Jail{}, fmt.Errorf("failed to mount environment directory: %w", err)
 	}
 
@@ -178,8 +177,8 @@ func New(template string, wd string) (Jail, error) {
 		syscall.Iovec("persist\x00"), syscall.IovecZ,
 	}, syscall.JAIL_CREATE)
 	if err != nil {
-		syscall.Unmount(unsafe.String(unsafe.SliceData(tmp), len(tmp)), 0)
-		syscall.Unmount(unsafe.String(unsafe.SliceData(path), len(path)), 0)
+		syscall.Unmount(util.Slice2String(tmp), 0)
+		syscall.Unmount(util.Slice2String(path), 0)
 		return Jail{}, err
 	}
 
@@ -200,8 +199,8 @@ func New(template string, wd string) (Jail, error) {
 		if err := syscall.RctlAddRule(rule[:n+1]); err != nil {
 			syscall.RctlRemoveRule(prefix)
 			syscall.JailRemove(j.ID)
-			syscall.Unmount(unsafe.String(unsafe.SliceData(tmp), len(tmp)), 0)
-			syscall.Unmount(unsafe.String(unsafe.SliceData(path), len(path)), 0)
+			syscall.Unmount(util.Slice2String(tmp), 0)
+			syscall.Unmount(util.Slice2String(path), 0)
 			return Jail{}, fmt.Errorf("failed to add rule %d for jail: %w", i, err)
 		}
 	}
@@ -218,7 +217,7 @@ func Protect(j Jail) error {
 	n = PutEnv(env, j)
 	env = env[:n+1]
 
-	if err := syscall.Unmount(unsafe.String(unsafe.SliceData(tmp), len(tmp)), 0); err != nil {
+	if err := syscall.Unmount(util.Slice2String(tmp), 0); err != nil {
 		return fmt.Errorf("failed to unmount environment: %w", err)
 	}
 
@@ -258,28 +257,28 @@ func Remove(j Jail) error {
 	prefix = prefix[:n+1]
 
 	if err1 := syscall.RctlRemoveRule(prefix); err1 != nil {
-		err = errors.Join(err, fmt.Errorf("failed to remove jail rules: %w", err1))
+		err = fmt.Errorf("failed to remove jail rules: %w", err1)
 	}
 
 	if err1 := syscall.JailRemove(j.ID); err1 != nil {
-		err = errors.Join(err, fmt.Errorf("failed to remove jail: %w", err1))
+		err = fmt.Errorf("failed to remove jail: %w", err1)
 	}
 
-	if err1 := syscall.Unmount(unsafe.String(unsafe.SliceData(tmp), len(tmp)), 0); err1 != nil {
-		err = errors.Join(err, fmt.Errorf("failed to unmount environment: %w", err1))
+	if err1 := syscall.Unmount(util.Slice2String(tmp), 0); err1 != nil {
+		err = fmt.Errorf("failed to unmount environment: %w", err1)
 	}
 
-	if err1 := syscall.Unmount(unsafe.String(unsafe.SliceData(path), len(path)), 0); err1 != nil {
-		err = errors.Join(err, fmt.Errorf("failed to unmount container: %w", err1))
+	if err1 := syscall.Unmount(util.Slice2String(path), 0); err1 != nil {
+		err = fmt.Errorf("failed to unmount container: %w", err1)
 	}
 
-	if err1 := syscall.Rmdir(unsafe.String(unsafe.SliceData(env), len(env))); err1 != nil {
-		err = errors.Join(err, fmt.Errorf("failed to remove environment directory: %w", err1))
+	if err1 := syscall.Rmdir(util.Slice2String(env)); err1 != nil {
+		err = fmt.Errorf("failed to remove environment directory: %w", err1)
 	}
 
-	if err1 := syscall.Rmdir(unsafe.String(unsafe.SliceData(path), len(path))); err1 != nil {
-		err = errors.Join(err, fmt.Errorf("failed to remove container directory: %w", err1))
+	if err1 := syscall.Rmdir(util.Slice2String(path)); err1 != nil {
+		err = fmt.Errorf("failed to remove container directory: %w", err1)
 	}
 
-	return nil
+	return err
 }

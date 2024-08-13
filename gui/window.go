@@ -1,6 +1,7 @@
 package gui
 
 import (
+	"github.com/anton2920/gofa/gui/color"
 	"github.com/anton2920/gofa/intel"
 	"github.com/anton2920/gofa/time"
 	"github.com/anton2920/gofa/trace"
@@ -80,7 +81,7 @@ func (w *Window) Invalidate() {
 	trace.End(t)
 }
 
-func (w *Window) DisplayPixels(pixels []uint32, width, height int) {
+func (w *Window) DisplayPixels(pixels []color.Color, width, height int) {
 	t := trace.Begin("")
 
 	platformWindowDisplayPixels(w, pixels, width, height)

@@ -1,11 +1,10 @@
 package http
 
 import (
-	"unsafe"
-
 	"github.com/anton2920/gofa/net/url"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/util"
 )
 
 type Request struct {
@@ -48,7 +47,7 @@ func (r *Request) ParseForm() error {
 		return nil
 	}
 
-	query := unsafe.String(unsafe.SliceData(r.Body), len(r.Body))
+	query := util.Slice2String(r.Body)
 	err := url.ParseQuery(&r.Form, query)
 
 	trace.End(t)

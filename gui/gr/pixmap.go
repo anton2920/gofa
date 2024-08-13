@@ -2,10 +2,10 @@ package gr
 
 import (
 	"image"
+	"reflect"
 	"unsafe"
 
 	"github.com/anton2920/gofa/gui/color"
-	"github.com/anton2920/gofa/util"
 )
 
 type AlphaType int
@@ -35,14 +35,16 @@ func NewPixmap(width, height int, alpha AlphaType) Pixmap {
 	pixmap.Alpha = alpha
 
 	/* Force alpha to be opaque. */
-	util.Memset(pixmap.Pixels, color.Black)
+	for i := 0; i < len(pixmap.Pixels); i++ {
+		pixmap.Pixels[i] = color.Black
+	}
 	return pixmap
 }
 
 func NewPixmapFromImage(img *image.RGBA, alpha AlphaType) Pixmap {
 	var pixmap Pixmap
 
-	pixmap.Pixels = unsafe.Slice((*color.Color)(unsafe.Pointer(unsafe.SliceData(img.Pix))), len(img.Pix)>>2)
+	pixmap.Pixels = *(*[]color.Color)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&img.Pix[0])), Len: len(img.Pix) >> 2, Cap: len(img.Pix) >> 2}))
 	pixmap.Width = img.Bounds().Max.X - img.Bounds().Min.X
 	pixmap.Height = img.Bounds().Max.Y - img.Bounds().Min.Y
 	pixmap.Stride = pixmap.Width

@@ -14,10 +14,12 @@ package gui
 */
 import "C"
 import (
-	"runtime"
+	"reflect"
 	"unsafe"
 
 	"github.com/anton2920/gofa/errors"
+	"github.com/anton2920/gofa/gui/color"
+	"github.com/anton2920/gofa/util"
 )
 
 type platformWindow struct {
@@ -56,16 +58,18 @@ func platformNewWindow(w *Window, x, y int) error {
 
 	platformWindowSetTitle(w, w.Title)
 
-	if (w.Flags & WindowResizable) == 0 {
-		hints := C.XAllocSizeHints()
-		hints.flags = C.PMinSize | C.PMaxSize
-		hints.min_width = C.int(w.Width)
-		hints.min_height = C.int(w.Height)
-		hints.max_width = C.int(w.Width)
-		hints.max_height = C.int(w.Height)
-		C.XSetWMNormalHints(w.display, w.window, hints)
-		C.XFree(unsafe.Pointer(hints))
-	}
+	/*
+		if (w.Flags & WindowResizable) == 0 {
+			hints := C.XAllocSizeHints()
+			hints.flags = C.PMinSize | C.PMaxSize
+			hints.util.Min_width = C.int(w.Width)
+			hints.util.Min_height = C.int(w.Height)
+			hints.max_width = C.int(w.Width)
+			hints.max_height = C.int(w.Height)
+			C.XSetWMNormalHints(w.display, w.window, hints)
+			C.XFree(unsafe.Pointer(hints))
+		}
+	*/
 
 	if (w.Flags & WindowHidden) == 0 {
 		C.XMapWindow(w.display, w.window)
@@ -97,7 +101,7 @@ func platformWindowHasEvents(w *Window) bool {
 func platformWindowGetEvents(w *Window, events []Event) (int, error) {
 	var platformEvent C.XEvent
 
-	n := min(w.pendingEvents, len(events))
+	n := util.Min(w.pendingEvents, len(events))
 	var consumed int
 	for i := 0; i < n; i++ {
 		event := &events[consumed]
@@ -175,14 +179,16 @@ func platformWindowInvalidate(w *Window) {
 	C.XFlush(w.display)
 }
 
-func platformWindowDisplayPixels(w *Window, pixels []uint32, width int, height int) {
+func platformWindowDisplayPixels(w *Window, pixels []color.Color, width int, height int) {
 	var image C.XImage
-	var pinner runtime.Pinner
+
+	data := C.malloc(C.size_t(len(pixels) * int(unsafe.Sizeof(pixels[0]))))
+	copy(*(*[]color.Color)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(data), Len: len(pixels), Cap: len(pixels)})), pixels)
 
 	image.width = C.int(width)
 	image.height = C.int(height)
 	image.format = C.ZPixmap
-	image.data = (*C.char)(unsafe.Pointer(unsafe.SliceData(pixels)))
+	image.data = (*C.char)(data)
 	image.bitmap_unit = C.int(unsafe.Sizeof(pixels[0]) * 8)
 	image.bitmap_pad = C.int(unsafe.Sizeof(pixels[0]) * 8)
 	image.depth = 24
@@ -192,10 +198,9 @@ func platformWindowDisplayPixels(w *Window, pixels []uint32, width int, height i
 	image.green_mask = w.visual.green_mask
 	image.blue_mask = w.visual.blue_mask
 
-	pinner.Pin(&pixels[0])
 	C.XInitImage(&image)
-	C.XPutImage(w.display, w.window, w.gc, &image, 0, 0, 0, 0, C.uint(width), C.uint(height))
-	pinner.Unpin()
+	C.XPutImage(w.display, *(*C.Drawable)(unsafe.Pointer(&w.window)), w.gc, &image, 0, 0, 0, 0, C.uint(width), C.uint(height))
+	C.free(data)
 }
 
 func platformWindowEnableCursor(w *Window) {

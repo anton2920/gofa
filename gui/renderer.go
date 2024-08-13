@@ -21,7 +21,7 @@ type Renderer interface {
 	RenderCircle(x0, y0, radius int, clr color.Color)
 
 	/* Text. */
-	RenderText(text string, font Font, x, y int, clr color.Color)
+	RenderText(text string, font gr.Font, x, y int, clr color.Color)
 
 	/* Graphics. */
 	RenderPixmap(pixmap gr.Pixmap, x, y int)

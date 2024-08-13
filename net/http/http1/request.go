@@ -2,17 +2,17 @@ package http1
 
 import (
 	"strconv"
-	"unsafe"
 
 	"github.com/anton2920/gofa/net/http"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/util"
 )
 
 func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remoteAddr string) (int, error) {
 	t := trace.Begin("")
 
-	request := unsafe.String(unsafe.SliceData(buffer), len(buffer))
+	request := util.Slice2String(buffer)
 	pos := *consumed
 
 	var i int
@@ -100,7 +100,7 @@ func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remo
 				return i, nil
 			}
 
-			r.Body = unsafe.Slice(unsafe.StringData(request[pos:]), contentLength)
+			r.Body = util.String2Slice(request[pos : pos+contentLength])
 			pos += len(r.Body)
 		}
 

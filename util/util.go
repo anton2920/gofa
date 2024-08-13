@@ -1,6 +1,13 @@
 package util
 
-import "unsafe"
+import (
+	"reflect"
+	"unsafe"
+)
+
+func AlignUp(x int, quantum int) int {
+	return (x + (quantum - 1)) & ^(quantum - 1)
+}
 
 func Bool2Int(b bool) int {
 	if b {
@@ -22,7 +29,47 @@ func Clamp(x int, l int, r int) int {
 
 /* GetCallerPC returns a value of %IP register that is going to be used by RET instruction. arg0 is the address of the first agrument function of interest accepts. */
 func GetCallerPC(arg0 unsafe.Pointer) uintptr {
-	return *((*uintptr)(unsafe.Add(arg0, -8)))
+	return *(*uintptr)(PtrAdd(arg0, -int(unsafe.Sizeof(arg0))))
+}
+
+func Max(a, b int) int {
+	if a > b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func Min(a, b int) int {
+	if a < b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func MoveIntDown(vs []int, i int) {
+	if (i >= 0) && (i < len(vs)-1) {
+		vs[i], vs[i+1] = vs[i+1], vs[i]
+	}
+}
+
+func MoveStringDown(vs []string, i int) {
+	if (i >= 0) && (i < len(vs)-1) {
+		vs[i], vs[i+1] = vs[i+1], vs[i]
+	}
+}
+
+func MoveIntUp(vs []int, i int) {
+	if (i > 0) && (i <= len(vs)-1) {
+		vs[i-1], vs[i] = vs[i], vs[i-1]
+	}
+}
+
+func MoveStringUp(vs []string, i int) {
+	if (i > 0) && (i <= len(vs)-1) {
+		vs[i-1], vs[i] = vs[i], vs[i-1]
+	}
 }
 
 /* Noescape hides a pointer from escape analysis. Noescape is the identity function but escape analysis doesn't think the output depends on the input. Noescape is inlined and currently compiles down to zero instructions. */
@@ -32,34 +79,42 @@ func Noescape(p unsafe.Pointer) unsafe.Pointer {
 	return unsafe.Pointer(x ^ 0)
 }
 
-func RoundUp(x int, quantum int) int {
-	return (x + (quantum - 1)) & ^(quantum - 1)
+func PtrAdd(ptr unsafe.Pointer, x int) unsafe.Pointer {
+	return unsafe.Pointer(uintptr(ptr) + uintptr(x))
 }
 
-func Memset[T any](mem []T, v T) {
-	var i int
-	for i = 0; i < len(mem)>>2; i++ {
-		mem[(i<<2)+0] = v
-		mem[(i<<2)+1] = v
-		mem[(i<<2)+2] = v
-		mem[(i<<2)+3] = v
-	}
-	for j := 0; j < len(mem)&3; j++ {
-		mem[(i<<2)+j] = v
-	}
+func Slice2String(s []byte) string {
+	return *(*string)(unsafe.Pointer(&reflect.StringHeader{Data: (*reflect.SliceHeader)(unsafe.Pointer(&s)).Data, Len: len(s)}))
 }
 
-func RemoveAtIndex[T any](ts []T, i int) []T {
-	if (len(ts) == 0) || (i < 0) || (i >= len(ts)) {
-		return ts
-	}
+func String2Slice(s string) []byte {
+	return *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: (*reflect.StringHeader)(unsafe.Pointer(&s)).Data, Len: len(s), Cap: len(s)}))
+}
 
-	if i < len(ts)-1 {
-		copy(ts[i:], ts[i+1:])
-	}
-	return ts[:len(ts)-1]
+func StringData(s string) *byte {
+	return (*byte)(unsafe.Pointer((*reflect.StringHeader)(unsafe.Pointer(&s)).Data))
 }
 
 func SwapBytesInWord(x uint16) uint16 {
 	return ((x << 8) & 0xFF00) | (x >> 8)
+}
+
+func RemoveIntAtIndex(vs []int, i int) []int {
+	if (len(vs) == 0) || (i < 0) || (i >= len(vs)) {
+		return vs
+	}
+	if i < len(vs)-1 {
+		copy(vs[i:], vs[i+1:])
+	}
+	return vs[:len(vs)-1]
+}
+
+func RemoveStringAtIndex(vs []string, i int) []string {
+	if (len(vs) == 0) || (i < 0) || (i >= len(vs)) {
+		return vs
+	}
+	if i < len(vs)-1 {
+		copy(vs[i:], vs[i+1:])
+	}
+	return vs[:len(vs)-1]
 }

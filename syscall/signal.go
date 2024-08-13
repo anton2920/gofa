@@ -16,7 +16,7 @@ type Sigset struct {
 
 /* From <sys/signal.h>. */
 type Sigaction_t struct {
-	Handler unsafe.Pointer
+	Handler uintptr
 	Flags   int32
 	Mask    Sigset
 }
@@ -92,7 +92,7 @@ const (
 )
 
 /* From <sys/signal.h>. */
-var SIG_IGN = unsafe.Pointer(uintptr(1))
+const SIG_IGN = uintptr(1)
 
 var signals = [...]string{
 	SIGHUP:    "terminal line hangup",

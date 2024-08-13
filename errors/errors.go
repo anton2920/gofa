@@ -26,10 +26,7 @@ func NewPanic(value interface{}) Panic {
 }
 
 func (e Panic) Error() string {
-	buffer := make([]byte, 0, 1024)
-	buffer = fmt.Appendf(buffer, "%v\n", e.Value)
-	buffer = append(buffer, e.Trace...)
-	return string(buffer)
+	return fmt.Sprintf("%v\n%s", e.Value, e.Trace)
 }
 
 func WrapWithTrace(err error, skip int) error {

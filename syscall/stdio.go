@@ -1,6 +1,9 @@
 package syscall
 
-import "unsafe"
+import (
+	"reflect"
+	"unsafe"
+)
 
 const (
 	/* From <stdio.h>. */
@@ -8,4 +11,4 @@ const (
 	SEEK_END = 2
 )
 
-var NULL = unsafe.String(nil, 0)
+var NULL = *(*string)(unsafe.Pointer(&reflect.StringHeader{Data: 0, Len: 0}))

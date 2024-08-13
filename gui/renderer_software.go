@@ -1,12 +1,9 @@
 package gui
 
 import (
-	"unsafe"
-
 	"github.com/anton2920/gofa/gui/color"
 	"github.com/anton2920/gofa/gui/gr"
 	"github.com/anton2920/gofa/trace"
-	"github.com/anton2920/gofa/util"
 )
 
 /* SoftwareRenderer is a completely platform-independent renderer. All rendering is done in a Pixmap, which is then transferred to a screen via Window platform-specific function. This enables maximum portability at a cost of performance. */
@@ -21,7 +18,7 @@ func NewSoftwareRenderer(window *Window) *SoftwareRenderer {
 
 	r.Window = window
 	r.Pixmap = gr.NewPixmap(window.Width, window.Height, gr.AlphaOpaque)
-	r.Active = Rect{0, 0, r.Pixmap.Width, r.Pixmap.Height}
+	r.Active = gr.Rect{0, 0, r.Pixmap.Width, r.Pixmap.Height}
 
 	return &r
 }
@@ -29,7 +26,9 @@ func NewSoftwareRenderer(window *Window) *SoftwareRenderer {
 func (r *SoftwareRenderer) Clear(clr color.Color) {
 	t := trace.Begin("")
 
-	util.Memset(r.Pixmap.Pixels, clr)
+	for i := 0; i < len(r.Pixmap.Pixels); i++ {
+		r.Pixmap.Pixels[i] = clr
+	}
 
 	trace.End(t)
 }
@@ -37,7 +36,7 @@ func (r *SoftwareRenderer) Clear(clr color.Color) {
 func (r *SoftwareRenderer) Present() {
 	t := trace.Begin("")
 
-	r.Window.DisplayPixels(unsafe.Slice((*uint32)(unsafe.Pointer(unsafe.SliceData(r.Pixmap.Pixels))), len(r.Pixmap.Pixels)), r.Pixmap.Width, r.Pixmap.Height)
+	r.Window.DisplayPixels(r.Pixmap.Pixels, r.Pixmap.Width, r.Pixmap.Height)
 
 	trace.End(t)
 }
@@ -53,7 +52,7 @@ func (r *SoftwareRenderer) Resize(width int, height int) {
 		r.Pixmap.Height = height
 		r.Pixmap.Stride = width
 	}
-	r.Active = Rect{0, 0, r.Pixmap.Width, r.Pixmap.Height}
+	r.Active = gr.Rect{0, 0, r.Pixmap.Width, r.Pixmap.Height}
 
 	trace.End(t)
 }
@@ -118,7 +117,7 @@ func (r *SoftwareRenderer) RenderCircle(x0, y0, radius int, clr color.Color) {
 	trace.End(t)
 }
 
-func (r *SoftwareRenderer) RenderText(text string, font Font, x, y int, clr color.Color) {
+func (r *SoftwareRenderer) RenderText(text string, font gr.Font, x, y int, clr color.Color) {
 	t := trace.Begin("")
 
 	gr.DrawText(r.Pixmap, r.Active, text, font, x, y, clr)

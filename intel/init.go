@@ -1,6 +1,7 @@
 package intel
 
 import (
+	"reflect"
 	"unsafe"
 
 	"github.com/anton2920/gofa/debug"
@@ -32,7 +33,8 @@ func init() {
 		vendor[0] = b
 		vendor[1] = d
 		vendor[2] = c
-		VendorString = string(unsafe.Slice((*byte)(unsafe.Pointer(&vendor[0])), len(vendor)*int(unsafe.Sizeof(vendor[0]))))
+		buffer := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&vendor[0])), Len: len(vendor) * int(unsafe.Sizeof(vendor[0])), Cap: len(vendor) * int(unsafe.Sizeof(vendor[0]))}))
+		VendorString = string(buffer)
 	}
 
 	{
@@ -65,7 +67,8 @@ func init() {
 				brand[4*i+3] = d
 				base++
 			}
-			BrandString = string(unsafe.Slice((*byte)(unsafe.Pointer(&brand[0])), len(brand)*int(unsafe.Sizeof(brand[0]))))
+			buffer := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&brand[0])), Len: len(brand) * int(unsafe.Sizeof(brand[0])), Cap: len(brand) * int(unsafe.Sizeof(brand[0]))}))
+			BrandString = string(buffer)
 
 			/* NOTE(anton2920): eliding \x00 bytes at the end. */
 			for BrandString[len(BrandString)-1] == '\x00' {
@@ -83,11 +86,11 @@ func init() {
 			signature := (Family << 8) | (Model)
 			switch signature {
 			case 0x0655: /* Intel® Xeon® Scalable Processor Family. */
-				CPUHz = (Cycles(25_000_000) * Cycles(numerator)) / Cycles(denominator)
+				CPUHz = (Cycles(25000000) * Cycles(numerator)) / Cycles(denominator)
 			case 0x064E, 0x065E, 0x068E, 0x069E: /* 6th, 7th, 8th and 9th generation Intel® Core™ processors. */
-				CPUHz = (Cycles(24_000_000) * Cycles(numerator)) / Cycles(denominator)
+				CPUHz = (Cycles(24000000) * Cycles(numerator)) / Cycles(denominator)
 			case 0x65C: /* Next Generation Intel Atom® processors based on Goldmont Microarchitecture. */
-				CPUHz = (Cycles(19_200_000) * Cycles(numerator)) / Cycles(denominator)
+				CPUHz = (Cycles(19200000) * Cycles(numerator)) / Cycles(denominator)
 			}
 		}
 		if CPUHz != 0 {

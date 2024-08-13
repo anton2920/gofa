@@ -1,6 +1,7 @@
 package http1
 
 import (
+	"reflect"
 	"unsafe"
 
 	"github.com/anton2920/gofa/net/http"
@@ -46,7 +47,7 @@ func FillError(ctx *http.Context, err error, dateBuf []byte) {
 	w.WriteString("\r\n")
 
 	w.Headers.Set("Connection", "close")
-	FillResponses(ctx, unsafe.Slice(&w, 1), dateBuf)
+	FillResponses(ctx, *(*[]http.Response)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&w)), Len: 1, Cap: 1})), dateBuf)
 
 	trace.End(t)
 }

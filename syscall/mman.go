@@ -1,7 +1,5 @@
 package syscall
 
-import "unsafe"
-
 const (
 	/* From <sys/mman.h>. */
 
@@ -58,5 +56,3 @@ const (
 	SHM_LARGEPAGE_ALLOC_NOWAIT  = 1
 	SHM_LARGEPAGE_ALLOC_HARD    = 2
 )
-
-var SHM_ANON = unsafe.String((*byte)(unsafe.Pointer(uintptr(1))), 8)

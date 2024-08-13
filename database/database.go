@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"reflect"
 	"unsafe"
 
 	"github.com/anton2920/gofa/errors"
@@ -37,27 +38,31 @@ var id ID
 
 var NotFound = errors.New("not found")
 
+/* Offset2String performs s.Ptr += base-MinValidPointer. */
 //go:nosplit
 func Offset2String(s string, base *byte) string {
-	return unsafe.String((*byte)(util.Noescape(unsafe.Add(unsafe.Pointer(base), uintptr(unsafe.Pointer(unsafe.StringData(s)))-MinValidPointer))), len(s))
+	return *(*string)(unsafe.Pointer(&reflect.StringHeader{Data: uintptr(util.Noescape(util.PtrAdd(unsafe.Pointer(base), int(uintptr(unsafe.Pointer(util.StringData(s)))-MinValidPointer)))), Len: len(s)}))
 }
 
+/* Offset2Slice performs s.Ptr += base-MinValidPointer. */
 //go:nosplit
-func Offset2Slice[T any](s []T, base *byte) []T {
+func Offset2Slice(s []byte, base *byte) []byte {
 	if len(s) == 0 {
 		return s
 	}
-	return unsafe.Slice((*T)(util.Noescape(unsafe.Add(unsafe.Pointer(base), uintptr(unsafe.Pointer(unsafe.SliceData(s)))-MinValidPointer))), len(s))
+	return *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(util.Noescape(util.PtrAdd(unsafe.Pointer(base), int(uintptr(unsafe.Pointer(&s[0]))-MinValidPointer)))), Len: len(s), Cap: cap(s)}))
 }
 
+/* String2Offset performs s.Ptr = offset+MinValidPointer. */
 //go:nosplit
 func String2Offset(s string, offset int) string {
-	return unsafe.String((*byte)(util.Noescape(unsafe.Pointer(uintptr(offset)+MinValidPointer))), len(s))
+	return *(*string)(unsafe.Pointer(&reflect.StringHeader{Data: uintptr(offset) + MinValidPointer, Len: len(s)}))
 }
 
+/* Slice2Offset performs s.Ptr = offset+MinValidPointer. */
 //go:nosplit
-func Slice2Offset[T any](s []T, offset int) []T {
-	return unsafe.Slice((*T)(util.Noescape(unsafe.Pointer(uintptr(offset)+MinValidPointer))), len(s))
+func Slice2Offset(s []byte, offset int) []byte {
+	return *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(offset) + MinValidPointer, Len: len(s), Cap: cap(s)}))
 }
 
 //go:nosplit
@@ -68,15 +73,25 @@ func String2DBString(ds *string, ss string, data []byte, n int) int {
 }
 
 //go:nosplit
-func Slice2DBSlice[T any](ds *[]T, ss []T, data []byte, n int) int {
+func Slice2DBSlice(ds *[]byte, ss []byte, size int, alignment int, data []byte, n int) int {
 	if len(ss) == 0 {
 		return 0
 	}
 
-	start := util.RoundUp(n, int(unsafe.Alignof(&ss[0])))
-	nbytes := copy(data[start:], unsafe.Slice((*byte)(unsafe.Pointer(&ss[0])), len(ss)*int(unsafe.Sizeof(ss[0]))))
+	start := util.AlignUp(n, alignment)
+	nbytes := copy(data[start:], *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&ss[0])), Len: len(ss) * size, Cap: len(ss) * size})))
 	*ds = Slice2Offset(ss, start)
 	return nbytes + (start - n)
+}
+
+func ID2Slice(x *ID) []byte {
+	size := int(unsafe.Sizeof(*x))
+	return *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(x)), Len: size, Cap: size}))
+}
+
+func uint322Slice(x *uint32) []byte {
+	size := int(unsafe.Sizeof(*x))
+	return *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(x)), Len: size, Cap: size}))
 }
 
 func Open(path string) (*DB, error) {
@@ -89,7 +104,7 @@ func Open(path string) (*DB, error) {
 		return nil, err
 	}
 
-	n, err := syscall.Pread(db.FD, unsafe.Slice((*byte)(unsafe.Pointer(&db.Version)), unsafe.Sizeof(db.Version)), VersionOffset)
+	n, err := syscall.Pread(db.FD, uint322Slice(&db.Version), VersionOffset)
 	if err != nil {
 		syscall.Close(db.FD)
 		return nil, err
@@ -97,7 +112,7 @@ func Open(path string) (*DB, error) {
 	if n < int(unsafe.Sizeof(db.Version)) {
 		db.Version = Version
 
-		_, err := syscall.Pwrite(db.FD, unsafe.Slice((*byte)(unsafe.Pointer(&db.Version)), unsafe.Sizeof(db.Version)), VersionOffset)
+		_, err := syscall.Pwrite(db.FD, uint322Slice(&db.Version), VersionOffset)
 		if err != nil {
 			syscall.Close(db.FD)
 			return nil, err
@@ -127,7 +142,7 @@ func Drop(db *DB) error {
 func GetNextID(db *DB) (ID, error) {
 	var id ID
 
-	_, err := syscall.Pread(db.FD, unsafe.Slice((*byte)(unsafe.Pointer(&id)), unsafe.Sizeof(id)), NextIDOffset)
+	_, err := syscall.Pread(db.FD, ID2Slice(&id), NextIDOffset)
 	if err != nil {
 		return -1, fmt.Errorf("failed to read next ID: %w", err)
 	}
@@ -148,23 +163,21 @@ func IncrementNextID(db *DB) (ID, error) {
 }
 
 func SetNextID(db *DB, id ID) error {
-	_, err := syscall.Pwrite(db.FD, unsafe.Slice((*byte)(unsafe.Pointer(&id)), unsafe.Sizeof(id)), NextIDOffset)
+	_, err := syscall.Pwrite(db.FD, ID2Slice(&id), NextIDOffset)
 	if err != nil {
 		return fmt.Errorf("failed to write next ID: %w", err)
 	}
 	return nil
 }
 
-func GetOffsetForID[T any](id ID) int64 {
-	var t T
-	return int64(int(id)*int(unsafe.Sizeof(t))) + DataOffset
+func GetOffsetForID(id ID, size int) int64 {
+	return int64(int(id)*size) + DataOffset
 }
 
-func Read[T any](db *DB, id ID, t *T) error {
-	size := int(unsafe.Sizeof(*t))
+func Read(db *DB, id ID, t unsafe.Pointer, size int) error {
 	offset := int64(int(id)*size) + DataOffset
 
-	n, err := syscall.Pread(db.FD, unsafe.Slice((*byte)(unsafe.Pointer(t)), size), offset)
+	n, err := syscall.Pread(db.FD, *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(t), Len: size, Cap: size})), offset)
 	if err != nil {
 		return fmt.Errorf("failed to read record from DB: %w", err)
 	}
@@ -175,13 +188,12 @@ func Read[T any](db *DB, id ID, t *T) error {
 	return nil
 }
 
-func ReadMany[T any](db *DB, pos *int64, ts []T) (int, error) {
+func ReadMany(db *DB, pos *int64, ts []byte, size int) (int, error) {
 	if *pos < DataOffset {
 		*pos = DataOffset
 	}
-	size := int(unsafe.Sizeof(ts[0]))
 
-	n, err := syscall.Pread(db.FD, unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(ts))), len(ts)*size), *pos)
+	n, err := syscall.Pread(db.FD, *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&ts[0])), Len: len(ts) * size, Cap: len(ts) * size})), *pos)
 	if err != nil {
 		return 0, fmt.Errorf("failed to read records from DB: %w", err)
 	}
@@ -190,11 +202,10 @@ func ReadMany[T any](db *DB, pos *int64, ts []T) (int, error) {
 	return n / size, nil
 }
 
-func Write[T any](db *DB, id ID, t *T) error {
-	size := int(unsafe.Sizeof(*t))
+func Write(db *DB, id ID, t unsafe.Pointer, size int) error {
 	offset := int64(int(id)*size) + DataOffset
 
-	_, err := syscall.Pwrite(db.FD, unsafe.Slice((*byte)(unsafe.Pointer(t)), size), offset)
+	_, err := syscall.Pwrite(db.FD, *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(t), Len: size, Cap: size})), offset)
 	if err != nil {
 		return fmt.Errorf("failed to write record to DB: %w", err)
 	}
