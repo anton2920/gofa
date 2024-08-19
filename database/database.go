@@ -10,7 +10,15 @@ import (
 	"github.com/anton2920/gofa/util"
 )
 
-type ID int32
+type (
+	ID    int32
+	Flags uint32
+)
+
+type Record struct {
+	ID    ID
+	Flags Flags
+}
 
 type DB struct {
 	Version uint32
