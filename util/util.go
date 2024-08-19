@@ -84,7 +84,7 @@ func PtrAdd(ptr unsafe.Pointer, x int) unsafe.Pointer {
 }
 
 func Slice2String(s []byte) string {
-	return *(*string)(unsafe.Pointer(&reflect.StringHeader{Data: (*reflect.SliceHeader)(unsafe.Pointer(&s)).Data, Len: len(s)}))
+	return *(*string)(unsafe.Pointer(&s))
 }
 
 func String2Slice(s string) []byte {
