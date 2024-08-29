@@ -192,6 +192,16 @@ func (vs *Values) Set(key string, value string) {
 	trace.End(t)
 }
 
+func (vs *Values) SetID(key string, value database.ID) {
+	t := trace.Begin("")
+
+	buffer := vs.Arena.NewSlice(20)
+	n := slices.PutInt(buffer, int(value))
+	vs.Set(key, util.Slice2String(buffer[:n]))
+
+	trace.End(t)
+}
+
 func (vs *Values) SetInt(key string, value int) {
 	t := trace.Begin("")
 
