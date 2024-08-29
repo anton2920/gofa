@@ -15,7 +15,7 @@ type Tm struct {
 	Isdst int /* Daylight Savings Time flag */
 }
 
-const RFC822Len = 31
+const RFC822Len = 29
 
 func ToTm(t int) Tm {
 	var tm Tm
@@ -24,8 +24,6 @@ func ToTm(t int) Tm {
 		{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365}, // 365 days, non-leap
 		{0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366}, // 366 days, leap
 	}
-
-	t += 3 * 60 * 60 /* MSK timezone hack. */
 
 	/* Re-bias from 1970 to 1601: 1970 - 1601 = 369 = 3*100 + 17*4 + 1 years (incl. 89 leap days) = (3*100*(365+24/100) + 17*4*(365+1/4) + 1*365)*24*3600 seconds. */
 	sec := t + 11644473600
@@ -96,6 +94,7 @@ func ToTm(t int) Tm {
 	return tm
 }
 
+/* PutTmRFC822 puts tm into buffer as 'Sun, 01 Jan 1970 00:00:00 GMT'. */
 func PutTmRFC822(buf []byte, tm Tm) int {
 	var n, ndigits int
 
@@ -152,11 +151,9 @@ func PutTmRFC822(buf []byte, tm Tm) int {
 	buf[n] = ' '
 	n++
 
-	buf[n] = '+'
-	buf[n+1] = '0'
-	buf[n+2] = '3'
-	buf[n+3] = '0'
-	buf[n+4] = '0'
+	buf[n] = 'G'
+	buf[n+1] = 'M'
+	buf[n+2] = 'T'
 
-	return n + 5
+	return n + 3
 }
