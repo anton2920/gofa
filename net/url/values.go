@@ -63,6 +63,16 @@ func ParseQuery(vs *Values, query string) error {
 	return err
 }
 
+func RemoveValuesAtIndex(vs [][]string, i int) [][]string {
+	if (len(vs) == 0) || (i < 0) || (i >= len(vs)) {
+		return vs
+	}
+	if i < len(vs)-1 {
+		copy(vs[i:], vs[i+1:])
+	}
+	return vs[:len(vs)-1]
+}
+
 func (vs *Values) Add(key string, value string) {
 	t := trace.Begin("")
 
@@ -86,6 +96,20 @@ func (vs *Values) Add(key string, value string) {
 	vs.Values = vs.Values[:n+1]
 	vs.Values[n] = vs.Values[n][:0]
 	vs.Values[n] = append(vs.Values[n], value)
+
+	trace.End(t)
+}
+
+func (vs *Values) Del(key string) {
+	t := trace.Begin("")
+
+	for i := 0; i < len(vs.Keys); i++ {
+		if key == vs.Keys[i] {
+			vs.Keys = util.RemoveStringAtIndex(vs.Keys, i)
+			vs.Values = RemoveValuesAtIndex(vs.Values, i)
+			break
+		}
+	}
 
 	trace.End(t)
 }
