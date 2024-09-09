@@ -25,6 +25,11 @@ func BadRequest(format string, args ...interface{}) Error {
 	return Error{StatusCode: StatusBadRequest, DisplayMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 2)}
 }
 
+func Forbidden(format string, args ...interface{}) Error {
+	message := fmt.Sprintf(format, args...)
+	return Error{StatusCode: StatusForbidden, DisplayMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 2)}
+}
+
 func NotFound(format string, args ...interface{}) Error {
 	message := fmt.Sprintf(format, args...)
 	return Error{StatusCode: StatusNotFound, DisplayMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 2)}
