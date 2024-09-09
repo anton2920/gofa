@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/anton2920/gofa/mime/multipart"
 	"github.com/anton2920/gofa/net/url"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/trace"
@@ -15,7 +16,8 @@ type Request struct {
 	Headers Headers
 	Body    []byte
 
-	Form url.Values
+	Form  url.Values
+	Files multipart.Files
 }
 
 func (r *Request) Cookie(name string) string {
@@ -54,9 +56,24 @@ func (r *Request) ParseForm() error {
 	return err
 }
 
+func (r *Request) ParseMultipartForm() error {
+	t := trace.Begin("")
+
+	if (len(r.Form.Keys) != 0) || (len(r.Files.Keys) != 0) {
+		trace.End(t)
+		return nil
+	}
+
+	err := multipart.ParseFormData(r.Headers.Get("Content-Type"), &r.Form, &r.Files, r.Body)
+
+	trace.End(t)
+	return err
+}
+
 func (r *Request) Reset() {
 	r.URL.Query.Reset()
 	r.Headers.Reset()
 	r.Body = r.Body[:0]
 	r.Form.Reset()
+	r.Files.Reset()
 }
