@@ -25,9 +25,8 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 		return fmt.Errorf("expected boundary in Content-Type, got '%s:%s'", key[len(key)-len("boundary"):], boundary)
 	}
 
-	var pos int
 	form := util.Slice2String(body)
-
+	var pos int
 	for {
 		/* Parsing boundary. */
 		lineEnd := strings.FindChar(form[pos:], '\r')
@@ -116,7 +115,7 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 		}
 		value := form[pos : pos+lineEnd]
 		if (len(name) > 0) && (len(filename) > 0) {
-			files.Add(name, filename, contentType, util.String2Slice(value))
+			files.Add(name, File{filename, contentType, util.String2Slice(value)})
 		} else if len(name) > 0 {
 			vs.Add(name, value)
 		}
