@@ -58,20 +58,20 @@ const (
 
 func RawSyscall(trap, a1, a2, a3 uintptr) (r1, r2, errno uintptr)
 
-func Syscall(trap, a1, a2, a3 uintptr) (uintptr, uintptr, uintptr) {
-	r1, r2, errno := syscall.Syscall(trap, a1, a2, a3)
+func Syscall(trap, nargs, a1, a2, a3 uintptr) (uintptr, uintptr, uintptr) {
+	r1, r2, errno := syscall.Syscall(trap, nargs, a1, a2, a3)
 	return r1, r2, uintptr(errno)
 }
 
 func RawSyscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2, errno uintptr)
 
-func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (uintptr, uintptr, uintptr) {
-	r1, r2, errno := syscall.Syscall6(trap, a1, a2, a3, a4, a5, a6)
+func Syscall6(trap, nargs, a1, a2, a3, a4, a5, a6 uintptr) (uintptr, uintptr, uintptr) {
+	r1, r2, errno := syscall.Syscall6(trap, nargs, a1, a2, a3, a4, a5, a6)
 	return r1, r2, uintptr(errno)
 }
 
-func Accept(s int32, addr *Sockaddr, addrlen *uint32) (int32, error) {
-	r1, _, errno := Syscall(SYS_accept, uintptr(s), uintptr(unsafe.Pointer(addr)), uintptr(unsafe.Pointer(addrlen)))
+func Accept(s int32, nargs uintptr, addr *Sockaddr, addrlen *uint32) (int32, error) {
+	r1, _, errno := Syscall(SYS_accept, nargs, uintptr(s), uintptr(unsafe.Pointer(addr)), uintptr(unsafe.Pointer(addrlen)))
 	return int32(r1), NewError("accept", errno)
 }
 
@@ -108,8 +108,8 @@ func ClockGettime(clockID int32, tp *Timespec) error {
 	return NewError("clock_gettime", errno)
 }
 
-func Close(fd int32) error {
-	_, _, errno := Syscall(SYS_close, uintptr(fd), 0, 0)
+func Close(fd int32, nargs uintptr) error {
+	_, _, errno := Syscall(SYS_close, nargs, uintptr(fd), 0, 0)
 	return NewError("close", errno)
 }
 
@@ -117,8 +117,8 @@ func Exit(status int32) {
 	RawSyscall(SYS_exit, uintptr(status), 0, 0)
 }
 
-func Fcntl(fd, cmd, arg int32) error {
-	_, _, errno := Syscall(SYS_fcntl, uintptr(fd), uintptr(cmd), uintptr(arg))
+func Fcntl(fd, cmd, arg int32, nargs uintptr) error {
+	_, _, errno := Syscall(SYS_fcntl, nargs, uintptr(fd), uintptr(cmd), uintptr(arg))
 	return NewError("fcntl", errno)
 }
 
@@ -132,8 +132,8 @@ func Ftruncate(fd int32, length int64) error {
 	return NewError("ftruncate", errno)
 }
 
-func Getrandom(buf []byte, flags uint32) (int64, error) {
-	r1, _, errno := Syscall(SYS_getrandom, uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)), uintptr(flags))
+func Getrandom(buf []byte, flags uint32, nargs uintptr) (int64, error) {
+	r1, _, errno := Syscall(SYS_getrandom, nargs, uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)), uintptr(flags))
 	return int64(r1), NewError("getrandom", errno)
 }
 
@@ -147,7 +147,7 @@ func JailSet(iovs []Iovec, flags int32) (int32, error) {
 	return int32(jid), NewError("jail_set", errno)
 }
 
-func Kevent(kq int32, changelist []Kevent_t, eventlist []Kevent_t, timeout *Timespec) (int, error) {
+func Kevent(kq int32, changelist []Kevent_t, eventlist []Kevent_t, timeout *Timespec, nargs uintptr) (int, error) {
 	var chptr, evptr unsafe.Pointer
 	if len(changelist) > 0 {
 		chptr = unsafe.Pointer(&changelist[0])
@@ -156,7 +156,7 @@ func Kevent(kq int32, changelist []Kevent_t, eventlist []Kevent_t, timeout *Time
 		evptr = unsafe.Pointer(&eventlist[0])
 	}
 
-	r1, _, errno := Syscall6(SYS_kevent, uintptr(kq), uintptr(chptr), uintptr(len(changelist)), uintptr(evptr), uintptr(len(eventlist)), uintptr(unsafe.Pointer(timeout)))
+	r1, _, errno := Syscall6(SYS_kevent, nargs, uintptr(kq), uintptr(chptr), uintptr(len(changelist)), uintptr(evptr), uintptr(len(eventlist)), uintptr(unsafe.Pointer(timeout)))
 	return int(r1), NewError("kevent", errno)
 }
 
@@ -198,8 +198,8 @@ func Munmap(addr unsafe.Pointer, len uint64) error {
 	return NewError("munmap", errno)
 }
 
-func Nanosleep(rqtp, rmtp *Timespec) error {
-	_, _, errno := Syscall(SYS_nanosleep, uintptr(unsafe.Pointer(rqtp)), uintptr(unsafe.Pointer(rmtp)), 0)
+func Nanosleep(rqtp, rmtp *Timespec, nargs uintptr) error {
+	_, _, errno := Syscall(SYS_nanosleep, nargs, uintptr(unsafe.Pointer(rqtp)), uintptr(unsafe.Pointer(rmtp)), 0)
 	return NewError("nanosleep", errno)
 }
 
@@ -208,21 +208,21 @@ func Nmount(iovs []Iovec, flags int32) error {
 	return NewError("nmount", errno)
 }
 
-func Open(path string, flags int32, mode uint16) (int32, error) {
+func Open(path string, flags int32, mode uint16, nargs uintptr) (int32, error) {
 	buffer := make([]byte, PATH_MAX+1)
 	copy(buffer[:PATH_MAX], path)
 
-	r1, _, errno := Syscall(SYS_open, uintptr(unsafe.Pointer(&buffer[0])), uintptr(flags), uintptr(mode))
+	r1, _, errno := Syscall(SYS_open, nargs, uintptr(unsafe.Pointer(&buffer[0])), uintptr(flags), uintptr(mode))
 	return int32(r1), NewError("open", errno)
 }
 
-func Pread(fd int32, buf []byte, offset int64) (int, error) {
-	r1, _, errno := Syscall6(SYS_pread, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)), uintptr(offset), 0, 0)
+func Pread(fd int32, buf []byte, offset int64, nargs uintptr) (int, error) {
+	r1, _, errno := Syscall6(SYS_pread, nargs, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)), uintptr(offset), 0, 0)
 	return int(r1), NewError("pread", errno)
 }
 
-func Pwrite(fd int32, buf []byte, offset int64) (int, error) {
-	r1, _, errno := Syscall6(SYS_pwrite, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)), uintptr(offset), 0, 0)
+func Pwrite(fd int32, buf []byte, offset int64, nargs uintptr) (int, error) {
+	r1, _, errno := Syscall6(SYS_pwrite, nargs, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)), uintptr(offset), 0, 0)
 	return int(r1), NewError("pwrite", errno)
 }
 
@@ -236,8 +236,8 @@ func RctlRemoveRule(filter []byte) error {
 	return NewError("rctl_remove_rule", errno)
 }
 
-func Read(fd int32, buf []byte) (int, error) {
-	r1, _, errno := Syscall(SYS_read, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
+func Read(fd int32, buf []byte, nargs uintptr) (int, error) {
+	r1, _, errno := Syscall(SYS_read, nargs, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
 	return int(r1), NewError("read", errno)
 }
 
@@ -298,12 +298,12 @@ func Unmount(path string, flags int32) error {
 	return NewError("unmount", errno)
 }
 
-func Write(fd int32, buf []byte) (int, error) {
-	r1, _, errno := Syscall(SYS_write, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
+func Write(fd int32, buf []byte, nargs uintptr) (int, error) {
+	r1, _, errno := Syscall(SYS_write, nargs, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
 	return int(r1), NewError("write", errno)
 }
 
-func Writev(fd int32, iov []Iovec) (int, error) {
-	r1, _, errno := Syscall(SYS_writev, uintptr(fd), uintptr(unsafe.Pointer(&iov[0])), uintptr(len(iov)))
+func Writev(fd int32, iov []Iovec, nargs uintptr) (int, error) {
+	r1, _, errno := Syscall(SYS_writev, nargs, uintptr(fd), uintptr(unsafe.Pointer(&iov[0])), uintptr(len(iov)))
 	return int(r1), NewError("writev", errno)
 }
