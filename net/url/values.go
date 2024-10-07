@@ -182,6 +182,28 @@ func (vs *Values) Has(key string) bool {
 	return false
 }
 
+func (vs *Values) HasID(id database.ID) bool {
+	t := trace.Begin("")
+
+	buffer := make([]byte, 20)
+	n := slices.PutInt(buffer, int(id))
+	has := vs.Has(util.Slice2String(buffer[:n]))
+
+	trace.End(t)
+	return has
+}
+
+func (vs *Values) HasInt(value int) bool {
+	t := trace.Begin("")
+
+	buffer := make([]byte, 20)
+	n := slices.PutInt(buffer, value)
+	has := vs.Has(util.Slice2String(buffer[:n]))
+
+	trace.End(t)
+	return has
+}
+
 func (vs *Values) Reset() {
 	vs.Keys = vs.Keys[:0]
 	vs.Values = vs.Values[:0]
