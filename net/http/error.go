@@ -13,9 +13,6 @@ type Error struct {
 }
 
 var (
-	UnauthorizedError = Error{StatusCode: StatusUnauthorized, DisplayMessage: "whoops... You have to sign in to see this page", LogError: errors.New("whoops... You have to sign in to see this page")}
-	ForbiddenError    = Error{StatusCode: StatusForbidden, DisplayMessage: "whoops... Your permissions are insufficient", LogError: errors.New("whoops... Your permissions are insufficient")}
-
 	NoSpaceLeft    = Error{StatusCode: StatusRequestEntityTooLarge, DisplayMessage: "no space left in the buffer", LogError: errors.New("no space left in the buffer")}
 	TooManyClients = Error{StatusCode: StatusServiceUnavailable, DisplayMessage: "too many clients", LogError: errors.New("too many clients")}
 )
@@ -23,6 +20,11 @@ var (
 func BadRequest(format string, args ...interface{}) Error {
 	message := fmt.Sprintf(format, args...)
 	return Error{StatusCode: StatusBadRequest, DisplayMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 2)}
+}
+
+func Unauthorized(format string, args ...interface{}) Error {
+	message := fmt.Sprintf(format, args...)
+	return Error{StatusCode: StatusUnauthorized, DisplayMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 2)}
 }
 
 func Forbidden(format string, args ...interface{}) Error {
