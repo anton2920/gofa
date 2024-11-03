@@ -34,5 +34,5 @@ func WrapWithTrace(err error, skip int) error {
 	if !ok {
 		return err
 	}
-	return fmt.Errorf("%s:%d: %w", file, line, err)
+	return fmt.Errorf("%s:%d: %v", file, line, err)
 }
