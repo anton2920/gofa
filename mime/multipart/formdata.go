@@ -30,6 +30,9 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 	for {
 		/* Parsing boundary. */
 		lineEnd := strings.FindChar(form[pos:], '\r')
+		if lineEnd == 0 {
+			break
+		}
 		if lineEnd == -1 {
 			trace.End(t)
 			return errors.New("expected new line after boundary")
