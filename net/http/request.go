@@ -5,7 +5,6 @@ import (
 	"github.com/anton2920/gofa/net/url"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/trace"
-	"github.com/anton2920/gofa/util"
 )
 
 type Request struct {
@@ -39,35 +38,6 @@ func (r *Request) Cookie(name string) string {
 
 	trace.End(t)
 	return ""
-}
-
-func (r *Request) ParseForm() error {
-	t := trace.Begin("")
-
-	if len(r.Form.Keys) != 0 {
-		trace.End(t)
-		return nil
-	}
-
-	query := util.Slice2String(r.Body)
-	err := url.ParseQuery(&r.Form, query)
-
-	trace.End(t)
-	return err
-}
-
-func (r *Request) ParseMultipartForm() error {
-	t := trace.Begin("")
-
-	if (len(r.Form.Keys) != 0) || (len(r.Files.Keys) != 0) {
-		trace.End(t)
-		return nil
-	}
-
-	err := multipart.ParseFormData(r.Headers.Get("Content-Type"), &r.Form, &r.Files, r.Body)
-
-	trace.End(t)
-	return err
 }
 
 func (r *Request) Reset() {
