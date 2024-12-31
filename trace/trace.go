@@ -15,18 +15,18 @@ import (
 )
 
 type Anchor struct {
-	PC    uintptr /* NOTE(anton2920): for lazy function name resolution. */
-	Label string  /* NOTE(anton2920): for names of non-function blocks. */
+	PC    uintptr /* for lazy function name resolution. */
+	Label string  /* for names of non-function blocks. */
 
 	HitCount int
 
-	ElapsedCyclesExclusive intel.Cycles /* NOTE(anton2920): time for anchor itself. */
-	ElapsedCyclesInclusive intel.Cycles /* NOTE(anton2920): time for anchor plus time of its children. */
+	ElapsedCyclesExclusive intel.Cycles /* time for anchor itself. */
+	ElapsedCyclesInclusive intel.Cycles /* time for anchor plus time of its children. */
 }
 
 type Block struct {
-	PC    uintptr /* NOTE(anton2920): for lazy function name resolution. */
-	Label string  /* NOTE(anton2920): for names of non-function blocks. */
+	PC    uintptr /* for lazy function name resolution. */
+	Label string  /* for names of non-function blocks. */
 
 	ParentIndex int32
 	AnchorIndex int32
@@ -48,6 +48,7 @@ type Profiler struct {
 var GlobalProfiler Profiler
 
 func init() {
+	/* NOTE(anton2920): len must be a power of two for fast modulus calculation. */
 	GlobalProfiler.Anchors = make(Anchors, 64*1024)
 }
 
@@ -95,20 +96,6 @@ func anchorIndexForPC(pc uintptr) int32 {
 	return idx + int32(util.Bool2Int(idx == 0))
 }
 
-func BeginProfile() {
-	for i := 0; i < len(GlobalProfiler.Anchors); i++ {
-		GlobalProfiler.Anchors[i] = Anchor{}
-	}
-	GlobalProfiler.CurrentParent = 0
-	GlobalProfiler.StartCycles = intel.RDTSC()
-}
-
-//go:nosplit
-func Begin(label string) Block {
-	intel.LFENCE()
-	return begin(util.GetCallerPC(unsafe.Pointer(&label)), label)
-}
-
 //go:nosplit
 func begin(pc uintptr, label string) Block {
 	var b Block
@@ -126,6 +113,28 @@ func begin(pc uintptr, label string) Block {
 
 	b.StartCycles = intel.RDTSC()
 	return b
+}
+
+//go:nosplit
+func Begin(label string) Block {
+	intel.LFENCE()
+	return begin(util.GetCallerPC(unsafe.Pointer(&label)), label)
+}
+
+func BeginProfile() {
+	for i := 0; i < len(GlobalProfiler.Anchors); i++ {
+		GlobalProfiler.Anchors[i] = Anchor{}
+	}
+	GlobalProfiler.CurrentParent = 0
+	GlobalProfiler.StartCycles = intel.RDTSC()
+}
+
+func CyclesToNsec(c intel.Cycles) float64 {
+	return 1000000000 * float64(c) / float64(intel.CPUHz)
+}
+
+func CyclesToMsec(c intel.Cycles) float64 {
+	return 1000 * float64(c) / float64(intel.CPUHz)
 }
 
 //go:nosplit
@@ -148,25 +157,6 @@ func End(b Block) {
 	}
 	anchor.PC = b.PC
 	anchor.Label = b.Label
-}
-
-func CyclesToNsec(c intel.Cycles) float64 {
-	return 1000000000 * float64(c) / float64(intel.CPUHz)
-}
-
-func CyclesToMsec(c intel.Cycles) float64 {
-	return 1000 * float64(c) / float64(intel.CPUHz)
-}
-
-func PrintTimeElapsed(label string, totalElapsed, elapsedCyclesExclusive, elapsedCyclesInclusive intel.Cycles, hitCount int) {
-	percent := 100 * (float64(elapsedCyclesExclusive) / float64(totalElapsed))
-
-	fmt.Fprintf(os.Stderr, "[gofa/trace]: \t %s[%d]: flat: [%.4fms %.2f%% %.2fns/op]", label, hitCount, CyclesToMsec(elapsedCyclesExclusive), percent, CyclesToNsec(elapsedCyclesExclusive)/float64(hitCount))
-	if elapsedCyclesInclusive > elapsedCyclesExclusive {
-		percentWidthChildren := 100 * (float64(elapsedCyclesInclusive) / float64(totalElapsed))
-		fmt.Fprintf(os.Stderr, ", cum [%.4fms %.2f%% %.2fns/op]", CyclesToMsec(elapsedCyclesInclusive), percentWidthChildren, CyclesToNsec(elapsedCyclesInclusive)/float64(hitCount))
-	}
-	fmt.Fprintf(os.Stderr, "\n")
 }
 
 func EndAndPrintProfile() {
@@ -196,4 +186,15 @@ func EndAndPrintProfile() {
 	if totalHits > 0 {
 		PrintTimeElapsed("= Grand total", totalElapsed, totalCycles, 0, totalHits)
 	}
+}
+
+func PrintTimeElapsed(label string, totalElapsed, elapsedCyclesExclusive, elapsedCyclesInclusive intel.Cycles, hitCount int) {
+	percent := 100 * (float64(elapsedCyclesExclusive) / float64(totalElapsed))
+
+	fmt.Fprintf(os.Stderr, "[gofa/trace]: \t %s[%d]: flat: [%.4fms %.2f%% %.2fns/op]", label, hitCount, CyclesToMsec(elapsedCyclesExclusive), percent, CyclesToNsec(elapsedCyclesExclusive)/float64(hitCount))
+	if elapsedCyclesInclusive > elapsedCyclesExclusive {
+		percentWidthChildren := 100 * (float64(elapsedCyclesInclusive) / float64(totalElapsed))
+		fmt.Fprintf(os.Stderr, ", cum [%.4fms %.2f%% %.2fns/op]", CyclesToMsec(elapsedCyclesInclusive), percentWidthChildren, CyclesToNsec(elapsedCyclesInclusive)/float64(hitCount))
+	}
+	fmt.Fprintf(os.Stderr, "\n")
 }
