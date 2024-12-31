@@ -25,6 +25,7 @@ const (
 	SYS_fstat            = 551
 	SYS_ftruncate        = 480
 	SYS_getrandom        = 563
+	SYS_ioctl            = 54
 	SYS_jail_remove      = 508
 	SYS_jail_set         = 507
 	SYS_kevent           = 560
@@ -130,6 +131,11 @@ func Fstat(fd int32, sb *Stat_t) error {
 func Ftruncate(fd int32, length int64) error {
 	_, _, errno := RawSyscall(SYS_ftruncate, uintptr(fd), uintptr(length), 0)
 	return NewError("ftruncate", errno)
+}
+
+func Ioctl(fd int32, request uint, argp unsafe.Pointer) error {
+	_, _, errno := RawSyscall(SYS_ioctl, uintptr(fd), uintptr(request), uintptr(argp))
+	return NewError("ioctl", errno)
 }
 
 func Getrandom(buf []byte, flags uint32) (int64, error) {
