@@ -36,10 +36,10 @@ func init() {
 	}
 }
 
-func Unix() int {
+func Unix() int64 {
 	var tp syscall.Timespec
 	syscall.ClockGettime(syscall.CLOCK_REALTIME, &tp)
-	return int(tp.Sec)
+	return tp.Sec
 }
 
 func UnixNsec() int64 {
