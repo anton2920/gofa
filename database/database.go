@@ -5,19 +5,17 @@ import (
 	"reflect"
 	"unsafe"
 
+	"github.com/anton2920/gofa/bits"
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/syscall"
 	"github.com/anton2920/gofa/util"
 )
 
-type (
-	ID    int32
-	Flags uint32
-)
+type ID int32
 
 type Record struct {
 	ID    ID
-	Flags Flags
+	Flags bits.Flags
 }
 
 type DB struct {
@@ -30,7 +28,7 @@ const Version uint32 = 0x0
 const (
 	VersionOffset = 0
 	NextIDOffset  = VersionOffset + int64(unsafe.Sizeof(Version))
-	DataOffset    = NextIDOffset + int64(unsafe.Sizeof(id))
+	DataOffset    = NextIDOffset + int64(unsafe.Sizeof(ID(0)))
 )
 
 const (
@@ -38,11 +36,15 @@ const (
 	MaxValidID = (1 << 31) - 1
 )
 
+const FlagsCustomOffset = 16
+
+const (
+	FlagsNone = bits.Flags(1 << iota)
+	FlagsDeleted
+)
+
 /* NOTE(anton2920): to bypass check in runtime·adjustpoiners. */
 const MinValidPointer = 4096
-
-/* NOTE(anton2920): for sizeof. */
-var id ID
 
 var NotFound = errors.New("not found")
 
