@@ -39,8 +39,8 @@ const (
 const FlagsCustomOffset = 16
 
 const (
-	FlagsNone = bits.Flags(1 << iota)
-	FlagsDeleted
+	FlagsNone    = bits.Flags(0)
+	FlagsDeleted = bits.Flags(1 << (iota - 1))
 )
 
 /* NOTE(anton2920): to bypass check in runtime·adjustpoiners. */
