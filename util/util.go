@@ -54,6 +54,12 @@ func MoveIntDown(vs []int, i int) {
 	}
 }
 
+func MoveInt64Down(vs []int64, i int) {
+	if (i >= 0) && (i < len(vs)-1) {
+		vs[i], vs[i+1] = vs[i+1], vs[i]
+	}
+}
+
 func MoveStringDown(vs []string, i int) {
 	if (i >= 0) && (i < len(vs)-1) {
 		vs[i], vs[i+1] = vs[i+1], vs[i]
@@ -61,6 +67,12 @@ func MoveStringDown(vs []string, i int) {
 }
 
 func MoveIntUp(vs []int, i int) {
+	if (i > 0) && (i <= len(vs)-1) {
+		vs[i-1], vs[i] = vs[i], vs[i-1]
+	}
+}
+
+func MoveInt64Up(vs []int64, i int) {
 	if (i > 0) && (i <= len(vs)-1) {
 		vs[i-1], vs[i] = vs[i], vs[i-1]
 	}
@@ -110,6 +122,16 @@ func RemoveIntAtIndex(vs []int, i int) []int {
 }
 
 func RemoveInt32AtIndex(vs []int32, i int) []int32 {
+	if (len(vs) == 0) || (i < 0) || (i >= len(vs)) {
+		return vs
+	}
+	if i < len(vs)-1 {
+		copy(vs[i:], vs[i+1:])
+	}
+	return vs[:len(vs)-1]
+}
+
+func RemoveInt64AtIndex(vs []int64, i int) []int64 {
 	if (len(vs) == 0) || (i < 0) || (i >= len(vs)) {
 		return vs
 	}
