@@ -42,6 +42,11 @@ func Conflict(format string, args ...interface{}) Error {
 	return Error{StatusCode: StatusConflict, DisplayMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 2)}
 }
 
+func RequestEntityTooLarge(format string, args ...interface{}) Error {
+	message := fmt.Sprintf(format, args...)
+	return Error{StatusCode: StatusRequestEntityTooLarge, DisplayMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 2)}
+}
+
 func ClientError(err error) Error {
 	return Error{StatusCode: StatusBadRequest, DisplayMessage: "whoops... Something went wrong. Please reload this page or try again later", LogError: errors.WrapWithTrace(err, 2)}
 }
