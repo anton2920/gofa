@@ -1,8 +1,13 @@
+//go:build freebsd
+// +build freebsd
+
 package jail
 
 import (
 	"fmt"
+	"os/exec"
 	"sync/atomic"
+	stdsyscall "syscall"
 
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/syscall"
@@ -16,7 +21,7 @@ type Jail struct {
 }
 
 const (
-	JailNamePrefix = "sems-"
+	JailNamePrefix = "gofa-"
 	MaxJailNameLen = len(JailNamePrefix) + 20
 
 	MaxJailRctlPrefixLen = len("jail:") + MaxJailNameLen + len(":")
@@ -136,18 +141,18 @@ func New(template string, wd string) (Jail, error) {
 	env = env[:n+1]
 
 	if err := syscall.Access(util.Slice2String(tmpl), 0); err != nil {
-		return Jail{}, fmt.Errorf("provided template is not valid BSD userland: %w", err)
+		return Jail{}, fmt.Errorf("provided template does not exist: %v", err)
 	}
 
 	if err := syscall.Mkdir(util.Slice2String(path), 0755); err != nil {
 		if err.(syscall.Error).Errno != syscall.EEXIST {
-			return Jail{}, fmt.Errorf("failed to create path: %w", err)
+			return Jail{}, fmt.Errorf("failed to create path: %v", err)
 		}
 	}
 
 	if err := syscall.Mkdir(util.Slice2String(env), 0755); err != nil {
 		if err.(syscall.Error).Errno != syscall.EEXIST {
-			return Jail{}, fmt.Errorf("failed to create environment directory: %w", err)
+			return Jail{}, fmt.Errorf("failed to create environment directory: %v", err)
 		}
 	}
 
@@ -157,7 +162,7 @@ func New(template string, wd string) (Jail, error) {
 		syscall.Iovec("fstype\x00"), syscall.Iovec("nullfs\x00"),
 		syscall.Iovec("ro\x00"), syscall.IovecZ,
 	}, 0); err != nil {
-		return Jail{}, fmt.Errorf("failed to mount container directory: %w", err)
+		return Jail{}, fmt.Errorf("failed to mount container directory: %v", err)
 	}
 
 	if err := syscall.Nmount([]syscall.Iovec{
@@ -167,11 +172,11 @@ func New(template string, wd string) (Jail, error) {
 		syscall.Iovec("rw\x00"), syscall.IovecZ,
 	}, 0); err != nil {
 		syscall.Unmount(util.Slice2String(path), 0)
-		return Jail{}, fmt.Errorf("failed to mount environment directory: %w", err)
+		return Jail{}, fmt.Errorf("failed to mount environment directory: %v", err)
 	}
 
 	j.ID, err = syscall.JailSet([]syscall.Iovec{
-		syscall.Iovec("host.hostname\x00"), syscall.Iovec("sems-jail\x00"),
+		syscall.Iovec("host.hostname\x00"), syscall.Iovec("gofa-jail\x00"),
 		syscall.Iovec("name\x00"), syscall.IovecForByteSlice(name),
 		syscall.Iovec("path\x00"), syscall.IovecForByteSlice(path),
 		syscall.Iovec("persist\x00"), syscall.IovecZ,
@@ -201,7 +206,7 @@ func New(template string, wd string) (Jail, error) {
 			syscall.JailRemove(j.ID)
 			syscall.Unmount(util.Slice2String(tmp), 0)
 			syscall.Unmount(util.Slice2String(path), 0)
-			return Jail{}, fmt.Errorf("failed to add rule %d for jail: %w", i, err)
+			return Jail{}, fmt.Errorf("failed to add rule %d for jail: %v", i, err)
 		}
 	}
 
@@ -218,7 +223,7 @@ func Protect(j Jail) error {
 	env = env[:n+1]
 
 	if err := syscall.Unmount(util.Slice2String(tmp), 0); err != nil {
-		return fmt.Errorf("failed to unmount environment: %w", err)
+		return fmt.Errorf("failed to unmount environment: %v", err)
 	}
 
 	if err := syscall.Nmount([]syscall.Iovec{
@@ -227,7 +232,7 @@ func Protect(j Jail) error {
 		syscall.Iovec("fstype\x00"), syscall.Iovec("nullfs\x00"),
 		syscall.Iovec("ro\x00"), syscall.IovecZ,
 	}, 0); err != nil {
-		return fmt.Errorf("failed to mount environment directory: %w", err)
+		return fmt.Errorf("failed to mount environment directory: %v", err)
 	}
 
 	return nil
@@ -257,28 +262,35 @@ func Remove(j Jail) error {
 	prefix = prefix[:n+1]
 
 	if err1 := syscall.RctlRemoveRule(prefix); err1 != nil {
-		err = fmt.Errorf("failed to remove jail rules: %w", err1)
+		err = fmt.Errorf("failed to remove jail rules: %v", err1)
 	}
 
 	if err1 := syscall.JailRemove(j.ID); err1 != nil {
-		err = fmt.Errorf("failed to remove jail: %w", err1)
+		err = fmt.Errorf("failed to remove jail: %v", err1)
 	}
 
 	if err1 := syscall.Unmount(util.Slice2String(tmp), 0); err1 != nil {
-		err = fmt.Errorf("failed to unmount environment: %w", err1)
+		err = fmt.Errorf("failed to unmount environment: %v", err1)
 	}
 
 	if err1 := syscall.Unmount(util.Slice2String(path), 0); err1 != nil {
-		err = fmt.Errorf("failed to unmount container: %w", err1)
+		err = fmt.Errorf("failed to unmount container: %v", err1)
 	}
 
 	if err1 := syscall.Rmdir(util.Slice2String(env)); err1 != nil {
-		err = fmt.Errorf("failed to remove environment directory: %w", err1)
+		err = fmt.Errorf("failed to remove environment directory: %v", err1)
 	}
 
 	if err1 := syscall.Rmdir(util.Slice2String(path)); err1 != nil {
-		err = fmt.Errorf("failed to remove container directory: %w", err1)
+		err = fmt.Errorf("failed to remove container directory: %v", err1)
 	}
 
 	return err
+}
+
+func Command(j Jail, exe string, args ...string) *exec.Cmd {
+	cmd := exec.Command(exe, args...)
+	cmd.SysProcAttr = &stdsyscall.SysProcAttr{Setsid: true, Jail: int(j.ID)}
+	cmd.Dir = "/tmp"
+	return cmd
 }
