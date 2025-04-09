@@ -32,6 +32,21 @@ func (hs *Headers) Add(key string, value string) {
 	trace.End(t)
 }
 
+func (hs *Headers) Del(key string) {
+	t := trace.Begin("")
+
+	for i := 0; i < len(hs.Keys); i++ {
+		if key == hs.Keys[i] {
+			copy(hs.Keys[i:], hs.Keys[i+1:])
+			copy(hs.Values[i:], hs.Values[i+1:])
+			hs.Keys = hs.Keys[:len(hs.Keys)-1]
+			hs.Values = hs.Values[:len(hs.Values)-1]
+		}
+	}
+
+	trace.End(t)
+}
+
 func (hs *Headers) Get(key string) string {
 	t := trace.Begin("")
 
