@@ -1,3 +1,6 @@
+//go:build freebsd || openbsd
+// +build freebsd openbsd
+
 package event
 
 import (
@@ -18,8 +21,6 @@ type platformEventQueue struct {
 	tail   int
 }
 
-type Type int16
-
 const (
 	Read   = syscall.EVFILT_READ
 	Write  = syscall.EVFILT_WRITE
@@ -31,11 +32,11 @@ const (
 type DurationUnits int
 
 const (
-	Seconds      DurationUnits = syscall.NOTE_SECONDS
-	Milliseconds               = syscall.NOTE_MSECONDS
-	Microseconds               = syscall.NOTE_USECONDS
-	Nanoseconds                = syscall.NOTE_NSECONDS
-	Absolute                   = syscall.NOTE_ABSTIME
+	Seconds      = DurationUnits(syscall.NOTE_SECONDS)
+	Milliseconds = syscall.NOTE_MSECONDS
+	Microseconds = syscall.NOTE_USECONDS
+	Nanoseconds  = syscall.NOTE_NSECONDS
+	Absolute     = syscall.NOTE_ABSTIME
 )
 
 type Event struct {
