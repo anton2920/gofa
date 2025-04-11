@@ -83,8 +83,11 @@ func Remove(j Jail) error {
 }
 
 func Command(j Jail, exe string, args ...string) *exec.Cmd {
+	env := make([]byte, syscall.PATH_MAX)
+	n := PutEnv(env, j)
+
 	cmd := exec.Command(exe, args...)
 	cmd.SysProcAttr = &stdsyscall.SysProcAttr{Setsid: true}
-	cmd.Dir = "/tmp"
+	cmd.Dir = string(env[:n])
 	return cmd
 }
