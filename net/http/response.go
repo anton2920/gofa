@@ -1,6 +1,8 @@
 package http
 
 import (
+	"strconv"
+
 	"github.com/anton2920/gofa/alloc"
 	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/net/html"
@@ -139,6 +141,10 @@ func (w *Response) WriteHTML(b []byte) {
 		last = i + 1
 	}
 	w.Body = append(w.Body, b[last:]...)
+}
+
+func (w *Response) WriteFloat64(f float64) {
+	w.Body = strconv.AppendFloat(w.Body, f, 'f', -1, 64)
 }
 
 func (w *Response) WriteInt(i int) {
