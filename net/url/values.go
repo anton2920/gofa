@@ -137,17 +137,26 @@ func (vs Values) GetInt(key string) (int, error) {
 	return n, err
 }
 
+func (vs Values) GetInt32(key string) (int32, error) {
+	t := trace.Begin("")
+
+	n, err := vs.GetInt(key)
+
+	trace.End(t)
+	return int32(n), err
+}
+
 func (vs Values) GetID(key string) (database.ID, error) {
 	t := trace.Begin("")
 
-	id, err := strconv.Atoi(vs.Get(key))
+	id, err := vs.GetInt(key)
 	if err != nil {
 		trace.End(t)
-		return -1, err
+		return 0, err
 	}
 	if (id < database.MinValidID) || (id > database.MaxValidID) {
 		trace.End(t)
-		return -1, errors.New("ID out of range")
+		return 0, errors.New("ID out of range")
 	}
 
 	trace.End(t)
