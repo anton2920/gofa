@@ -13,7 +13,7 @@ import (
 
 type ID int32
 
-type Record struct {
+type RecordHeader struct {
 	ID    ID
 	Flags bits.Flags
 }
