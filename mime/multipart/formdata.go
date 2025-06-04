@@ -48,6 +48,8 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 
 		/* Parsing headers. */
 		var name, filename, contentType string
+		var isFile bool
+
 		for {
 			lineEnd := strings.FindChar(form[pos:], '\r')
 			if lineEnd == -1 {
@@ -96,6 +98,7 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 						name = value
 					case "filename":
 						filename = value
+						isFile = true
 					}
 				}
 			case "Content-Type":
@@ -117,10 +120,12 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 			return errors.New("expected new line after value")
 		}
 		value := form[pos : pos+lineEnd]
-		if (len(name) > 0) && (len(filename) > 0) {
-			files.Add(name, File{filename, contentType, util.String2Slice(value)})
-		} else if len(name) > 0 {
-			vs.Add(name, value)
+		if len(name) > 0 {
+			if isFile {
+				files.Add(name, File{filename, contentType, util.String2Slice(value)})
+			} else {
+				vs.Add(name, value)
+			}
 		}
 		pos += lineEnd + len("\r\n")
 	}
