@@ -10,6 +10,10 @@ func (f Flags) Has(g Flags) bool {
 	return (f & g) == g
 }
 
+func (f Flags) Have(g Flags) bool {
+	return f.Has(g)
+}
+
 func (f *Flags) Set(g Flags) {
 	*f = (*f) | g
 }
