@@ -13,6 +13,7 @@ import (
 
 type ID int32
 
+//gofa:gpp json
 type RecordHeader struct {
 	ID    ID
 	Flags bits.Flags
