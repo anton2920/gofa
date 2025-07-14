@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -e
+
+VERBOSITY=0
+VERBOSITYFLAGS=""
+while test "$1" = "-v"; do
+	VERBOSITY=$((VERBOSITY+1))
+	VERBOSITYFLAGS="$VERBOSITYFLAGS -v"
+	shift
+done
+
+run()
+{
+	if test $VERBOSITY -gt 1; then echo "$@"; fi
+	"$@" || exit 1
+}
+
+DIRS=`find . -type d | grep -v \.git | grep -v ^\.$ | sed 's/\.\///'`
+for dir in $DIRS; do
+	if `ls $dir/*.go >/dev/null 2>&1`; then
+		run gpp $dir
+	fi
+done
