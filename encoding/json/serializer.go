@@ -15,6 +15,7 @@ type Serializer struct {
 func (s *Serializer) PutObjectBegin() {
 	s.Buf[s.Pos] = '{'
 	s.Pos++
+	s.NeedComma = false
 }
 
 func (s *Serializer) PutObjectEnd() {
@@ -25,6 +26,7 @@ func (s *Serializer) PutObjectEnd() {
 func (s *Serializer) PutArrayBegin() {
 	s.Buf[s.Pos] = '['
 	s.Pos++
+	s.NeedComma = false
 }
 
 func (s *Serializer) PutArrayEnd() {
