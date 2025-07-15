@@ -22,6 +22,13 @@ var (
 	TooManyClients = Error{StatusCode: StatusServiceUnavailable, DisplayErrorMessage: "too many clients", LogError: errors.New("too many clients")}
 )
 
+func (err Error) Error() string {
+	if err.LogError == nil {
+		return "<nil>"
+	}
+	return err.LogError.Error()
+}
+
 func BadRequest(format string, args ...interface{}) Error {
 	message := fmt.Sprintf(format, args...)
 	return Error{StatusCode: StatusBadRequest, DisplayErrorMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 2)}
@@ -58,11 +65,4 @@ func ClientError(err error) Error {
 
 func ServerError(err error) Error {
 	return Error{StatusCode: StatusInternalServerError, DisplayErrorMessage: ServerDisplayErrorMessage, LogError: errors.WrapWithTrace(err, 2)}
-}
-
-func (err Error) Error() string {
-	if err.LogError == nil {
-		return "<nil>"
-	}
-	return err.LogError.Error()
 }
