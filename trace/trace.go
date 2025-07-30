@@ -11,6 +11,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/intel"
+	_ "github.com/anton2920/gofa/time"
 	"github.com/anton2920/gofa/util"
 )
 
