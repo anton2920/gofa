@@ -38,7 +38,7 @@ func FillError(ctx *http.Context, err error, dateBuf []byte) {
 		message = err.Error()
 	case http.Error:
 		w.StatusCode = err.StatusCode
-		message = err.DisplayMessage
+		message = err.DisplayErrorMessage
 	}
 
 	w.WriteString(http.Status2Reason[w.StatusCode])
@@ -52,6 +52,8 @@ func FillError(ctx *http.Context, err error, dateBuf []byte) {
 	trace.End(t)
 }
 
+/* TODO(anton2920): remove after rewriting server. */
+//go:norace
 func FillResponses(ctx *http.Context, ws []http.Response, dateBuf []byte) {
 	t := trace.Begin("")
 
@@ -63,7 +65,7 @@ func FillResponses(ctx *http.Context, ws []http.Response, dateBuf []byte) {
 		if !w.Headers.Has("Date") {
 			if dateBuf == nil {
 				dateBuf = make([]byte, time.RFC822Len)
-				time.PutTmRFC822(dateBuf, time.ToTm(time.Unix()))
+				time.PutTmRFC822(dateBuf, time.ToTm(int(time.Unix())))
 			}
 			ctx.ResponseBuffer = append(ctx.ResponseBuffer, "Date: "...)
 			ctx.ResponseBuffer = append(ctx.ResponseBuffer, dateBuf...)
