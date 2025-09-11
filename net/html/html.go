@@ -1,228 +1,155 @@
 package html
 
 import (
-	"github.com/anton2920/gofa/alloc"
-	"github.com/anton2920/gofa/bytes"
+	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/l10n"
 	"github.com/anton2920/gofa/net/http"
+	"github.com/anton2920/gofa/time"
 	"github.com/anton2920/gofa/trace"
 )
 
-type ApplyType int32
+type HTML struct {
+	W *http.Response
 
-type Options struct {
-	ApplyType
-
-	ID    string
-	Class string
-
-	Type        string
-	Name        string
-	Value       string
-	Placeholder string
-
-	Min int
-	Max int
-
-	Cols int
-	Rows int
-
-	MinLength int
-	MaxLength int
-
-	Disabled       bool
-	Readonly       bool
-	Required       bool
-	FormNoValidate bool
+	database.ID
+	l10n.Language
+	time.Timezone
 }
 
-const (
-	ApplyTypeMerge = ApplyType(iota)
-	ApplyTypeReplace
-	ApplyTypeCount
-)
+func New(w *http.Response, id database.ID, l l10n.Language, tz time.Timezone) HTML {
+	var h HTML
 
-func ProcessOptions(arena *alloc.Arena, dflt Options, user Options) Options {
-	t := trace.Begin("")
+	h.ID = id
+	h.Language = l
+	h.Timezone = tz
 
-	if user.ApplyType == ApplyTypeReplace {
-		trace.End(t)
-		return user
-	}
-
-	result := dflt
-
-	if len(user.ID) > 0 {
-		result.ID = user.ID
-	}
-	if len(user.Class) > 0 {
-		var n int
-
-		buffer := arena.NewSlice(len(dflt.Class) + len(" ") + len(user.Class))
-		n += copy(buffer[n:], dflt.Class)
-		n += copy(buffer[n:], " ")
-		n += copy(buffer[n:], user.Class)
-
-		result.Class = bytes.AsString(buffer)
-	}
-
-	if len(user.Type) > 0 {
-		result.Type = user.Type
-	}
-	if len(user.Name) > 0 {
-		result.Name = user.Name
-	}
-	if len(user.Value) > 0 {
-		result.Value = user.Value
-	}
-	if len(user.Placeholder) > 0 {
-		result.Placeholder = user.Placeholder
-	}
-
-	if user.Min > 0 {
-		result.Min = user.Min
-	}
-	if user.Max > 0 {
-		result.Max = user.Max
-	}
-
-	if user.MinLength > 0 {
-		result.MinLength = user.MinLength
-	}
-	if user.MaxLength > 0 {
-		result.MaxLength = user.MaxLength
-	}
-
-	if user.Disabled {
-		result.Disabled = user.Disabled
-	}
-	if user.Readonly {
-		result.Readonly = user.Readonly
-	}
-	if user.Required {
-		result.Required = user.Required
-	}
-
-	trace.End(t)
-	return result
+	return h
 }
 
-func TagBegin(w *http.Response, tag string, opts Options) {
+func (h *HTML) Int(n int) {
+	h.W.WriteInt(n)
+}
+
+func (h *HTML) HTMLString(s string) {
+	h.W.WriteHTMLString(s)
+}
+
+func (h *HTML) LocalizedString(s string) (int, error) {
+	return h.W.WriteString(h.L(s))
+}
+
+func (h *HTML) String(s string) (int, error) {
+	return h.W.WriteString(s)
+}
+
+func (h *HTML) TagBegin(tag string, attrs ...Attributes) {
 	t := trace.Begin("")
 
-	opts = ProcessOptions(&w.Arena, Options{}, opts)
+	attr := h.MergeAttributes(attrs...)
 
-	w.WriteString(`<`)
-	w.WriteString(tag)
+	h.String(` <`)
+	h.String(tag)
 
-	if len(opts.ID) > 0 {
-		w.WriteString(` id="`)
-		w.WriteString(opts.ID)
-		w.WriteString(`"`)
-	}
-	if len(opts.Class) > 0 {
-		w.WriteString(` class=`)
-		w.WriteString(opts.Class)
-		w.WriteString(`"`)
-	}
+	if len(attrs) > 0 {
+		DisplayStringAttribute(h, "class", attr.Class)
 
-	if len(opts.Type) > 0 {
-		w.WriteString(` type=`)
-		w.WriteString(opts.Type)
-		w.WriteString(`"`)
-	}
-	if len(opts.Name) > 0 {
-		w.WriteString(` name=`)
-		w.WriteString(opts.Name)
-		w.WriteString(`"`)
-	}
-	if len(opts.Value) > 0 {
-		w.WriteString(` value=`)
-		w.WriteString(opts.Value)
-		w.WriteString(`"`)
-	}
-	if len(opts.Placeholder) > 0 {
-		w.WriteString(` placeholder=`)
-		w.WriteString(opts.Placeholder)
-		w.WriteString(`"`)
-	}
+		DisplayStringAttribute(h, "alt", attr.Alt)
+		DisplayStringAttribute(h, "src", attr.Src)
+		DisplayStringAttribute(h, "id", attr.ID)
+		DisplayStringAttribute(h, "name", attr.Name)
+		DisplayStringAttribute(h, "placeholder", attr.Placeholder)
+		DisplayStringAttribute(h, "type", attr.Type)
+		DisplayStringAttribute(h, "value", attr.Value)
+		DisplayStringAttribute(h, "method", attr.Method)
+		DisplayStringAttribute(h, "action", attr.Action)
+		DisplayStringAttribute(h, "enctype", attr.Enctype)
 
-	if opts.Min > 0 {
-		w.WriteString(` min=`)
-		w.WriteInt(opts.Min)
-		w.WriteString(`"`)
-	}
-	if opts.Max > 0 {
-		w.WriteString(` max=`)
-		w.WriteInt(opts.Max)
-		w.WriteString(`"`)
-	}
+		DisplayIntAttribute(h, "cols", attr.Cols)
+		DisplayIntAttribute(h, "max", attr.Max)
+		DisplayIntAttribute(h, "maxlength", attr.MaxLength)
+		DisplayIntAttribute(h, "min", attr.Min)
+		DisplayIntAttribute(h, "minlength", attr.MinLength)
+		DisplayIntAttribute(h, "rows", attr.Rows)
 
-	if opts.Cols > 0 {
-		w.WriteString(` cols=`)
-		w.WriteInt(opts.Cols)
-		w.WriteString(`"`)
+		DisplayBoolAttribute(h, "disabled", attr.Disabled)
+		DisplayBoolAttribute(h, "formnovalidate", attr.FormNoValidate)
+		DisplayBoolAttribute(h, "readonly", attr.Readonly)
+		DisplayBoolAttribute(h, "required", attr.Required)
 	}
-	if opts.Rows > 0 {
-		w.WriteString(` rows=`)
-		w.WriteInt(opts.Rows)
-		w.WriteString(`"`)
-	}
-
-	if opts.MinLength > 0 {
-		w.WriteString(` minlength=`)
-		w.WriteInt(opts.MinLength)
-		w.WriteString(`"`)
-	}
-	if opts.MaxLength > 0 {
-		w.WriteString(` maxlength=`)
-		w.WriteInt(opts.MaxLength)
-		w.WriteString(`"`)
-	}
-
-	if opts.Disabled {
-		w.WriteString(` disabled`)
-	}
-	if opts.Readonly {
-		w.WriteString(` readonly`)
-	}
-	if opts.Required {
-		w.WriteString(` required`)
-	}
-	if opts.FormNoValidate {
-		w.WriteString(` formnovalidate`)
-	}
-
-	w.WriteString(`>`)
+	h.String(`>`)
 
 	trace.End(t)
 }
 
-func TagEnd(w *http.Response, tag string) {
-	t := trace.Begin("")
-
-	w.WriteString(`</`)
-	w.WriteString(tag)
-	w.WriteString(`>`)
-
-	trace.End(t)
+func (h *HTML) TagEnd(tag string) {
+	h.String(`</`)
+	h.String(tag)
+	h.String(`>`)
 }
 
-func Begin(w *http.Response, l l10n.Language) {
-	t := trace.Begin("")
-
-	w.WriteString(`<!DOCTYPE html`)
-	w.WriteString(`<html lang="`)
-	w.WriteString(l10n.Language2HTMLLang[l])
-	w.WriteString(`">`)
-
-	trace.End(t)
+func (h *HTML) Begin() {
+	h.String(`<!DOCTYPE html>`)
+	h.String(`<html lang="`)
+	h.String(l10n.Language2HTMLLang[h.Language])
+	h.String(`">`)
 }
 
-func End(w *http.Response) {
-	t := trace.Begin("")
+func (h *HTML) End() {
+	h.TagEnd("html")
+}
 
-	w.WriteString(`</html>`)
+func (h *HTML) HeadBegin() {
+	h.TagBegin("head")
+	h.String(`<meta charset="UTF-8">`)
+	h.String(`<meta name="viewport" content="width=device-width, initial-scale=1.0">`)
+}
 
-	trace.End(t)
+func (h *HTML) HeadEnd() {
+	h.TagEnd("head")
+}
+
+func (h *HTML) TitleBegin() {
+	h.TagBegin("title")
+}
+
+func (h *HTML) Title(title string) {
+	h.TitleBegin()
+	h.HTMLString(h.L(title))
+	h.TitleEnd()
+}
+
+func (h *HTML) TitleEnd() {
+	h.TagEnd("title")
+}
+
+func (h *HTML) BodyBegin() {
+	h.TagBegin("body")
+}
+
+func (h *HTML) BodyEnd() {
+	h.TagEnd("body")
+}
+
+func (h *HTML) BR() {
+	h.String(`<br>`)
+}
+
+func (h *HTML) HR() {
+	h.String(`<hr>`)
+}
+
+func (h *HTML) SP() {
+	h.String(` `)
+}
+
+func (h *HTML) DivBegin(attrs ...Attributes) {
+	h.TagBegin("div", attrs...)
+}
+
+func (h *HTML) DivEnd() {
+	h.TagEnd("div")
+}
+
+func (h *HTML) Img(alt string, src string, attrs ...Attributes) {
+	h.TagBegin("img", h.AppendAttributes(attrs, Attributes{Alt: alt, Src: src}))
 }
