@@ -4,8 +4,9 @@ import (
 	"reflect"
 	"unsafe"
 
+	"github.com/anton2920/gofa/ints"
+	"github.com/anton2920/gofa/pointers"
 	"github.com/anton2920/gofa/syscall"
-	"github.com/anton2920/gofa/util"
 )
 
 type Circular struct {
@@ -19,7 +20,7 @@ func NewCircular(size int) (*Circular, error) {
 	var c Circular
 
 	const pageSize = 4096
-	size = util.AlignUp(size, pageSize)
+	size = ints.AlignUp(size, pageSize)
 
 	/* NOTE(anton2920): first argument is SHM_ANON, cannot have that as a variable as Go's checkptr doesn't like it. */
 	fd, err := syscall.ShmOpen2(*(*string)(unsafe.Pointer(&reflect.StringHeader{Data: 1, Len: 8})), syscall.O_RDWR, 0, 0, syscall.NULL)
@@ -41,7 +42,7 @@ func NewCircular(size int) (*Circular, error) {
 	if _, err := syscall.Mmap(buffer, uint64(size), syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED|syscall.MAP_FIXED, fd, 0); err != nil {
 		return nil, err
 	}
-	if _, err := syscall.Mmap(util.PtrAdd(buffer, size), uint64(size), syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED|syscall.MAP_FIXED, fd, 0); err != nil {
+	if _, err := syscall.Mmap(pointers.Add(buffer, size), uint64(size), syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED|syscall.MAP_FIXED, fd, 0); err != nil {
 		return nil, err
 	}
 	c.Buf = *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(buffer), Len: 2 * size, Cap: 2 * size}))

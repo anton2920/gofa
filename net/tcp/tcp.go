@@ -9,8 +9,11 @@ import (
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/syscall"
-	"github.com/anton2920/gofa/util"
 )
+
+func SwapBytesInWord(x uint16) uint16 {
+	return ((x << 8) & 0xFF00) | (x >> 8)
+}
 
 func ParseAddress(address string) (uint32, uint16, error) {
 	var addr uint32
@@ -24,7 +27,7 @@ func ParseAddress(address string) (uint32, uint16, error) {
 	if err != nil {
 		return 0, 0, fmt.Errorf("failed to parse port value: %w", err)
 	}
-	port := util.SwapBytesInWord(uint16(part))
+	port := SwapBytesInWord(uint16(part))
 
 	address = address[:colon]
 	dot := strings.FindChar(address, '.')
@@ -88,13 +91,18 @@ func PutAddress(buffer []byte, addr uint32, port uint16) int {
 	buffer[n] = '.'
 	n++
 
-	n += slices.PutInt(buffer[n:], int(util.SwapBytesInWord(port)))
+	n += slices.PutInt(buffer[n:], int(SwapBytesInWord(port)))
 
 	return n
 }
 
 /* Listen creates TCP/IPv4 socket and starts listening on a specified address. */
 func Listen(address string, backlog int) (int32, error) {
+	addr, port, err := ParseAddress(address)
+	if err != nil {
+		return -1, fmt.Errorf("failed to parse address string: %w", err)
+	}
+
 	l, err := syscall.Socket(syscall.PF_INET, syscall.SOCK_STREAM, 0)
 	if err != nil {
 		return -1, fmt.Errorf("failed to create new socket: %w", err)
@@ -109,10 +117,6 @@ func Listen(address string, backlog int) (int32, error) {
 		return -1, fmt.Errorf("failed to apply options to socket: %w", err)
 	}
 
-	addr, port, err := ParseAddress(address)
-	if err != nil {
-		return -1, fmt.Errorf("failed to parse address string: %w", err)
-	}
 	sin := syscall.SockAddrIn{Family: syscall.AF_INET, Addr: addr, Port: port}
 	if err := syscall.Bind(l, (*syscall.Sockaddr)(unsafe.Pointer(&sin)), uint32(unsafe.Sizeof(sin))); err != nil {
 		return -1, fmt.Errorf("failed to bind socket to address: %w", err)

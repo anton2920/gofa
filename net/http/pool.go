@@ -4,7 +4,7 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/anton2920/gofa/util"
+	"github.com/anton2920/gofa/pointers"
 )
 
 type ContextPoolItem struct {
@@ -54,7 +54,7 @@ func (p *ContextPool) Put(t *Context) {
 
 	p.Lock()
 
-	item := (*ContextPoolItem)(util.PtrAdd(unsafe.Pointer(t), -int(unsafe.Sizeof(p.Head))))
+	item := (*ContextPoolItem)(pointers.Add(unsafe.Pointer(t), -int(unsafe.Sizeof(p.Head))))
 	item.Next = p.Head
 	p.Head = item
 

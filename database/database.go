@@ -7,9 +7,10 @@ import (
 
 	"github.com/anton2920/gofa/bits"
 	"github.com/anton2920/gofa/errors"
+	"github.com/anton2920/gofa/ints"
+	"github.com/anton2920/gofa/pointers"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/syscall"
-	"github.com/anton2920/gofa/util"
 )
 
 type ID int32
@@ -52,7 +53,7 @@ var NotFound = errors.New("not found")
 /* Offset2String performs s.Ptr += base-MinValidPointer. */
 //go:nosplit
 func Offset2String(s string, base *byte) string {
-	return *(*string)(unsafe.Pointer(&reflect.StringHeader{Data: uintptr(util.Noescape(util.PtrAdd(unsafe.Pointer(base), int(uintptr(unsafe.Pointer(strings.Data(s)))-MinValidPointer)))), Len: len(s)}))
+	return *(*string)(unsafe.Pointer(&reflect.StringHeader{Data: uintptr(pointers.Noescape(pointers.Add(unsafe.Pointer(base), int(uintptr(unsafe.Pointer(strings.Data(s)))-MinValidPointer)))), Len: len(s)}))
 }
 
 /* Offset2Slice performs s.Ptr += base-MinValidPointer. */
@@ -61,7 +62,7 @@ func Offset2Slice(s []byte, base *byte) []byte {
 	if len(s) == 0 {
 		return s
 	}
-	return *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(util.Noescape(util.PtrAdd(unsafe.Pointer(base), int(uintptr(unsafe.Pointer(&s[0]))-MinValidPointer)))), Len: len(s), Cap: cap(s)}))
+	return *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(pointers.Noescape(pointers.Add(unsafe.Pointer(base), int(uintptr(unsafe.Pointer(&s[0]))-MinValidPointer)))), Len: len(s), Cap: cap(s)}))
 }
 
 /* String2Offset performs s.Ptr = offset+MinValidPointer. */
@@ -89,7 +90,7 @@ func Slice2DBSlice(ds *[]byte, ss []byte, size int, alignment int, data []byte, 
 		return 0
 	}
 
-	start := util.AlignUp(n, alignment)
+	start := ints.AlignUp(n, alignment)
 	nbytes := copy(data[start:], *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&ss[0])), Len: len(ss) * size, Cap: len(ss) * size})))
 	*ds = Slice2Offset(ss, start)
 	return nbytes + (start - n)
