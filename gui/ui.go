@@ -9,11 +9,12 @@ import (
 	"fmt"
 	"unsafe"
 
+	"github.com/anton2920/gofa/bools"
 	"github.com/anton2920/gofa/gui/color"
 	"github.com/anton2920/gofa/gui/fonts"
 	"github.com/anton2920/gofa/gui/gr"
+	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/trace"
-	"github.com/anton2920/gofa/util"
 )
 
 type Point struct {
@@ -196,7 +197,7 @@ func (ui *UI) ButtonToggle(labelUnchecked, labelChecked string, checked *bool) b
 		label = labelUnchecked
 	}
 
-	result := ui.ButtonW(ID(checked), label, util.Max(widthUnchecked, widthChecked)+ui.Layout.ButtonPaddingWidth*2)
+	result := ui.ButtonW(ID(checked), label, ints.Max(widthUnchecked, widthChecked)+ui.Layout.ButtonPaddingWidth*2)
 	if result {
 		*checked = !*checked
 	}
@@ -262,7 +263,7 @@ func (ui *UI) DragX(id ID, x *int, width int, y0, y1 int) bool {
 	}
 
 	/* TODO(anton2920): copy below '(*UI) ButtonDownLogic' drag offseting code. */
-	ui.ButtonLogic(id, ui.inRect(*x-width/2, util.Min(y0, y1), width, y1-y0))
+	ui.ButtonLogic(id, ui.inRect(*x-width/2, ints.Min(y0, y1), width, y1-y0))
 	if ui.active(id) {
 		if ui.MouseX != *x {
 			*x = ui.MouseX
@@ -284,7 +285,7 @@ func (ui *UI) DragY(id ID, y *int, height int, x0, x1 int) bool {
 	}
 
 	/* TODO(anton2920): copy below '(*UI) ButtonDownLogic' drag offseting code. */
-	ui.ButtonLogic(id, ui.inRect(util.Min(x0, x1), *y-height/2, x1-x0, height))
+	ui.ButtonLogic(id, ui.inRect(ints.Min(x0, x1), *y-height/2, x1-x0, height))
 	if ui.active(id) {
 		if ui.MouseY != *y {
 			*y = ui.MouseY
@@ -422,7 +423,7 @@ func (ui *UI) SliderInt(label string, valueMin, valueMax int, value *int) bool {
 	z := float32(*value)
 
 	if ui.SliderRaw(ID(value), label, float32(valueMin), float32(valueMax), &z, true) {
-		*value = int(z) + util.Bool2Int((z-float32(int(z))) >= 0.5)
+		*value = int(z) + bools.ToInt((z-float32(int(z))) >= 0.5)
 
 		trace.End(t)
 		return oldValue != *value

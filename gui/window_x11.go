@@ -19,7 +19,7 @@ import (
 
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/gui/color"
-	"github.com/anton2920/gofa/util"
+	"github.com/anton2920/gofa/ints"
 )
 
 type platformWindow struct {
@@ -101,7 +101,7 @@ func platformWindowHasEvents(w *Window) bool {
 func platformWindowGetEvents(w *Window, events []Event) (int, error) {
 	var platformEvent C.XEvent
 
-	n := util.Min(w.pendingEvents, len(events))
+	n := ints.Min(w.pendingEvents, len(events))
 	var consumed int
 	for i := 0; i < n; i++ {
 		event := &events[consumed]

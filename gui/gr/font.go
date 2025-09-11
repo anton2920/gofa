@@ -2,7 +2,7 @@ package gr
 
 import (
 	"github.com/anton2920/gofa/gui/color"
-	"github.com/anton2920/gofa/util"
+	"github.com/anton2920/gofa/ints"
 )
 
 type Font struct {
@@ -96,7 +96,7 @@ func (f *Font) TextHeight(text string) int {
 	var height int
 
 	for i := 0; i < len(text); i++ {
-		height = util.Max(height, f.CharHeight(text[i]))
+		height = ints.Max(height, f.CharHeight(text[i]))
 	}
 
 	return height
