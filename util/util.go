@@ -1,7 +1,6 @@
 package util
 
 import (
-	"reflect"
 	"unsafe"
 )
 
@@ -93,18 +92,6 @@ func Noescape(p unsafe.Pointer) unsafe.Pointer {
 
 func PtrAdd(ptr unsafe.Pointer, x int) unsafe.Pointer {
 	return unsafe.Pointer(uintptr(ptr) + uintptr(x))
-}
-
-func Slice2String(s []byte) string {
-	return *(*string)(unsafe.Pointer(&s))
-}
-
-func String2Slice(s string) []byte {
-	return *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: (*reflect.StringHeader)(unsafe.Pointer(&s)).Data, Len: len(s), Cap: len(s)}))
-}
-
-func StringData(s string) *byte {
-	return (*byte)(unsafe.Pointer((*reflect.StringHeader)(unsafe.Pointer(&s)).Data))
 }
 
 func SwapBytesInWord(x uint16) uint16 {

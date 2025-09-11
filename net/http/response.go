@@ -4,12 +4,11 @@ import (
 	"strconv"
 
 	"github.com/anton2920/gofa/alloc"
+	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/database"
-	"github.com/anton2920/gofa/net/html"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/time"
 	"github.com/anton2920/gofa/trace"
-	"github.com/anton2920/gofa/util"
 )
 
 type Response struct {
@@ -31,7 +30,7 @@ func (w *Response) DelCookie(name string) {
 	n += copy(cookie[n:], name)
 	n += copy(cookie[n:], finisher)
 
-	w.Headers.Set("Set-Cookie", util.Slice2String(cookie[:n]))
+	w.Headers.Set("Set-Cookie", bytes.AsString(cookie[:n]))
 
 	trace.End(t)
 }
@@ -55,7 +54,7 @@ func (w *Response) SetCookie(name, value string, expiry int) {
 	n += time.PutTmRFC822(cookie[n:], time.ToTm(expiry))
 	n += copy(cookie[n:], secure)
 
-	w.Headers.Set("Set-Cookie", util.Slice2String(cookie[:n]))
+	w.Headers.Set("Set-Cookie", bytes.AsString(cookie[:n]))
 
 	trace.End(t)
 }
@@ -78,7 +77,7 @@ func (w *Response) SetCookieUnsafe(name, value string, expiry int) {
 	n += copy(cookie[n:], expires)
 	n += time.PutTmRFC822(cookie[n:], time.ToTm(expiry))
 
-	w.Headers.Set("Set-Cookie", util.Slice2String(cookie[:n]))
+	w.Headers.Set("Set-Cookie", bytes.AsString(cookie[:n]))
 
 	trace.End(t)
 }
@@ -89,7 +88,7 @@ func (w *Response) Redirect(path string, code Status) {
 	pathBuf := w.Arena.NewSlice(len(path))
 	copy(pathBuf, path)
 
-	w.Headers.Set("Location", util.Slice2String(pathBuf))
+	w.Headers.Set("Location", bytes.AsString(pathBuf))
 	w.Body = w.Body[:0]
 	w.StatusCode = code
 
@@ -103,7 +102,7 @@ func (w *Response) RedirectID(prefix string, id database.ID, code Status) {
 	n := copy(buffer, prefix)
 	n += slices.PutInt(buffer[n:], int(id))
 
-	w.Headers.Set("Location", util.Slice2String(buffer[:n]))
+	w.Headers.Set("Location", bytes.AsString(buffer[:n]))
 	w.Body = w.Body[:0]
 	w.StatusCode = code
 
@@ -117,30 +116,7 @@ func (w *Response) Write(b []byte) (int, error) {
 
 /* WriteHTML writes to w the escaped html. equivalent of the plain text data b. */
 func (w *Response) WriteHTML(b []byte) {
-	last := 0
-	for i, c := range b {
-		var seq string
-		switch c {
-		case '\000':
-			seq = html.Null
-		case '"':
-			seq = html.Quot
-		case '\'':
-			seq = html.Apos
-		case '&':
-			seq = html.Amp
-		case '<':
-			seq = html.Lt
-		case '>':
-			seq = html.Gt
-		default:
-			continue
-		}
-		w.Body = append(w.Body, b[last:i]...)
-		w.Body = append(w.Body, seq...)
-		last = i + 1
-	}
-	w.Body = append(w.Body, b[last:]...)
+	w.WriteHTMLString(bytes.AsString(b))
 }
 
 func (w *Response) WriteFloat64(f float64) {
@@ -165,22 +141,24 @@ func (w *Response) WriteString(s string) (int, error) {
 }
 
 func (w *Response) WriteHTMLString(s string) {
+	t := trace.Begin("")
+
 	last := 0
-	for i, c := range s {
+	for i := 0; i < len(s); i++ {
 		var seq string
-		switch c {
+		switch s[i] {
 		case '\000':
-			seq = html.Null
+			seq = "\uFFFD"
 		case '"':
-			seq = html.Quot
+			seq = "&#34;"
 		case '\'':
-			seq = html.Apos
+			seq = "&#39;"
 		case '&':
-			seq = html.Amp
+			seq = "&amp;"
 		case '<':
-			seq = html.Lt
+			seq = "&lt;"
 		case '>':
-			seq = html.Gt
+			seq = "&gt;"
 		default:
 			continue
 		}
@@ -189,6 +167,8 @@ func (w *Response) WriteHTMLString(s string) {
 		last = i + 1
 	}
 	w.Body = append(w.Body, s[last:]...)
+
+	trace.End(t)
 }
 
 func (w *Response) Reset() {

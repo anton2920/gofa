@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/anton2920/gofa/alloc"
+	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/slices"
@@ -44,7 +45,7 @@ func ParseQuery(vs *Values, query string) error {
 			}
 			continue
 		}
-		key = util.Slice2String(keyBuffer[:n])
+		key = bytes.AsString(keyBuffer[:n])
 
 		valueBuffer := vs.Arena.NewSlice(len(value))
 		n, ok = QueryDecode(valueBuffer, value)
@@ -54,7 +55,7 @@ func ParseQuery(vs *Values, query string) error {
 			}
 			continue
 		}
-		value = util.Slice2String(valueBuffer[:n])
+		value = bytes.AsString(valueBuffer[:n])
 
 		vs.Add(key, value)
 	}
@@ -196,7 +197,7 @@ func (vs *Values) HasID(id database.ID) bool {
 
 	buffer := make([]byte, 20)
 	n := slices.PutInt(buffer, int(id))
-	has := vs.Has(util.Slice2String(buffer[:n]))
+	has := vs.Has(bytes.AsString(buffer[:n]))
 
 	trace.End(t)
 	return has
@@ -207,7 +208,7 @@ func (vs *Values) HasInt(value int) bool {
 
 	buffer := make([]byte, 20)
 	n := slices.PutInt(buffer, value)
-	has := vs.Has(util.Slice2String(buffer[:n]))
+	has := vs.Has(bytes.AsString(buffer[:n]))
 
 	trace.End(t)
 	return has
@@ -252,7 +253,7 @@ func (vs *Values) SetID(key string, value database.ID) {
 
 	buffer := vs.Arena.NewSlice(20)
 	n := slices.PutInt(buffer, int(value))
-	vs.Set(key, util.Slice2String(buffer[:n]))
+	vs.Set(key, bytes.AsString(buffer[:n]))
 
 	trace.End(t)
 }
@@ -262,7 +263,7 @@ func (vs *Values) SetInt(key string, value int) {
 
 	buffer := vs.Arena.NewSlice(20)
 	n := slices.PutInt(buffer, value)
-	vs.Set(key, util.Slice2String(buffer[:n]))
+	vs.Set(key, bytes.AsString(buffer[:n]))
 
 	trace.End(t)
 }

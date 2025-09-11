@@ -2,10 +2,10 @@ package html
 
 import (
 	"github.com/anton2920/gofa/alloc"
+	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/l10n"
 	"github.com/anton2920/gofa/net/http"
 	"github.com/anton2920/gofa/trace"
-	"github.com/anton2920/gofa/util"
 )
 
 type ApplyType int32
@@ -63,7 +63,7 @@ func ProcessOptions(arena *alloc.Arena, dflt Options, user Options) Options {
 		n += copy(buffer[n:], " ")
 		n += copy(buffer[n:], user.Class)
 
-		result.Class = util.Slice2String(buffer)
+		result.Class = bytes.AsString(buffer)
 	}
 
 	if len(user.Type) > 0 {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/anton2920/gofa/bits"
 	"github.com/anton2920/gofa/errors"
+	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/syscall"
 	"github.com/anton2920/gofa/util"
 )
@@ -51,7 +52,7 @@ var NotFound = errors.New("not found")
 /* Offset2String performs s.Ptr += base-MinValidPointer. */
 //go:nosplit
 func Offset2String(s string, base *byte) string {
-	return *(*string)(unsafe.Pointer(&reflect.StringHeader{Data: uintptr(util.Noescape(util.PtrAdd(unsafe.Pointer(base), int(uintptr(unsafe.Pointer(util.StringData(s)))-MinValidPointer)))), Len: len(s)}))
+	return *(*string)(unsafe.Pointer(&reflect.StringHeader{Data: uintptr(util.Noescape(util.PtrAdd(unsafe.Pointer(base), int(uintptr(unsafe.Pointer(strings.Data(s)))-MinValidPointer)))), Len: len(s)}))
 }
 
 /* Offset2Slice performs s.Ptr += base-MinValidPointer. */

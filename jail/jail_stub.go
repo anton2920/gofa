@@ -10,10 +10,10 @@ import (
 	"sync/atomic"
 	stdsyscall "syscall"
 
+	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/log"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/syscall"
-	"github.com/anton2920/gofa/util"
 )
 
 type Jail struct {
@@ -56,7 +56,7 @@ func New(template string, wd string) (Jail, error) {
 	n := PutEnv(env, j)
 	env = env[:n+1]
 
-	if err := syscall.Mkdir(util.Slice2String(env), 0755); err != nil {
+	if err := syscall.Mkdir(bytes.AsString(env), 0755); err != nil {
 		if err.(syscall.Error).Errno != syscall.EEXIST {
 			return Jail{}, fmt.Errorf("failed to create environment directory: %v", err)
 		}
@@ -75,7 +75,7 @@ func Remove(j Jail) error {
 	n := PutEnv(env, j)
 	env = env[:n+1]
 
-	if err := syscall.Rmdir(util.Slice2String(env)); err != nil {
+	if err := syscall.Rmdir(bytes.AsString(env)); err != nil {
 		return fmt.Errorf("failed to remove environment directory: %v", err)
 	}
 

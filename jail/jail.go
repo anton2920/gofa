@@ -9,9 +9,9 @@ import (
 	"sync/atomic"
 	stdsyscall "syscall"
 
+	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/syscall"
-	"github.com/anton2920/gofa/util"
 )
 
 type Jail struct {
@@ -140,17 +140,17 @@ func New(template string, wd string) (Jail, error) {
 	n = PutEnv(env, j)
 	env = env[:n+1]
 
-	if err := syscall.Access(util.Slice2String(tmpl), 0); err != nil {
+	if err := syscall.Access(bytes.AsString(tmpl), 0); err != nil {
 		return Jail{}, fmt.Errorf("provided template does not exist: %v", err)
 	}
 
-	if err := syscall.Mkdir(util.Slice2String(path), 0755); err != nil {
+	if err := syscall.Mkdir(bytes.AsString(path), 0755); err != nil {
 		if err.(syscall.Error).Errno != syscall.EEXIST {
 			return Jail{}, fmt.Errorf("failed to create path: %v", err)
 		}
 	}
 
-	if err := syscall.Mkdir(util.Slice2String(env), 0755); err != nil {
+	if err := syscall.Mkdir(bytes.AsString(env), 0755); err != nil {
 		if err.(syscall.Error).Errno != syscall.EEXIST {
 			return Jail{}, fmt.Errorf("failed to create environment directory: %v", err)
 		}
@@ -171,7 +171,7 @@ func New(template string, wd string) (Jail, error) {
 		syscall.Iovec("fstype\x00"), syscall.Iovec("nullfs\x00"),
 		syscall.Iovec("rw\x00"), syscall.IovecZ,
 	}, 0); err != nil {
-		syscall.Unmount(util.Slice2String(path), 0)
+		syscall.Unmount(bytes.AsString(path), 0)
 		return Jail{}, fmt.Errorf("failed to mount environment directory: %v", err)
 	}
 
@@ -182,8 +182,8 @@ func New(template string, wd string) (Jail, error) {
 		syscall.Iovec("persist\x00"), syscall.IovecZ,
 	}, syscall.JAIL_CREATE)
 	if err != nil {
-		syscall.Unmount(util.Slice2String(tmp), 0)
-		syscall.Unmount(util.Slice2String(path), 0)
+		syscall.Unmount(bytes.AsString(tmp), 0)
+		syscall.Unmount(bytes.AsString(path), 0)
 		return Jail{}, err
 	}
 
@@ -204,8 +204,8 @@ func New(template string, wd string) (Jail, error) {
 		if err := syscall.RctlAddRule(rule[:n+1]); err != nil {
 			syscall.RctlRemoveRule(prefix)
 			syscall.JailRemove(j.ID)
-			syscall.Unmount(util.Slice2String(tmp), 0)
-			syscall.Unmount(util.Slice2String(path), 0)
+			syscall.Unmount(bytes.AsString(tmp), 0)
+			syscall.Unmount(bytes.AsString(path), 0)
 			return Jail{}, fmt.Errorf("failed to add rule %d for jail: %v", i, err)
 		}
 	}
@@ -222,7 +222,7 @@ func Protect(j Jail) error {
 	n = PutEnv(env, j)
 	env = env[:n+1]
 
-	if err := syscall.Unmount(util.Slice2String(tmp), 0); err != nil {
+	if err := syscall.Unmount(bytes.AsString(tmp), 0); err != nil {
 		return fmt.Errorf("failed to unmount environment: %v", err)
 	}
 
@@ -269,19 +269,19 @@ func Remove(j Jail) error {
 		err = fmt.Errorf("failed to remove jail: %v", err1)
 	}
 
-	if err1 := syscall.Unmount(util.Slice2String(tmp), 0); err1 != nil {
+	if err1 := syscall.Unmount(bytes.AsString(tmp), 0); err1 != nil {
 		err = fmt.Errorf("failed to unmount environment: %v", err1)
 	}
 
-	if err1 := syscall.Unmount(util.Slice2String(path), 0); err1 != nil {
+	if err1 := syscall.Unmount(bytes.AsString(path), 0); err1 != nil {
 		err = fmt.Errorf("failed to unmount container: %v", err1)
 	}
 
-	if err1 := syscall.Rmdir(util.Slice2String(env)); err1 != nil {
+	if err1 := syscall.Rmdir(bytes.AsString(env)); err1 != nil {
 		err = fmt.Errorf("failed to remove environment directory: %v", err1)
 	}
 
-	if err1 := syscall.Rmdir(util.Slice2String(path)); err1 != nil {
+	if err1 := syscall.Rmdir(bytes.AsString(path)); err1 != nil {
 		err = fmt.Errorf("failed to remove container directory: %v", err1)
 	}
 

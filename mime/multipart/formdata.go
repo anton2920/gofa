@@ -4,11 +4,11 @@ import (
 	"fmt"
 	stdstrings "strings"
 
+	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/net/url"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/trace"
-	"github.com/anton2920/gofa/util"
 )
 
 func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte) error {
@@ -25,7 +25,7 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 		return fmt.Errorf("expected boundary in Content-Type, got '%s:%s'", key[len(key)-len("boundary"):], boundary)
 	}
 
-	form := util.Slice2String(body)
+	form := bytes.AsString(body)
 	var pos int
 	for {
 		/* Parsing boundary. */
@@ -122,7 +122,7 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 		value := form[pos : pos+lineEnd]
 		if len(name) > 0 {
 			if isFile {
-				files.Add(name, File{filename, contentType, util.String2Slice(value)})
+				files.Add(name, File{filename, contentType, strings.AsBytes(value)})
 			} else {
 				vs.Add(name, value)
 			}
