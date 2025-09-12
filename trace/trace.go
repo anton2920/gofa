@@ -10,10 +10,10 @@ import (
 	"sort"
 	"unsafe"
 
+	"github.com/anton2920/gofa/bools"
 	"github.com/anton2920/gofa/intel"
 	"github.com/anton2920/gofa/pointers"
 	_ "github.com/anton2920/gofa/time"
-	"github.com/anton2920/gofa/util"
 )
 
 type Anchor struct {
@@ -102,7 +102,7 @@ func GetCallerPC(arg0 unsafe.Pointer) uintptr {
 //go:nosplit
 func anchorIndexForPC(pc uintptr) int32 {
 	idx := int32(int(pc) & (len(GlobalProfiler.Anchors) - 1))
-	return idx + int32(util.Bool2Int(idx == 0))
+	return idx + int32(bools.ToInt(idx == 0))
 }
 
 //go:nosplit
