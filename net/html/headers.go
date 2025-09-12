@@ -6,7 +6,7 @@ func (h *HTML) H1Begin(attrs ...Attributes) {
 
 func (h *HTML) H1(s string, attrs ...Attributes) {
 	h.H1Begin(attrs...)
-	h.HTMLString(s)
+	h.LString(s)
 	h.H1End()
 }
 
@@ -20,7 +20,7 @@ func (h *HTML) H2Begin(attrs ...Attributes) {
 
 func (h *HTML) H2(s string, attrs ...Attributes) {
 	h.H2Begin(attrs...)
-	h.HTMLString(s)
+	h.LString(s)
 	h.H2End()
 }
 
@@ -34,7 +34,7 @@ func (h *HTML) H3Begin(attrs ...Attributes) {
 
 func (h *HTML) H3(s string, attrs ...Attributes) {
 	h.H3Begin(attrs...)
-	h.HTMLString(s)
+	h.LString(s)
 	h.H3End()
 }
 
@@ -48,7 +48,7 @@ func (h *HTML) H4Begin(attrs ...Attributes) {
 
 func (h *HTML) H4(s string, attrs ...Attributes) {
 	h.H4Begin(attrs...)
-	h.HTMLString(s)
+	h.LString(s)
 	h.H4End()
 }
 
@@ -62,7 +62,7 @@ func (h *HTML) H5Begin(attrs ...Attributes) {
 
 func (h *HTML) H5(s string, attrs ...Attributes) {
 	h.H5Begin(attrs...)
-	h.HTMLString(s)
+	h.LString(s)
 	h.H5End()
 }
 
@@ -76,7 +76,7 @@ func (h *HTML) H6Begin(attrs ...Attributes) {
 
 func (h *HTML) H6(s string, attrs ...Attributes) {
 	h.H6Begin(attrs...)
-	h.HTMLString(s)
+	h.LString(s)
 	h.H6End()
 }
 

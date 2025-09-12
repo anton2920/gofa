@@ -42,3 +42,25 @@ func (h *HTML) HiddenString(name string, s string) {
 		h.Input("hidden", Attributes{Name: name, Value: s})
 	}
 }
+
+func (h *HTML) LabelBegin(attrs ...Attributes) {
+	h.TagBegin("label", attrs...)
+}
+
+func (h *HTML) Label(text string, attrs ...Attributes) {
+	h.LabelBegin(attrs...)
+	h.LString(text)
+	h.LabelEnd()
+}
+
+func (h *HTML) LabelEnd() {
+	h.TagEnd("label")
+}
+
+func (h *HTML) Button(value string, attrs ...Attributes) {
+	h.Input("submit", h.Theme.Button, h.AppendAttributes(attrs, Attributes{Value: value}))
+}
+
+func (h *HTML) Checkbox(attrs ...Attributes) {
+	h.Input("checkbox", attrs...)
+}

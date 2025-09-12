@@ -9,16 +9,18 @@ import (
 type Attributes struct {
 	Class string
 
+	Action  string
+	Enctype string
+	Href    string
+	ID      string
+	Method  string
+	Name    string
+	Src     string
+	Type    string
+
 	Alt         string
-	Src         string
-	ID          string
-	Name        string
 	Placeholder string
-	Type        string
 	Value       string
-	Method      string
-	Action      string
-	Enctype     string
 
 	Cols      int
 	Max       int
@@ -60,6 +62,10 @@ func DisplayStringAttribute(h *HTML, attr string, value string) {
 	}
 }
 
+func DisplayLStringAttribute(h *HTML, attr string, value string) {
+	DisplayStringAttribute(h, attr, h.L(value))
+}
+
 func ReplaceBool(r *bool, b bool) {
 	if b {
 		*r = b
@@ -83,11 +89,13 @@ func MergeString(arena *alloc.Arena, r *string, s string) {
 		var n int
 
 		buffer := arena.NewSlice(len(*r) + len(" ") + len(s))
-		n += copy(buffer[n:], *r)
-		n += copy(buffer[n:], " ")
+		if len(*r) > 0 {
+			n += copy(buffer[n:], *r)
+			n += copy(buffer[n:], " ")
+		}
 		n += copy(buffer[n:], s)
 
-		*r = bytes.AsString(buffer)
+		*r = bytes.AsString(buffer[:n])
 	}
 }
 
@@ -107,18 +115,20 @@ func (h *HTML) MergeAttributes(attrs ...Attributes) Attributes {
 	for i := 0; i < len(attrs); i++ {
 		attr := &attrs[i]
 
-		MergeString(&h.W.Arena, &result.Class, attr.Class)
+		MergeString(&h.Arena, &result.Class, attr.Class)
 
-		ReplaceString(&result.Alt, attr.Alt)
-		ReplaceString(&result.Src, attr.Src)
-		ReplaceString(&result.ID, attr.ID)
-		ReplaceString(&result.Name, attr.Name)
-		ReplaceString(&result.Placeholder, attr.Placeholder)
-		ReplaceString(&result.Type, attr.Type)
-		ReplaceString(&result.Value, attr.Value)
-		ReplaceString(&result.Method, attr.Method)
 		ReplaceString(&result.Action, attr.Action)
 		ReplaceString(&result.Enctype, attr.Enctype)
+		ReplaceString(&result.Href, attr.Href)
+		ReplaceString(&result.ID, attr.ID)
+		ReplaceString(&result.Method, attr.Method)
+		ReplaceString(&result.Name, attr.Name)
+		ReplaceString(&result.Src, attr.Src)
+		ReplaceString(&result.Type, attr.Type)
+
+		ReplaceString(&result.Alt, attr.Alt)
+		ReplaceString(&result.Placeholder, attr.Placeholder)
+		ReplaceString(&result.Value, attr.Value)
 
 		ReplaceInt(&result.Cols, attr.Cols)
 		ReplaceInt(&result.Max, attr.Max)
@@ -148,4 +158,24 @@ func (h *HTML) AppendAttributes(user []Attributes, sys Attributes) Attributes {
 
 func Class(class string) Attributes {
 	return Attributes{Class: class}
+}
+
+func Name(name string) Attributes {
+	return Attributes{Name: name}
+}
+
+func Value(value string) Attributes {
+	return Attributes{Value: value}
+}
+
+func MinLength(n int) Attributes {
+	return Attributes{MinLength: n}
+}
+
+func MaxLength(n int) Attributes {
+	return Attributes{MaxLength: n}
+}
+
+func Required() Attributes {
+	return Attributes{Required: true}
 }

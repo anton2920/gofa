@@ -1,25 +1,31 @@
 package html
 
 import (
-	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/l10n"
 	"github.com/anton2920/gofa/net/http"
 	"github.com/anton2920/gofa/time"
 	"github.com/anton2920/gofa/trace"
 )
 
-type HTML struct {
-	W *http.Response
+type Theme struct {
+	Form   Attributes
+	Label  Attributes
+	Input  Attributes
+	Button Attributes
+}
 
-	database.ID
+type HTML struct {
+	Theme
+
+	*http.Response
 	l10n.Language
 	time.Timezone
 }
 
-func New(w *http.Response, id database.ID, l l10n.Language, tz time.Timezone) HTML {
+func New(w *http.Response, l l10n.Language, tz time.Timezone) HTML {
 	var h HTML
 
-	h.ID = id
+	h.Response = w
 	h.Language = l
 	h.Timezone = tz
 
@@ -27,19 +33,19 @@ func New(w *http.Response, id database.ID, l l10n.Language, tz time.Timezone) HT
 }
 
 func (h *HTML) Int(n int) {
-	h.W.WriteInt(n)
+	h.WriteInt(n)
 }
 
 func (h *HTML) HTMLString(s string) {
-	h.W.WriteHTMLString(s)
+	h.WriteHTMLString(s)
 }
 
-func (h *HTML) LocalizedString(s string) (int, error) {
-	return h.W.WriteString(h.L(s))
+func (h *HTML) LString(s string) {
+	h.WriteHTMLString(h.L(s))
 }
 
 func (h *HTML) String(s string) (int, error) {
-	return h.W.WriteString(s)
+	return h.WriteString(s)
 }
 
 func (h *HTML) TagBegin(tag string, attrs ...Attributes) {
@@ -53,16 +59,18 @@ func (h *HTML) TagBegin(tag string, attrs ...Attributes) {
 	if len(attrs) > 0 {
 		DisplayStringAttribute(h, "class", attr.Class)
 
-		DisplayStringAttribute(h, "alt", attr.Alt)
-		DisplayStringAttribute(h, "src", attr.Src)
-		DisplayStringAttribute(h, "id", attr.ID)
-		DisplayStringAttribute(h, "name", attr.Name)
-		DisplayStringAttribute(h, "placeholder", attr.Placeholder)
-		DisplayStringAttribute(h, "type", attr.Type)
-		DisplayStringAttribute(h, "value", attr.Value)
-		DisplayStringAttribute(h, "method", attr.Method)
 		DisplayStringAttribute(h, "action", attr.Action)
 		DisplayStringAttribute(h, "enctype", attr.Enctype)
+		DisplayStringAttribute(h, "href", attr.Href)
+		DisplayStringAttribute(h, "id", attr.ID)
+		DisplayStringAttribute(h, "method", attr.Method)
+		DisplayStringAttribute(h, "name", attr.Name)
+		DisplayStringAttribute(h, "src", attr.Src)
+		DisplayStringAttribute(h, "type", attr.Type)
+
+		DisplayLStringAttribute(h, "alt", attr.Alt)
+		DisplayLStringAttribute(h, "placeholder", attr.Placeholder)
+		DisplayLStringAttribute(h, "value", attr.Value)
 
 		DisplayIntAttribute(h, "cols", attr.Cols)
 		DisplayIntAttribute(h, "max", attr.Max)
@@ -76,7 +84,7 @@ func (h *HTML) TagBegin(tag string, attrs ...Attributes) {
 		DisplayBoolAttribute(h, "readonly", attr.Readonly)
 		DisplayBoolAttribute(h, "required", attr.Required)
 	}
-	h.String(`>`)
+	h.String(`> `)
 
 	trace.End(t)
 }
@@ -114,7 +122,7 @@ func (h *HTML) TitleBegin() {
 
 func (h *HTML) Title(title string) {
 	h.TitleBegin()
-	h.HTMLString(h.L(title))
+	h.LString(title)
 	h.TitleEnd()
 }
 
@@ -122,8 +130,8 @@ func (h *HTML) TitleEnd() {
 	h.TagEnd("title")
 }
 
-func (h *HTML) BodyBegin() {
-	h.TagBegin("body")
+func (h *HTML) BodyBegin(attrs ...Attributes) {
+	h.TagBegin("body", attrs...)
 }
 
 func (h *HTML) BodyEnd() {
@@ -142,8 +150,8 @@ func (h *HTML) SP() {
 	h.String(` `)
 }
 
-func (h *HTML) DivBegin(attrs ...Attributes) {
-	h.TagBegin("div", attrs...)
+func (h *HTML) DivBegin(class string) {
+	h.TagBegin("div", Attributes{Class: class})
 }
 
 func (h *HTML) DivEnd() {
@@ -152,4 +160,18 @@ func (h *HTML) DivEnd() {
 
 func (h *HTML) Img(alt string, src string, attrs ...Attributes) {
 	h.TagBegin("img", h.AppendAttributes(attrs, Attributes{Alt: alt, Src: src}))
+}
+
+func (h *HTML) ABegin(href string, attrs ...Attributes) {
+	h.TagBegin("a", h.AppendAttributes(attrs, Attributes{Href: href}))
+}
+
+func (h *HTML) A(href string, value string, attrs ...Attributes) {
+	h.ABegin(href, attrs...)
+	h.LString(value)
+	h.AEnd()
+}
+
+func (h *HTML) AEnd() {
+	h.TagEnd("a")
 }
