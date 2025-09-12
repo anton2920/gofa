@@ -100,7 +100,7 @@ func ParseRequestsUnsafeEx(buffer []byte, consumed *int, rs []http.Request, remo
 				return i, nil
 			}
 
-			r.Body = strings.AsSlice(request[pos : pos+contentLength])
+			r.Body = strings.AsBytes(request[pos : pos+contentLength])
 			pos += len(r.Body)
 		}
 
