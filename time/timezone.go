@@ -36,7 +36,7 @@ const (
 	TimezoneCount
 )
 
-var Timezone2String = map[int]string{
+var Timezone2String = map[Timezone]string{
 	-12: "UTC-12",
 	-11: "UTC-11",
 	-10: "UTC-10",
