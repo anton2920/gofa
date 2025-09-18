@@ -1,7 +1,7 @@
 package html
 
 func (h *HTML) H1Begin(attrs ...Attributes) {
-	h.TagBegin("h1", attrs...)
+	h.TagBegin("h1", h.PrependAttributes(h.Theme.H1, attrs))
 }
 
 func (h *HTML) H1(s string, attrs ...Attributes) {
@@ -15,7 +15,7 @@ func (h *HTML) H1End() {
 }
 
 func (h *HTML) H2Begin(attrs ...Attributes) {
-	h.TagBegin("h2", attrs...)
+	h.TagBegin("h2", h.PrependAttributes(h.Theme.H2, attrs))
 }
 
 func (h *HTML) H2(s string, attrs ...Attributes) {
@@ -29,7 +29,7 @@ func (h *HTML) H2End() {
 }
 
 func (h *HTML) H3Begin(attrs ...Attributes) {
-	h.TagBegin("h3", attrs...)
+	h.TagBegin("h3", h.PrependAttributes(h.Theme.H3, attrs))
 }
 
 func (h *HTML) H3(s string, attrs ...Attributes) {
@@ -43,7 +43,7 @@ func (h *HTML) H3End() {
 }
 
 func (h *HTML) H4Begin(attrs ...Attributes) {
-	h.TagBegin("h4", attrs...)
+	h.TagBegin("h4", h.PrependAttributes(h.Theme.H4, attrs))
 }
 
 func (h *HTML) H4(s string, attrs ...Attributes) {
@@ -57,7 +57,7 @@ func (h *HTML) H4End() {
 }
 
 func (h *HTML) H5Begin(attrs ...Attributes) {
-	h.TagBegin("h5", attrs...)
+	h.TagBegin("h5", h.PrependAttributes(h.Theme.H5, attrs))
 }
 
 func (h *HTML) H5(s string, attrs ...Attributes) {
@@ -71,7 +71,7 @@ func (h *HTML) H5End() {
 }
 
 func (h *HTML) H6Begin(attrs ...Attributes) {
-	h.TagBegin("h6", attrs...)
+	h.TagBegin("h6", h.PrependAttributes(h.Theme.H6, attrs))
 }
 
 func (h *HTML) H6(s string, attrs ...Attributes) {

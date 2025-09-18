@@ -9,6 +9,7 @@ import (
 type Attributes struct {
 	Class string
 
+	Accept  string
 	Action  string
 	Enctype string
 	Href    string
@@ -17,10 +18,10 @@ type Attributes struct {
 	Name    string
 	Src     string
 	Type    string
+	Value   string
 
 	Alt         string
 	Placeholder string
-	Value       string
 
 	Cols      int
 	Max       int
@@ -29,10 +30,12 @@ type Attributes struct {
 	MinLength int
 	Rows      int
 
+	Checked        bool
 	Disabled       bool
+	FormNoValidate bool
+	Multiple       bool
 	Readonly       bool
 	Required       bool
-	FormNoValidate bool
 }
 
 func DisplayBoolAttribute(h *HTML, attr string, value bool) {
@@ -117,6 +120,7 @@ func (h *HTML) MergeAttributes(attrs ...Attributes) Attributes {
 
 		MergeString(&h.Arena, &result.Class, attr.Class)
 
+		ReplaceString(&result.Accept, attr.Accept)
 		ReplaceString(&result.Action, attr.Action)
 		ReplaceString(&result.Enctype, attr.Enctype)
 		ReplaceString(&result.Href, attr.Href)
@@ -125,10 +129,10 @@ func (h *HTML) MergeAttributes(attrs ...Attributes) Attributes {
 		ReplaceString(&result.Name, attr.Name)
 		ReplaceString(&result.Src, attr.Src)
 		ReplaceString(&result.Type, attr.Type)
+		ReplaceString(&result.Value, attr.Value)
 
 		ReplaceString(&result.Alt, attr.Alt)
 		ReplaceString(&result.Placeholder, attr.Placeholder)
-		ReplaceString(&result.Value, attr.Value)
 
 		ReplaceInt(&result.Cols, attr.Cols)
 		ReplaceInt(&result.Max, attr.Max)
@@ -137,8 +141,10 @@ func (h *HTML) MergeAttributes(attrs ...Attributes) Attributes {
 		ReplaceInt(&result.MinLength, attr.MinLength)
 		ReplaceInt(&result.Rows, attr.Rows)
 
+		ReplaceBool(&result.Checked, attr.Checked)
 		ReplaceBool(&result.Disabled, attr.Disabled)
 		ReplaceBool(&result.FormNoValidate, attr.FormNoValidate)
+		ReplaceBool(&result.Multiple, attr.Multiple)
 		ReplaceBool(&result.Readonly, attr.Readonly)
 		ReplaceBool(&result.Required, attr.Required)
 
@@ -160,22 +166,30 @@ func Class(class string) Attributes {
 	return Attributes{Class: class}
 }
 
-func Name(name string) Attributes {
-	return Attributes{Name: name}
+func Enctype(enctype string) Attributes {
+	return Attributes{Enctype: enctype}
 }
 
-func Value(value string) Attributes {
-	return Attributes{Value: value}
-}
-
-func MinLength(n int) Attributes {
-	return Attributes{MinLength: n}
+func FormNoValidate() Attributes {
+	return Attributes{FormNoValidate: true}
 }
 
 func MaxLength(n int) Attributes {
 	return Attributes{MaxLength: n}
 }
 
+func MinLength(n int) Attributes {
+	return Attributes{MinLength: n}
+}
+
+func Name(name string) Attributes {
+	return Attributes{Name: name}
+}
+
 func Required() Attributes {
 	return Attributes{Required: true}
+}
+
+func Value(value string) Attributes {
+	return Attributes{Value: value}
 }
