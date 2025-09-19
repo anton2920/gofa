@@ -36,6 +36,7 @@ type Attributes struct {
 	Multiple       bool
 	Readonly       bool
 	Required       bool
+	Selected       bool
 }
 
 func DisplayBoolAttribute(h *HTML, attr string, value bool) {
@@ -147,7 +148,7 @@ func (h *HTML) MergeAttributes(attrs ...Attributes) Attributes {
 		ReplaceBool(&result.Multiple, attr.Multiple)
 		ReplaceBool(&result.Readonly, attr.Readonly)
 		ReplaceBool(&result.Required, attr.Required)
-
+		ReplaceBool(&result.Selected, attr.Selected)
 	}
 
 	trace.End(t)

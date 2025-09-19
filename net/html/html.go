@@ -31,10 +31,17 @@ type Theme struct {
 	H6       Attributes
 	Img      Attributes
 	Input    Attributes
+	LI       Attributes
 	Label    Attributes
 	P        Attributes
 	Select   Attributes
+	Span     Attributes
 	Textarea Attributes
+	UL       Attributes
+
+	Pagination             Attributes
+	PaginationButton       Attributes
+	PaginationButtonActive Attributes
 }
 
 type HTML struct {
@@ -68,6 +75,11 @@ func (h *HTML) HString(s string) {
 
 func (h *HTML) LString(s string) {
 	h.HString(h.L(s))
+}
+
+func (h *HTML) LStringColon(s string) {
+	h.LString(s)
+	h.String(": ")
 }
 
 func (h *HTML) String(s string) {
@@ -162,6 +174,7 @@ func (h *HTML) TagBegin(tag string, attrs ...Attributes) {
 		DisplayBoolAttribute(h, "formnovalidate", attr.FormNoValidate)
 		DisplayBoolAttribute(h, "readonly", attr.Readonly)
 		DisplayBoolAttribute(h, "required", attr.Required)
+		DisplayBoolAttribute(h, "selected", attr.Selected)
 	}
 	h.String(`>`)
 
@@ -299,4 +312,18 @@ func (h *HTML) P(p string, attrs ...Attributes) {
 
 func (h *HTML) PEnd() {
 	h.TagEnd("p")
+}
+
+func (h *HTML) SpanBegin(attrs ...Attributes) {
+	h.TagBegin("span", h.PrependAttributes(h.Theme.Span, attrs))
+}
+
+func (h *HTML) Span(s string, attrs ...Attributes) {
+	h.SpanBegin(attrs...)
+	h.LString(s)
+	h.SpanEnd()
+}
+
+func (h *HTML) SpanEnd() {
+	h.TagEnd("span")
 }

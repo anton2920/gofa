@@ -1,0 +1,23 @@
+package html
+
+func (h *HTML) ULBegin(attrs ...Attributes) {
+	h.TagBegin("ul", h.PrependAttributes(h.Theme.UL, attrs))
+}
+
+func (h *HTML) ULEnd() {
+	h.TagEnd("ul")
+}
+
+func (h *HTML) LIBegin(attrs ...Attributes) {
+	h.TagBegin("li", h.PrependAttributes(h.Theme.LI, attrs))
+}
+
+func (h *HTML) LI(li string, attrs ...Attributes) {
+	h.LIBegin(attrs...)
+	h.LString(li)
+	h.LIEnd()
+}
+
+func (h *HTML) LIEnd() {
+	h.TagEnd("li")
+}
