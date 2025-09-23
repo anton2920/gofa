@@ -4,6 +4,7 @@ import (
 	stdtime "time"
 	"unicode"
 
+	"github.com/anton2920/gofa/bools"
 	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/debug"
 	"github.com/anton2920/gofa/errors"
@@ -80,6 +81,10 @@ func (h *HTML) LString(s string) {
 func (h *HTML) LStringColon(s string) {
 	h.LString(s)
 	h.String(": ")
+}
+
+func (h *HTML) LStringPlural(s string, n int) {
+	h.LString(s[:len(s)-bools.ToInt(n == 1)])
 }
 
 func (h *HTML) String(s string) {
@@ -296,8 +301,7 @@ func (h *HTML) Error(err error, attrs ...Attributes) {
 func (h *HTML) ErrorMessage(message string, attrs ...Attributes) {
 	if len(message) > 0 {
 		h.DivBegin("", attrs...)
-		h.LString("Error")
-		h.String(": ")
+		h.LStringColon("Error")
 		h.LString(message)
 		h.DivEnd()
 	}
@@ -312,9 +316,11 @@ func (h *HTML) PBegin(attrs ...Attributes) {
 }
 
 func (h *HTML) P(p string, attrs ...Attributes) {
-	h.PBegin(attrs...)
-	h.LString(p)
-	h.PEnd()
+	if len(p) > 0 {
+		h.PBegin(attrs...)
+		h.LString(p)
+		h.PEnd()
+	}
 }
 
 func (h *HTML) PEnd() {
@@ -326,9 +332,11 @@ func (h *HTML) SpanBegin(attrs ...Attributes) {
 }
 
 func (h *HTML) Span(s string, attrs ...Attributes) {
-	h.SpanBegin(attrs...)
-	h.LString(s)
-	h.SpanEnd()
+	if len(s) > 0 {
+		h.SpanBegin(attrs...)
+		h.LString(s)
+		h.SpanEnd()
+	}
 }
 
 func (h *HTML) SpanEnd() {
