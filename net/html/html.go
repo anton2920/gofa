@@ -109,6 +109,13 @@ func (h *HTML) Itoa(x int) string {
 	return bytes.AsString(buf[:n])
 }
 
+func (h *HTML) Itoa1(x int) string {
+	if x == 0 {
+		return ""
+	}
+	return h.Itoa(x)
+}
+
 func (h *HTML) Ttoa(d int64) string {
 	buf := h.Arena.NewSlice(len(stdtime.DateTime))
 	stdtime.Unix(d+int64(h.Timezone)*time.OneHour, 0).UTC().AppendFormat(buf[:0], stdtime.DateTime)
