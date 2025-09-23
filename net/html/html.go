@@ -305,7 +305,7 @@ func (h *HTML) PBegin(attrs ...Attributes) {
 }
 
 func (h *HTML) P(p string, attrs ...Attributes) {
-	h.PBegin()
+	h.PBegin(attrs...)
 	h.LString(p)
 	h.PEnd()
 }
