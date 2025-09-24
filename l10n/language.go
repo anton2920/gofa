@@ -2,8 +2,6 @@ package l10n
 
 import (
 	stdstrings "strings"
-	"unicode"
-	"unicode/utf8"
 
 	"github.com/anton2920/gofa/trace"
 )
@@ -60,21 +58,23 @@ func (l Language) L(s string) string {
 
 func Add(ls Localizations) {
 	for k, v := range ls {
-		k := stdstrings.ToLower(k)
+		localizations[k] = v
 
 		lowers := v
 		for i := 0; i < len(lowers); i++ {
 			lowers[i] = stdstrings.ToLower(lowers[i])
 		}
-		localizations[k] = lowers
+		localizations[stdstrings.ToLower(k)] = lowers
 
-		capitals := v
-		for i := 0; i < len(capitals); i++ {
-			if len(capitals[i]) > 0 {
-				r, size := utf8.DecodeRuneInString(capitals[i])
-				capitals[i] = string(unicode.ToUpper(r)) + capitals[i][size:]
+		/*
+			capitals := v
+			for i := 0; i < len(capitals); i++ {
+				if len(capitals[i]) > 0 {
+					r, size := utf8.DecodeRuneInString(capitals[i])
+					capitals[i] = string(unicode.ToUpper(r)) + capitals[i][size:]
+				}
 			}
-		}
-		localizations[stdstrings.ToTitle(k[:1])+k[1:]] = capitals
+			localizations[stdstrings.ToTitle(k[:1])+k[1:]] = capitals
+		*/
 	}
 }
