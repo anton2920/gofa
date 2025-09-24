@@ -27,7 +27,7 @@ func (h *HTML) PaginationEllipsis() {
 
 func (h *HTML) Pagination(pagination *Pagination, attrs ...Attributes) {
 	if pagination.NumberOfPages > 1 {
-		h.DivBegin("", attrs...)
+		h.DivBegin(attrs...)
 
 		h.String(` <button class="join-item btn" name="Page" value="`)
 		if pagination.CurrentPage == 0 {

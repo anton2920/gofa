@@ -17,6 +17,7 @@ type Attributes struct {
 	Method  string
 	Name    string
 	Src     string
+	Style   string
 	Type    string
 	Value   string
 
@@ -129,6 +130,7 @@ func (h *HTML) MergeAttributes(attrs ...Attributes) Attributes {
 		ReplaceString(&result.Method, attr.Method)
 		ReplaceString(&result.Name, attr.Name)
 		ReplaceString(&result.Src, attr.Src)
+		ReplaceString(&result.Style, attr.Style)
 		ReplaceString(&result.Type, attr.Type)
 		ReplaceString(&result.Value, attr.Value)
 
@@ -189,6 +191,10 @@ func Name(name string) Attributes {
 
 func Required() Attributes {
 	return Attributes{Required: true}
+}
+
+func Style(s string) Attributes {
+	return Attributes{Style: s}
 }
 
 func Value(value string) Attributes {

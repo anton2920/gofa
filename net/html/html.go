@@ -6,12 +6,14 @@ import (
 
 	"github.com/anton2920/gofa/bools"
 	"github.com/anton2920/gofa/bytes"
+	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/debug"
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/l10n"
 	"github.com/anton2920/gofa/log"
 	"github.com/anton2920/gofa/net/http"
+	"github.com/anton2920/gofa/session"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/time"
 	"github.com/anton2920/gofa/trace"
@@ -34,6 +36,7 @@ type Theme struct {
 	Input    Attributes
 	LI       Attributes
 	Label    Attributes
+	OL       Attributes
 	P        Attributes
 	Select   Attributes
 	Span     Attributes
@@ -46,20 +49,20 @@ type Theme struct {
 }
 
 type HTML struct {
-	Theme
-
 	*http.Response
-	l10n.Language
-	time.Timezone
+	*http.Request
+
+	session.Session
+	Theme
 }
 
-func New(w *http.Response, theme Theme, l l10n.Language, tz time.Timezone) HTML {
-	return HTML{Response: w, Theme: theme, Language: l, Timezone: tz}
+func New(w *http.Response, r *http.Request, session session.Session, theme Theme) HTML {
+	return HTML{Response: w, Request: r, Session: session, Theme: theme}
 }
 
 /* TODO(anton2920): check whether it allocates memory. */
 func (h *HTML) WithoutTheme() *HTML {
-	return &HTML{Response: h.Response, Language: h.Language, Timezone: h.Timezone}
+	return &HTML{Response: h.Response, Request: h.Request, Session: h.Session}
 }
 
 func (h *HTML) Date(d int64) {
@@ -149,6 +152,16 @@ func (h *HTML) DoublyIndexedName(name string, index1 int, index2 int) string {
 	return bytes.AsString(buf[:n])
 }
 
+func (h *HTML) PathWithID(path string, id database.ID) string {
+	var n int
+
+	buf := h.Arena.NewSlice(len(path) + ints.Bufsize)
+	n += copy(buf[n:], path)
+	n += slices.PutInt(buf[n:], int(id))
+
+	return bytes.AsString(buf[:n])
+}
+
 func (h *HTML) TagBegin(tag string, attrs ...Attributes) {
 	t := trace.Begin("")
 
@@ -168,6 +181,7 @@ func (h *HTML) TagBegin(tag string, attrs ...Attributes) {
 		DisplayStringAttribute(h, "method", attr.Method)
 		DisplayStringAttribute(h, "name", attr.Name)
 		DisplayStringAttribute(h, "src", attr.Src)
+		DisplayStringAttribute(h, "style", attr.Style)
 		DisplayStringAttribute(h, "type", attr.Type)
 		DisplayStringAttribute(h, "value", attr.Value)
 
@@ -268,8 +282,8 @@ func (h *HTML) AEnd() {
 	h.TagEnd("a")
 }
 
-func (h *HTML) DivBegin(class string, attrs ...Attributes) {
-	h.TagBegin("div", h.Theme.Div, h.AppendAttributes(attrs, Attributes{Class: class}))
+func (h *HTML) DivBegin(attrs ...Attributes) {
+	h.TagBegin("div", h.PrependAttributes(h.Theme.Div, attrs))
 }
 
 func (h *HTML) DivEnd() {
@@ -300,7 +314,7 @@ func (h *HTML) Error(err error, attrs ...Attributes) {
 
 func (h *HTML) ErrorMessage(message string, attrs ...Attributes) {
 	if len(message) > 0 {
-		h.DivBegin("", attrs...)
+		h.DivBegin(attrs...)
 		h.LStringColon("Error")
 		h.LString(message)
 		h.DivEnd()

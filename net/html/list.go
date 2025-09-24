@@ -1,5 +1,13 @@
 package html
 
+func (h *HTML) OLBegin(attrs ...Attributes) {
+	h.TagBegin("ol", h.PrependAttributes(h.Theme.OL, attrs))
+}
+
+func (h *HTML) OLEnd() {
+	h.TagEnd("ol")
+}
+
 func (h *HTML) ULBegin(attrs ...Attributes) {
 	h.TagBegin("ul", h.PrependAttributes(h.Theme.UL, attrs))
 }
