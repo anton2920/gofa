@@ -20,6 +20,7 @@ import (
 )
 
 type Theme struct {
+	/* HTML tags. */
 	A        Attributes
 	Body     Attributes
 	Button   Attributes
@@ -43,9 +44,13 @@ type Theme struct {
 	Textarea Attributes
 	UL       Attributes
 
-	Pagination             Attributes
-	PaginationButton       Attributes
-	PaginationButtonActive Attributes
+	/* Custom components. */
+	Error Attributes
+
+	PageSelector                Attributes
+	PageSelectorButton          Attributes
+	PageSelectorButtonActive    Attributes
+	PageSelectorButtonContainer Attributes
 }
 
 type HTML struct {
@@ -314,7 +319,7 @@ func (h *HTML) Error(err error, attrs ...Attributes) {
 
 func (h *HTML) ErrorMessage(message string, attrs ...Attributes) {
 	if len(message) > 0 {
-		h.DivBegin(attrs...)
+		h.DivBegin(h.PrependAttributes(h.Theme.Error, attrs))
 		h.LStringColon("Error")
 		h.LString(message)
 		h.DivEnd()
