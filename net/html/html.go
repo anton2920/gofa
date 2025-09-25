@@ -53,7 +53,7 @@ type HTML struct {
 	*http.Request
 
 	session.Session
-	Theme
+	Theme Theme
 }
 
 func New(w *http.Response, r *http.Request, session session.Session, theme Theme) HTML {
