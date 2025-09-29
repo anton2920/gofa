@@ -2,7 +2,10 @@ package html
 
 import (
 	"github.com/anton2920/gofa/alloc"
+	"github.com/anton2920/gofa/bools"
 	"github.com/anton2920/gofa/bytes"
+	"github.com/anton2920/gofa/ints"
+	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/trace"
 )
 
@@ -71,24 +74,6 @@ func DisplayLStringAttribute(h *HTML, attr string, value string) {
 	DisplayStringAttribute(h, attr, h.L(value))
 }
 
-func ReplaceBool(r *bool, b bool) {
-	if b {
-		*r = b
-	}
-}
-
-func ReplaceInt(r *int, n int) {
-	if n > 0 {
-		*r = n
-	}
-}
-
-func ReplaceString(r *string, s string) {
-	if len(s) > 0 {
-		*r = s
-	}
-}
-
 func MergeString(arena *alloc.Arena, r *string, s string) {
 	if len(s) > 0 {
 		var n int
@@ -122,35 +107,35 @@ func (h *HTML) MergeAttributes(attrs ...Attributes) Attributes {
 
 		MergeString(&h.Arena, &result.Class, attr.Class)
 
-		ReplaceString(&result.Accept, attr.Accept)
-		ReplaceString(&result.Action, attr.Action)
-		ReplaceString(&result.Enctype, attr.Enctype)
-		ReplaceString(&result.Href, attr.Href)
-		ReplaceString(&result.ID, attr.ID)
-		ReplaceString(&result.Method, attr.Method)
-		ReplaceString(&result.Name, attr.Name)
-		ReplaceString(&result.Src, attr.Src)
-		ReplaceString(&result.Style, attr.Style)
-		ReplaceString(&result.Type, attr.Type)
-		ReplaceString(&result.Value, attr.Value)
+		strings.Replace(&result.Accept, attr.Accept)
+		strings.Replace(&result.Action, attr.Action)
+		strings.Replace(&result.Enctype, attr.Enctype)
+		strings.Replace(&result.Href, attr.Href)
+		strings.Replace(&result.ID, attr.ID)
+		strings.Replace(&result.Method, attr.Method)
+		strings.Replace(&result.Name, attr.Name)
+		strings.Replace(&result.Src, attr.Src)
+		strings.Replace(&result.Style, attr.Style)
+		strings.Replace(&result.Type, attr.Type)
+		strings.Replace(&result.Value, attr.Value)
 
-		ReplaceString(&result.Alt, attr.Alt)
-		ReplaceString(&result.Placeholder, attr.Placeholder)
+		strings.Replace(&result.Alt, attr.Alt)
+		strings.Replace(&result.Placeholder, attr.Placeholder)
 
-		ReplaceInt(&result.Cols, attr.Cols)
-		ReplaceInt(&result.Max, attr.Max)
-		ReplaceInt(&result.MaxLength, attr.MaxLength)
-		ReplaceInt(&result.Min, attr.Min)
-		ReplaceInt(&result.MinLength, attr.MinLength)
-		ReplaceInt(&result.Rows, attr.Rows)
+		ints.Replace(&result.Cols, attr.Cols)
+		ints.Replace(&result.Max, attr.Max)
+		ints.Replace(&result.MaxLength, attr.MaxLength)
+		ints.Replace(&result.Min, attr.Min)
+		ints.Replace(&result.MinLength, attr.MinLength)
+		ints.Replace(&result.Rows, attr.Rows)
 
-		ReplaceBool(&result.Checked, attr.Checked)
-		ReplaceBool(&result.Disabled, attr.Disabled)
-		ReplaceBool(&result.FormNoValidate, attr.FormNoValidate)
-		ReplaceBool(&result.Multiple, attr.Multiple)
-		ReplaceBool(&result.Readonly, attr.Readonly)
-		ReplaceBool(&result.Required, attr.Required)
-		ReplaceBool(&result.Selected, attr.Selected)
+		bools.Replace(&result.Checked, attr.Checked)
+		bools.Replace(&result.Disabled, attr.Disabled)
+		bools.Replace(&result.FormNoValidate, attr.FormNoValidate)
+		bools.Replace(&result.Multiple, attr.Multiple)
+		bools.Replace(&result.Readonly, attr.Readonly)
+		bools.Replace(&result.Required, attr.Required)
+		bools.Replace(&result.Selected, attr.Selected)
 	}
 
 	trace.End(t)
