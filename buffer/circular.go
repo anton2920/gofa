@@ -93,7 +93,7 @@ func (c *Circular) UnconsumedString() string {
 	return *(*string)(unsafe.Pointer(&reflect.StringHeader{Data: uintptr(unsafe.Pointer(&c.Buf[c.Head])), Len: c.UnconsumedLen()}))
 }
 
-func FreeCircular(c *Circular) {
+func (c *Circular) Free() {
 	syscall.Munmap(unsafe.Pointer(&c.Buf[0]), uint64(len(c.Buf)))
 	c.Buf = nil
 }
