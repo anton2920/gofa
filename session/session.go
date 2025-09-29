@@ -4,15 +4,14 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/gob"
+	"fmt"
 	"os"
 	"sync"
 	"unsafe"
 
 	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/database"
-	"github.com/anton2920/gofa/debug"
 	"github.com/anton2920/gofa/log"
-	"github.com/anton2920/gofa/net/http"
 	"github.com/anton2920/gofa/time"
 	"github.com/anton2920/gofa/trace"
 )
@@ -48,23 +47,7 @@ func New(userID database.ID) Session {
 	return session
 }
 
-func Get(w *http.Response, r *http.Request) Session {
-	const cookie = "Token"
-
-	session := GetFromToken(r.Cookie(cookie))
-	if len(session.Token) == 0 {
-		session = New(0)
-		if debug.Debug {
-			w.SetCookieUnsafe(cookie, session.Token, int(session.Expiry))
-		} else {
-			w.SetCookie(cookie, session.Token, int(session.Expiry))
-		}
-	}
-
-	return session
-}
-
-func GetFromToken(token string) Session {
+func Get(token string) Session {
 	defer trace.End(trace.Begin(""))
 
 	SessionsLock.RLock()
@@ -147,13 +130,13 @@ func GenerateToken() string {
 func LoadFromFile(filename string) error {
 	f, err := os.Open(filename)
 	if err != nil {
-		return http.ServerError(err)
+		return fmt.Errorf("failed to open sessions file %q: %v", filename, err)
 	}
 	defer f.Close()
 
 	dec := gob.NewDecoder(f)
 	if err := dec.Decode(&Sessions); err != nil {
-		return http.ServerError(err)
+		return fmt.Errorf("failed to decode sessions from file: %v", err)
 	}
 
 	return nil
@@ -162,7 +145,7 @@ func LoadFromFile(filename string) error {
 func StoreToFile(filename string) error {
 	f, err := os.Create(filename)
 	if err != nil {
-		return http.ServerError(err)
+		return fmt.Errorf("failed to create sessions file %q: %v", filename, err)
 	}
 	defer f.Close()
 
@@ -170,7 +153,7 @@ func StoreToFile(filename string) error {
 	SessionsLock.Lock()
 	defer SessionsLock.Unlock()
 	if err := enc.Encode(Sessions); err != nil {
-		return http.ServerError(err)
+		return fmt.Errorf("failed to encode sessions to file: %v", err)
 	}
 
 	return nil
