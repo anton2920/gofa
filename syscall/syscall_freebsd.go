@@ -242,9 +242,9 @@ func RctlRemoveRule(filter []byte) error {
 	return NewError("rctl_remove_rule", errno)
 }
 
-func Read(fd int32, buf []byte) (int, error) {
+func Read(fd int32, buf []byte) (int64, error) {
 	r1, _, errno := Syscall(SYS_read, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
-	return int(r1), NewError("read", errno)
+	return int64(r1), NewError("read", errno)
 }
 
 func Rmdir(path string) error {
@@ -304,12 +304,12 @@ func Unmount(path string, flags int32) error {
 	return NewError("unmount", errno)
 }
 
-func Write(fd int32, buf []byte) (int, error) {
+func Write(fd int32, buf []byte) (int64, error) {
 	r1, _, errno := Syscall(SYS_write, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
-	return int(r1), NewError("write", errno)
+	return int64(r1), NewError("write", errno)
 }
 
-func Writev(fd int32, iov []Iovec) (int, error) {
+func Writev(fd int32, iov []Iovec) (int64, error) {
 	r1, _, errno := Syscall(SYS_writev, uintptr(fd), uintptr(unsafe.Pointer(&iov[0])), uintptr(len(iov)))
-	return int(r1), NewError("writev", errno)
+	return int64(r1), NewError("writev", errno)
 }
