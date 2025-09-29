@@ -1,8 +1,8 @@
 package time
 
 import (
+	"github.com/anton2920/gofa/cpu"
 	"github.com/anton2920/gofa/debug"
-	"github.com/anton2920/gofa/intel"
 	"github.com/anton2920/gofa/syscall"
 )
 
@@ -21,11 +21,11 @@ const (
 )
 
 func init() {
-	if intel.CPUHz == 0 {
+	if cpu.CPUHz == 0 {
 		const osHz = int64(1 * NsecPerSec)
 		const millisecondsToWait = 10
 
-		cpuStart := intel.RDTSC()
+		cpuStart := cpu.GetPerformanceCounter()
 		osStart := UnixNsec()
 
 		osEnd := UnixNsec()
@@ -37,10 +37,10 @@ func init() {
 			osElapsed = osEnd - osStart
 		}
 
-		cpuEnd := intel.RDTSC()
+		cpuEnd := cpu.GetPerformanceCounter()
 		cpuElapsed := int64(cpuEnd - cpuStart)
-		intel.CPUHz = intel.Cycles(cpuElapsed * osHz / osElapsed)
-		debug.Printf("[gofa/time]: CPU Frequency %dHz", intel.CPUHz)
+		cpu.CPUHz = cpu.Cycles(cpuElapsed * osHz / osElapsed)
+		debug.Printf("[time]: CPU Frequency %dHz", cpu.CPUHz)
 	}
 }
 
