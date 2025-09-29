@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"unsafe"
 
+	"github.com/anton2920/gofa/os"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/syscall"
@@ -97,7 +98,7 @@ func PutAddress(buffer []byte, addr uint32, port uint16) int {
 }
 
 /* Listen creates TCP/IPv4 socket and starts listening on a specified address. */
-func Listen(address string, backlog int) (int32, error) {
+func Listen(address string, backlog int) (os.Handle, error) {
 	addr, port, err := ParseAddress(address)
 	if err != nil {
 		return -1, fmt.Errorf("failed to parse address string: %w", err)
@@ -126,5 +127,5 @@ func Listen(address string, backlog int) (int32, error) {
 		return -1, fmt.Errorf("failed to listen for incoming connections: %w", err)
 	}
 
-	return l, nil
+	return os.Handle(l), nil
 }
