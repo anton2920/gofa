@@ -21,7 +21,7 @@ var (
 	BrandIndex  int
 	BrandString string
 
-	CPUHz Cycles
+	CPUHz uint64
 )
 
 func init() {
@@ -49,7 +49,7 @@ func init() {
 			Model += (int((info>>16)&0xF) << 4)
 		}
 		ProcessorType = int((info >> 12) & 0x3)
-		debug.Printf("[gofa/intel]: %s Family %X Model %X Stepping %X Type %.2b", VendorString, Family, Model, Stepping, ProcessorType)
+		debug.Printf("[cpu/intel]: %s Family %X Model %X Stepping %X Type %.2b", VendorString, Family, Model, Stepping, ProcessorType)
 
 		BrandIndex = int(index & 0xFF)
 	}
@@ -75,26 +75,26 @@ func init() {
 				BrandString = BrandString[:len(BrandString)-1]
 			}
 		}
-		debug.Printf("[gofa/intel]: %s", BrandString)
+		debug.Printf("[cpu/intel]: %s", BrandString)
 	}
 
 	{
 		denominator, numerator, coreHz, _ := CPUID(0x15, 0)
 		if (numerator != 0) && (coreHz != 0) {
-			CPUHz = (Cycles(coreHz) * Cycles(numerator)) / Cycles(denominator)
+			CPUHz = (uint64(coreHz) * uint64(numerator)) / uint64(denominator)
 		} else if (denominator != 0) && (coreHz == 0) {
 			signature := (Family << 8) | (Model)
 			switch signature {
 			case 0x0655: /* Intel® Xeon® Scalable Processor Family. */
-				CPUHz = (Cycles(25000000) * Cycles(numerator)) / Cycles(denominator)
+				CPUHz = (uint64(25000000) * uint64(numerator)) / uint64(denominator)
 			case 0x064E, 0x065E, 0x068E, 0x069E: /* 6th, 7th, 8th and 9th generation Intel® Core™ processors. */
-				CPUHz = (Cycles(24000000) * Cycles(numerator)) / Cycles(denominator)
+				CPUHz = (uint64(24000000) * uint64(numerator)) / uint64(denominator)
 			case 0x65C: /* Next Generation Intel Atom® processors based on Goldmont Microarchitecture. */
-				CPUHz = (Cycles(19200000) * Cycles(numerator)) / Cycles(denominator)
+				CPUHz = (uint64(19200000) * uint64(numerator)) / uint64(denominator)
 			}
 		}
 		if CPUHz != 0 {
-			debug.Printf("[gofa/intel]: CPU Frequency %dHz", CPUHz)
+			debug.Printf("[cpu/intel]: CPU Frequency %dHz", CPUHz)
 		}
 	}
 }
