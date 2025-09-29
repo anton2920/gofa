@@ -3,7 +3,7 @@ package event
 import (
 	"unsafe"
 
-	"github.com/anton2920/gofa/intel"
+	"github.com/anton2920/gofa/cpu"
 	"github.com/anton2920/gofa/net/http"
 	"github.com/anton2920/gofa/syscall"
 	"github.com/anton2920/gofa/time"
@@ -12,7 +12,7 @@ import (
 type Queue struct {
 	platformEventQueue
 
-	LastSync intel.Cycles
+	LastSync cpu.Cycles
 }
 
 type Request int
@@ -75,14 +75,14 @@ func (q *Queue) HasEvents() bool {
 }
 
 func (q *Queue) SyncFPS(fps int) {
-	now := intel.RDTSC()
+	now := cpu.GetPerformanceCounter()
 	durationBetweenPauses := now - q.LastSync
 	targetRate := int64(time.MsecPerSec / float64(fps) * (time.NsecPerSec / time.MsecPerSec))
 
 	duration := targetRate - durationBetweenPauses.ToNsec()
 	if duration > 0 {
 		platformQueuePause(q, duration)
-		now = intel.RDTSC()
+		now = cpu.GetPerformanceCounter()
 	}
 	q.LastSync = now
 }
