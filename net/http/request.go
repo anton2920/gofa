@@ -10,13 +10,18 @@ import (
 type Request struct {
 	Method string
 	URL    url.URL
-	Proto  string
+
+	Proto      string
+	ProtoMajor int
+	ProtoMinor int
 
 	Headers Headers
 	Body    []byte
 
 	Form  url.Values
 	Files multipart.Files
+
+	Error error
 }
 
 func (r *Request) Cookie(name string) string {
@@ -46,4 +51,5 @@ func (r *Request) Reset() {
 	r.Body = r.Body[:0]
 	r.Form.Reset()
 	r.Files.Reset()
+	r.Error = nil
 }

@@ -7,29 +7,29 @@ import (
 	"github.com/anton2920/gofa/pointers"
 )
 
-type ContextPoolItem struct {
-	Next *ContextPoolItem
-	Item Context
+type ConnPoolItem struct {
+	Item Conn
+	Next *ConnPoolItem
 }
 
-type ContextPool struct {
+type ConnPool struct {
 	sync.Mutex
 
-	Items []ContextPoolItem
-	Head  *ContextPoolItem
+	Items []ConnPoolItem
+	Head  *ConnPoolItem
 }
 
-func NewContextPool(n int) *ContextPool {
-	var p ContextPool
+func NewConnPool(n int) *ConnPool {
+	var p ConnPool
 
-	p.Items = make([]ContextPoolItem, n)
+	p.Items = make([]ConnPoolItem, n)
 	p.Head = nil
 	p.PutAll()
 
 	return &p
 }
 
-func (p *ContextPool) Get() (*Context, error) {
+func (p *ConnPool) Get() (*Conn, error) {
 	p.Lock()
 
 	item := p.Head
@@ -43,7 +43,7 @@ func (p *ContextPool) Get() (*Context, error) {
 	return &item.Item, nil
 }
 
-func (p *ContextPool) Put(t *Context) {
+func (p *ConnPool) Put(t *Conn) {
 	if t == nil {
 		return
 	}
@@ -54,14 +54,14 @@ func (p *ContextPool) Put(t *Context) {
 
 	p.Lock()
 
-	item := (*ContextPoolItem)(pointers.Add(unsafe.Pointer(t), -int(unsafe.Sizeof(p.Head))))
+	item := (*ConnPoolItem)(pointers.Add(unsafe.Pointer(t), -int(unsafe.Sizeof(p.Head))))
 	item.Next = p.Head
 	p.Head = item
 
 	p.Unlock()
 }
 
-func (p *ContextPool) PutAll() {
+func (p *ConnPool) PutAll() {
 	p.Lock()
 
 	for i := len(p.Items) - 1; i >= 0; i-- {
