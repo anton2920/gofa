@@ -72,6 +72,8 @@ forRequests:
 		r := &rs[i]
 		r.Reset()
 
+		r.RemoteAddr = c.RemoteAddr
+
 		/* Parsing request line. */
 		lineEnd := strings.FindSubstring(request[pos:], "\r\n")
 		if lineEnd == -1 {

@@ -80,9 +80,7 @@ func (c *Conn) Close() error {
 func (c *Conn) ReadRequests(rs []Request) (int, error) {
 	t := trace.Begin("")
 
-	rBuf := c.RequestBuffer
-	buf := rBuf.RemainingSlice()
-
+	buf := c.RequestBuffer.RemainingSlice()
 	if (c.Closed) || (len(rs) == 0) {
 		trace.End(t)
 		return 0, nil
@@ -97,7 +95,7 @@ func (c *Conn) ReadRequests(rs []Request) (int, error) {
 		trace.End(t)
 		return -1, err
 	}
-	rBuf.Produce(int(n))
+	c.RequestBuffer.Produce(int(n))
 
 	trace.End(t)
 	return ParseRequests(c, rs)
@@ -108,23 +106,20 @@ func (c *Conn) WriteResponses(ws []Response) (int, error) {
 
 	var err error
 
-	wBuf := c.ResponseBuffer
-	pos := c.ResponsePos
-
 	if c.Closed {
 		panic("write to a closed connection")
 	}
 
 	FillResponses(c, ws)
 
-	n, err := os.Write(c.Socket, wBuf[pos:])
+	n, err := os.Write(c.Socket, c.ResponseBuffer[c.ResponsePos:])
 	if err != nil {
 		trace.End(t)
 		return -1, err
 	}
 	c.ResponsePos += int(n)
 
-	if c.ResponsePos == len(wBuf) {
+	if c.ResponsePos == len(c.ResponseBuffer) {
 		c.ResponseBuffer = c.ResponseBuffer[:0]
 		c.ResponsePos = 0
 		if c.CloseAfterWrite {

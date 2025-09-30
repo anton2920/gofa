@@ -31,7 +31,6 @@ func RequestHandler(w *Response, r *Request, session session.Session, router Rou
 		case MethodPost:
 			if len(r.Body) > 0 {
 				contentType := r.Headers.Get("Content-Type")
-				println("HERE!", contentType)
 				switch {
 				case contentType == "application/x-www-form-urlencoded":
 					err = url.ParseQuery(&r.Form, bytes.AsString(r.Body))
@@ -89,7 +88,7 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 	}
 }
 
-func ConnectionHandler(l *Listener, c *Conn, handler func([]Response, []Request)) {
+func ConnectionHandler(l *Listener, c *Conn, handler func([]Response, []Request, Router), router Router) {
 	const pipeline = 64
 
 	rs := make([]Request, pipeline)
@@ -104,14 +103,11 @@ func ConnectionHandler(l *Listener, c *Conn, handler func([]Response, []Request)
 			break
 		}
 
-		handler(ws[:n], rs[:n])
+		handler(ws[:n], rs[:n], router)
 
 		n, err = c.WriteResponses(ws[:n])
 		if err != nil {
 			log.Errorf("Failed to write HTTP responses: %v", err)
-			break
-		} else if (n > 0) && (n < len(ws)) {
-			log.Errorf("Failed to write all HTTP responses: %v", err)
 			break
 		}
 	}
@@ -119,4 +115,6 @@ func ConnectionHandler(l *Listener, c *Conn, handler func([]Response, []Request)
 	if err := c.Close(); err != nil {
 		log.Warnf("Failed to close HTTP connection: %v", err)
 	}
+
+	l.ConnPool.Put(c)
 }

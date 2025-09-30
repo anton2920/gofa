@@ -15,8 +15,7 @@ import (
 type Listener struct {
 	*ConnPool
 
-	SocketTCP os.Handle
-	SocketUDP os.Handle
+	Socket os.Handle
 }
 
 type ListenerOptions struct {
@@ -47,7 +46,7 @@ func Listen(addr string, opts ...ListenerOptions) (*Listener, error) {
 
 	opt := MergeListenerOptions(opts...)
 
-	l.SocketTCP, err = tcp.Listen(addr, ints.Or(opt.Backlog, 128))
+	l.Socket, err = tcp.Listen(addr, ints.Or(opt.Backlog, 128))
 	if err != nil {
 		return nil, fmt.Errorf("failed to listen on addr %q: %v", err)
 	}
@@ -67,7 +66,7 @@ func (l *Listener) Accept(opts ...ConnOptions) (*Conn, error) {
 
 	opt := MergeConnOptions(opts...)
 
-	sock, err := syscall.Accept(int32(l.SocketTCP), (*syscall.Sockaddr)(unsafe.Pointer(&addr)), &addrLen)
+	sock, err := syscall.Accept(int32(l.Socket), (*syscall.Sockaddr)(unsafe.Pointer(&addr)), &addrLen)
 	if err != nil {
 		return nil, fmt.Errorf("failed to accept incoming connection: %w", err)
 	}
@@ -91,4 +90,8 @@ func (l *Listener) Accept(opts ...ConnOptions) (*Conn, error) {
 	c.RemoteAddr = string(buffer[:n])
 
 	return c, err
+}
+
+func (l *Listener) Close() error {
+	return os.Close(l.Socket)
 }
