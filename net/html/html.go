@@ -70,6 +70,10 @@ func (h *HTML) WithoutTheme() *HTML {
 	return &HTML{Response: h.Response, Request: h.Request, Session: h.Session}
 }
 
+func (h *HTML) Bytes(bs []byte) {
+	h.Write(bs)
+}
+
 func (h *HTML) Date(d int64) {
 	h.String(h.Dtoa(d))
 }
@@ -112,7 +116,7 @@ func (h *HTML) TString(s string) {
 
 func (h *HTML) Dtoa(d int64) string {
 	buf := h.Arena.NewSlice(len(stdtime.DateOnly))
-	stdtime.Unix(d+int64(h.Timezone)*time.OneHour, 0).UTC().AppendFormat(buf[:0], stdtime.DateOnly)
+	stdtime.Unix(d+int64(h.Timezone)*time.Hour/time.Second, 0).UTC().AppendFormat(buf[:0], stdtime.DateOnly)
 	return bytes.AsString(buf)
 }
 
@@ -131,7 +135,7 @@ func (h *HTML) Itoa1(x int) string {
 
 func (h *HTML) Ttoa(d int64) string {
 	buf := h.Arena.NewSlice(len(stdtime.DateTime))
-	stdtime.Unix(d+int64(h.Timezone)*time.OneHour, 0).UTC().AppendFormat(buf[:0], stdtime.DateTime)
+	stdtime.Unix(d+int64(h.Timezone)*time.Hour/time.Second, 0).UTC().AppendFormat(buf[:0], stdtime.DateTime)
 	return bytes.AsString(buf)
 }
 
