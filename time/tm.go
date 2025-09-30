@@ -17,10 +17,13 @@ type Tm struct {
 
 const RFC822Len = 29
 
-func ToTm(t int) Tm {
+func ToTm(t int64) Tm {
 	var tm Tm
 
-	daysSinceJan1st := [2][13]int{
+	/* Convert to seconds. */
+	t /= Second
+
+	daysSinceJan1st := [2][13]int64{
 		{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365}, // 365 days, non-leap
 		{0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366}, // 366 days, leap
 	}
@@ -73,7 +76,7 @@ func ToTm(t int) Tm {
 	sec %= 60
 
 	/* Calculate the month. */
-	var month, mday int = 1, 1
+	var month, mday int64 = 1, 1
 	for ; month < 13; month++ {
 		if yday < daysSinceJan1st[leap][month] {
 			mday += yday - daysSinceJan1st[leap][month-1]
@@ -81,15 +84,15 @@ func ToTm(t int) Tm {
 		}
 	}
 
-	tm.Sec = sec          /*  [0,59]. */
-	tm.Min = min          /*  [0,59]. */
-	tm.Hour = hour        /*  [0,23]. */
-	tm.Mday = mday        /*  [1,31]  (day of month). */
-	tm.Mon = month - 1    /*  [0,11]  (month). */
-	tm.Year = year - 1900 /*  70+     (year since 1900). */
-	tm.Wday = wday        /*  [0,6]   (day since Sunday AKA day of week). */
-	tm.Yday = yday        /*  [0,365] (day since January 1st AKA day of year). */
-	tm.Isdst = -1         /*  daylight saving time flag. */
+	tm.Sec = int(sec)          /*  [0,59]. */
+	tm.Min = int(min)          /*  [0,59]. */
+	tm.Hour = int(hour)        /*  [0,23]. */
+	tm.Mday = int(mday)        /*  [1,31]  (day of month). */
+	tm.Mon = int(month - 1)    /*  [0,11]  (month). */
+	tm.Year = int(year - 1900) /*  70+     (year since 1900). */
+	tm.Wday = int(wday)        /*  [0,6]   (day since Sunday AKA day of week). */
+	tm.Yday = int(yday)        /*  [0,365] (day since January 1st AKA day of year). */
+	tm.Isdst = -1              /*  daylight saving time flag. */
 
 	return tm
 }
