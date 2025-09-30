@@ -4,7 +4,6 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/cpu"
-	"github.com/anton2920/gofa/net/http"
 	"github.com/anton2920/gofa/syscall"
 	"github.com/anton2920/gofa/time"
 )
@@ -18,15 +17,19 @@ type Queue struct {
 type Request int
 
 const (
-	RequestRead Request = (1 << iota)
+	RequestNone = Request(1 << iota)
+	RequestRead
 	RequestWrite
+	RequestCount
 )
 
 type Trigger int
 
 const (
-	TriggerLevel Trigger = iota
+	TriggerNone = Trigger(iota)
+	TriggerLevel
 	TriggerEdge
+	TriggerCount
 )
 
 func NewQueue() (*Queue, error) {
@@ -35,10 +38,6 @@ func NewQueue() (*Queue, error) {
 		return nil, err
 	}
 	return q, nil
-}
-
-func (q *Queue) AddHTTP(ctx *http.Context, request Request, trigger Trigger) error {
-	return platformQueueAddSocket(q, ctx.Connection, request, trigger, ctx.Pointer())
 }
 
 func (q *Queue) AddSocket(sock int32, request Request, trigger Trigger, userData unsafe.Pointer) error {
@@ -54,8 +53,8 @@ func (q *Queue) AddSignals(sigs ...syscall.Signal) error {
 	return nil
 }
 
-func (q *Queue) AddTimer(identifier uintptr, duration int, units DurationUnits, userData unsafe.Pointer) error {
-	return platformQueueAddTimer(q, identifier, duration, units, userData)
+func (q *Queue) AddTimer(id uintptr, duration int64, userData unsafe.Pointer) error {
+	return platformQueueAddTimer(q, id, duration, userData)
 }
 
 func (q *Queue) AppendEvent(event Event) {
@@ -75,14 +74,14 @@ func (q *Queue) HasEvents() bool {
 }
 
 func (q *Queue) SyncFPS(fps int) {
-	now := cpu.GetPerformanceCounter()
+	now := cpu.ReadPerformanceCounter()
 	durationBetweenPauses := now - q.LastSync
-	targetRate := int64(time.MsecPerSec / float64(fps) * (time.NsecPerSec / time.MsecPerSec))
+	targetRate := int64(1000 / float64(fps) * float64(time.Millisecond))
 
-	duration := targetRate - durationBetweenPauses.ToNsec()
+	duration := targetRate - durationBetweenPauses.ToNanoseconds()
 	if duration > 0 {
 		platformQueuePause(q, duration)
-		now = cpu.GetPerformanceCounter()
+		now = cpu.ReadPerformanceCounter()
 	}
 	q.LastSync = now
 }

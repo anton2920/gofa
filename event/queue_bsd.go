@@ -16,35 +16,27 @@ type platformEventQueue struct {
 	kq int32
 
 	/* Events buffer */
-	events [64]Event
+	events []Event
 	head   int
 	tail   int
 }
 
-const (
-	Read   = syscall.EVFILT_READ
-	Write  = syscall.EVFILT_WRITE
-	Aio    = syscall.EVFILT_AIO
-	Signal = syscall.EVFILT_SIGNAL
-	Timer  = syscall.EVFILT_TIMER
-)
-
-type DurationUnits int
+type Type int16
 
 const (
-	Seconds      = DurationUnits(syscall.NOTE_SECONDS)
-	Milliseconds = syscall.NOTE_MSECONDS
-	Microseconds = syscall.NOTE_USECONDS
-	Nanoseconds  = syscall.NOTE_NSECONDS
-	Absolute     = syscall.NOTE_ABSTIME
+	TypeRead   = syscall.EVFILT_READ
+	TypeWrite  = syscall.EVFILT_WRITE
+	TypeAio    = syscall.EVFILT_AIO
+	TypeSignal = syscall.EVFILT_SIGNAL
+	TypeTimer  = syscall.EVFILT_TIMER
 )
 
 type Event struct {
 	Identifier uintptr
-	Type       int16
+	Type       Type
 	Flags      uint16
 	Fflags     uint32
-	Data       int
+	Data       int64
 	UserData   unsafe.Pointer
 	_          [4]uint
 }
@@ -63,9 +55,12 @@ func (e *Event) Error() syscall.Errno {
 func platformNewEventQueue(q *Queue) error {
 	kq, err := syscall.Kqueue()
 	if err != nil {
-		return fmt.Errorf("failed to open kernel queue: %w", err)
+		return fmt.Errorf("failed to open kernel queue: %v", err)
 	}
+
 	q.kq = kq
+	q.events = make([]Event, 64)
+
 	return nil
 }
 
@@ -75,36 +70,40 @@ func platformQueueAddSocket(q *Queue, l int32, request Request, trigger Trigger,
 		flags |= syscall.EV_CLEAR
 	}
 
+	events := make([]syscall.Kevent_t, 0, 2)
 	if (request & RequestRead) == RequestRead {
-		event := syscall.Kevent_t{Ident: uintptr(l), Filter: syscall.EVFILT_READ, Flags: flags, Udata: userData}
-		if _, err := syscall.Kevent(q.kq, *(*[]syscall.Kevent_t)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&event)), Len: 1, Cap: 1})), nil, nil); err != nil {
-			return fmt.Errorf("failed to request socket read event: %w", err)
-		}
+		events = append(events, syscall.Kevent_t{Ident: uintptr(l), Filter: syscall.EVFILT_READ, Flags: flags, Udata: userData})
+	}
+	if (request & RequestWrite) == RequestWrite {
+		events = append(events, syscall.Kevent_t{Ident: uintptr(l), Filter: syscall.EVFILT_WRITE, Flags: flags, Udata: userData})
 	}
 
-	if (request & RequestWrite) == RequestWrite {
-		event := syscall.Kevent_t{Ident: uintptr(l), Filter: syscall.EVFILT_WRITE, Flags: flags, Udata: userData}
-		if _, err := syscall.Kevent(q.kq, *(*[]syscall.Kevent_t)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&event)), Len: 1, Cap: 1})), nil, nil); err != nil {
-			return fmt.Errorf("failed to request socket write event: %w", err)
-		}
+	if _, err := syscall.Kevent(q.kq, events, nil, nil); err != nil {
+		return fmt.Errorf("failed to request socket events: %v", err)
 	}
 
 	return nil
 }
 
 func platformQueueAddSignal(q *Queue, sig syscall.Signal) error {
-	event := syscall.Kevent_t{Ident: uintptr(sig), Filter: syscall.EVFILT_SIGNAL, Flags: syscall.EV_ADD}
-	if _, err := syscall.Kevent(q.kq, *(*[]syscall.Kevent_t)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&event)), Len: 1, Cap: 1})), nil, nil); err != nil {
-		return fmt.Errorf("failed to request signal event: %w", err)
+	events := make([]syscall.Kevent_t, 1)
+	events[0] = syscall.Kevent_t{Ident: uintptr(sig), Filter: syscall.EVFILT_SIGNAL, Flags: syscall.EV_ADD}
+
+	if _, err := syscall.Kevent(q.kq, events, nil, nil); err != nil {
+		return fmt.Errorf("failed to request signal event: %v", err)
 	}
+
 	return nil
 }
 
-func platformQueueAddTimer(q *Queue, identifier uintptr, timeout int, units DurationUnits, userData unsafe.Pointer) error {
-	event := syscall.Kevent_t{Ident: identifier, Filter: syscall.EVFILT_TIMER, Flags: syscall.EV_ADD, Fflags: uint32(units), Udata: userData}
-	if _, err := syscall.Kevent(q.kq, *(*[]syscall.Kevent_t)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&event)), Len: 1, Cap: 1})), nil, nil); err != nil {
-		return fmt.Errorf("failed to request timer event: %w", err)
+func platformQueueAddTimer(q *Queue, id uintptr, duration int64, userData unsafe.Pointer) error {
+	events := make([]syscall.Kevent_t, 1)
+	events[0] = syscall.Kevent_t{Ident: id, Data: duration, Filter: syscall.EVFILT_TIMER, Flags: syscall.EV_ADD, Fflags: syscall.NOTE_NSECONDS, Udata: userData}
+
+	if _, err := syscall.Kevent(q.kq, events, nil, nil); err != nil {
+		return fmt.Errorf("failed to request timer event: %v", err)
 	}
+
 	return nil
 }
 
@@ -126,25 +125,27 @@ func platformQueueClose(q *Queue) error {
 }
 
 func platformQueueRequestNewEvents(q *Queue, tp *syscall.Timespec) error {
-	var err error
 retry:
-	q.tail, err = syscall.Kevent(q.kq, nil, *(*[]syscall.Kevent_t)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&q.events[0])), Len: len(q.events), Cap: cap(q.events)})), tp)
+	n, err := syscall.Kevent(q.kq, nil, *(*[]syscall.Kevent_t)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&q.events[q.head])), Len: len(q.events) - q.head, Cap: cap(q.events) - q.head})), tp)
 	if err != nil {
 		if err.(syscall.Error).Errno == syscall.EINTR {
 			goto retry
 		}
 		return err
 	}
-	q.head = 0
 
+	q.tail += n
 	return nil
 }
 
 func platformQueueGetEvents(q *Queue, events []Event) (int, error) {
 	if q.head < q.tail {
 		n := copy(events, q.events[q.head:q.tail])
-		q.head = 0
-		q.tail = 0
+		q.head += n
+		if q.head >= len(q.events) {
+			q.head = 0
+			q.tail = 0
+		}
 		return n, nil
 	}
 
@@ -167,6 +168,7 @@ func platformQueueHasEvents(q *Queue) bool {
 	if err := platformQueueRequestNewEvents(q, &tp); err != nil {
 		return false
 	}
+
 	return q.tail > 0
 }
 
@@ -175,6 +177,6 @@ func platformQueuePause(q *Queue, duration int64) {
 		return
 	}
 
-	tp := syscall.Timespec{Sec: duration / time.NsecPerSec, Nsec: duration % time.NsecPerSec}
+	tp := syscall.Timespec{Sec: duration / time.Second, Nsec: duration % time.Second}
 	platformQueueRequestNewEvents(q, &tp)
 }
