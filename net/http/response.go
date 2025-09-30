@@ -185,11 +185,7 @@ func FillResponses(c *Conn, ws []Response) {
 	for i := 0; i < len(ws); i++ {
 		w := &ws[i]
 
-		c.ResponseBuffer = append(c.ResponseBuffer, Version2String[c.Version]...)
-		c.ResponseBuffer = append(c.ResponseBuffer, ' ')
-		c.ResponseBuffer = append(c.ResponseBuffer, Status2String[w.StatusCode]...)
-		c.ResponseBuffer = append(c.ResponseBuffer, ' ')
-		c.ResponseBuffer = append(c.ResponseBuffer, Status2Reason[w.StatusCode]...)
+		c.ResponseBuffer = append(c.ResponseBuffer, StatusLines[c.Version][w.StatusCode]...)
 
 		if !w.Headers.Has("Date") {
 			dateBuf := c.DateRFC822

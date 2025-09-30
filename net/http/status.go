@@ -52,6 +52,24 @@ var Status2Reason = [...]string{
 	StatusServiceUnavailable:    "Service Unavailable",
 }
 
+var StatusLines [VersionCount][]string
+
 func (s Status) String() string {
 	return Status2String[s]
+}
+
+func init() {
+	for i := VersionNone + 1; i <= Version11; i++ {
+		var row []string
+
+		for j := 0; j < len(Status2String); j++ {
+			if len(Status2String[j]) == 0 {
+				row = append(row, "")
+			} else {
+				row = append(row, Version2String[i]+" "+Status2String[j]+" "+Status2Reason[j]+"\r\n")
+			}
+		}
+
+		StatusLines[i] = row
+	}
 }

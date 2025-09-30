@@ -54,6 +54,11 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 		w := &ws[i]
 		r := &rs[i]
 
+		if r.URL.Path == "/plaintext" {
+			w.WriteString("Hello, world!\n")
+			continue
+		}
+
 		start := cpu.ReadPerformanceCounter()
 		w.Headers.Set("Content-Type", `text/html; charset="UTF-8"`)
 		level := log.LevelDebug
