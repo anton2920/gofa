@@ -1,6 +1,9 @@
 package alloc
 
-import "github.com/anton2920/gofa/ints"
+import (
+	"github.com/anton2920/gofa/bytes"
+	"github.com/anton2920/gofa/ints"
+)
 
 type Arena struct {
 	Buffer []byte
@@ -15,6 +18,18 @@ func (a *Arena) NewSlice(n int) []byte {
 	ret := a.Buffer[a.Used : a.Used+n]
 	a.Used += n
 	return ret
+}
+
+func (a *Arena) Copy(bs []byte) []byte {
+	ret := a.NewSlice(len(bs))
+	copy(ret, bs)
+	return ret
+}
+
+func (a *Arena) CopyString(s string) string {
+	ret := a.NewSlice(len(s))
+	copy(ret, s)
+	return bytes.AsString(ret)
 }
 
 func (a *Arena) Reset() {
