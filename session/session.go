@@ -37,7 +37,7 @@ var (
 
 func New(userID database.ID) Session {
 	token := GenerateToken()
-	expiry := time.Unix() + time.OneWeek
+	expiry := time.Now() + time.Week
 
 	session := Session{ID: userID, Expiry: expiry, Token: token}
 	SessionsLock.Lock()
@@ -57,14 +57,14 @@ func Get(token string) Session {
 		return Session{}
 	}
 
-	now := time.Unix()
+	now := time.Now()
 	if now-session.Expiry > 0 {
 		SessionsLock.Lock()
 		delete(Sessions, token)
 		SessionsLock.Unlock()
 		return Session{}
 	}
-	session.Expiry = now + time.OneWeek
+	session.Expiry = now + time.Week
 
 	SessionsLock.Lock()
 	Sessions[token] = session
@@ -94,6 +94,11 @@ func (session Session) GenerateToken() string {
 	return GenerateToken()
 }
 
+/* NOTE(anton2920): this function exists only so I don't have to solve name collisions of variable 'session' and this package. */
+func (session Session) New(id database.ID) Session {
+	return New(id)
+}
+
 func GenerateToken() string {
 	defer trace.End(trace.Begin(""))
 
@@ -105,8 +110,8 @@ func GenerateToken() string {
 
 	/* TODO(anton2920): think about adding delay before next attempt. */
 	for {
-		/* NOTE(anton2920): DEV0-28. Usage of current time as a part of the token must prevent generation of identical tokens for different IDs. */
-		t := time.Unix()
+		/* NOTE(anton2920): usage of current time as a part of the token must prevent generation of identical tokens for different IDs. */
+		t := time.Now()
 		*(*int64)(unsafe.Pointer(&buffer[0])) = t
 
 		n, err := rand.Read(buffer[unsafe.Sizeof(t):])
