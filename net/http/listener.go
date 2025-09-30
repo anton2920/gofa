@@ -19,69 +19,76 @@ type Listener struct {
 	SocketUDP os.Handle
 }
 
-type ListenerParams struct {
+type ListenerOptions struct {
 	Backlog               int
 	ConcurrentConnections int
 
 	MaxVersion float32
 }
 
-func MergeParams(params ...ListenerParams) ListenerParams {
-	var result ListenerParams
+func MergeListenerOptions(opts ...ListenerOptions) ListenerOptions {
+	var result ListenerOptions
 
-	for i := 0; i < len(params); i++ {
-		param := &params[i]
+	for i := 0; i < len(opts); i++ {
+		opt := &opts[i]
 
-		ints.Replace(&result.Backlog, param.Backlog)
-		ints.Replace(&result.ConcurrentConnections, param.ConcurrentConnections)
+		ints.Replace(&result.Backlog, opt.Backlog)
+		ints.Replace(&result.ConcurrentConnections, opt.ConcurrentConnections)
 
-		floats.Replace32(&result.MaxVersion, param.MaxVersion)
+		floats.Replace32(&result.MaxVersion, opt.MaxVersion)
 	}
 
 	return result
 }
 
-func Listen(addr string, params ...ListenerParams) (*Listener, error) {
+func Listen(addr string, opts ...ListenerOptions) (*Listener, error) {
 	var l Listener
 	var err error
 
-	result := MergeParams(params...)
+	opt := MergeListenerOptions(opts...)
 
-	l.SocketTCP, err = tcp.Listen(addr, ints.Or(result.Backlog, 128))
+	l.SocketTCP, err = tcp.Listen(addr, ints.Or(opt.Backlog, 128))
 	if err != nil {
 		return nil, fmt.Errorf("failed to listen on addr %q: %v", err)
 	}
-	if result.MaxVersion == 3.0 {
-		/* TODO(anton2920): listen for HTTP/3. */
+	if opt.MaxVersion > 2.0 {
+		panic("HTTP/2+ is not supported")
 	}
 
-	l.ConnPool = NewConnPool(ints.Or(result.ConcurrentConnections, 16*1024))
+	l.ConnPool = NewConnPool(ints.Or(opt.ConcurrentConnections, 16*1024))
 
 	return &l, nil
 }
 
 /* TODO(anton2920): remove syscall references. */
-func (l *Listener) Accept() (*Conn, error) {
+func (l *Listener) Accept(opts ...ConnOptions) (*Conn, error) {
 	var addr syscall.SockAddrIn
 	var addrLen uint32 = uint32(unsafe.Sizeof(addr))
 
-	c, err := syscall.Accept(l, (*syscall.Sockaddr)(unsafe.Pointer(&addr)), &addrLen)
+	opt := MergeConnOptions(opts...)
+
+	sock, err := syscall.Accept(int32(l.SocketTCP), (*syscall.Sockaddr)(unsafe.Pointer(&addr)), &addrLen)
 	if err != nil {
 		return nil, fmt.Errorf("failed to accept incoming connection: %w", err)
 	}
 
-	rb, err := buffer.NewCircular(bufferSize)
+	rb, err := buffer.NewCircular(ints.Or(opt.RequestBufferSize, os.PageSize))
 	if err != nil {
-		syscall.Close(c)
+		syscall.Close(sock)
 		return nil, fmt.Errorf("failed to create new request buffer: %w", err)
 	}
 
-	ctx, err := CtxPool.Get()
+	c, err := l.ConnPool.Get()
 	if err != nil {
-		ctx = new(Context)
-		err = TooManyClients
+		syscall.Close(sock)
+		panic("handle too many connections")
 	}
-	InitContext(ctx, c, addr, rb)
+	c.Socket = os.Handle(sock)
+	c.RequestBuffer = rb
 
-	return ctx, err
+	buffer := c.Arena.NewSlice(21)
+	n := tcp.PutAddress(buffer, addr.Addr, addr.Port)
+	c.RemoteAddr = string(buffer[:n])
+
+	return c, err
 }

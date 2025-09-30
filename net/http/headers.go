@@ -1,6 +1,10 @@
 package http
 
-import "github.com/anton2920/gofa/trace"
+import (
+	"strconv"
+
+	"github.com/anton2920/gofa/trace"
+)
 
 type Headers struct {
 	Keys   []string
@@ -59,6 +63,10 @@ func (hs *Headers) Get(key string) string {
 
 	trace.End(t)
 	return ""
+}
+
+func (hs *Headers) GetInt(key string) (int, error) {
+	return strconv.Atoi(hs.Get(key))
 }
 
 func (hs *Headers) GetMany(key string) []string {

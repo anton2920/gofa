@@ -4,6 +4,7 @@ import (
 	"sync"
 	"unsafe"
 
+	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/pointers"
 )
 
@@ -35,7 +36,7 @@ func (p *ConnPool) Get() (*Conn, error) {
 	item := p.Head
 	if item == nil {
 		p.Unlock()
-		return nil, NoSpaceLeft
+		return nil, errors.New("no space left")
 	}
 	p.Head = item.Next
 

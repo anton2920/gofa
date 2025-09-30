@@ -17,11 +17,6 @@ var (
 	ServerDisplayErrorMessage = "whoops... Something went wrong. Please try again later"
 )
 
-var (
-	NoSpaceLeft    = Error{StatusCode: StatusRequestEntityTooLarge, DisplayErrorMessage: "no space left in the buffer", LogError: errors.New("no space left in the buffer")}
-	TooManyClients = Error{StatusCode: StatusServiceUnavailable, DisplayErrorMessage: "too many clients", LogError: errors.New("too many clients")}
-)
-
 func (err Error) Error() string {
 	if err.LogError == nil {
 		return "<nil>"
@@ -29,34 +24,33 @@ func (err Error) Error() string {
 	return err.LogError.Error()
 }
 
-func BadRequest(format string, args ...interface{}) Error {
+func New(status Status, format string, args ...interface{}) Error {
 	message := fmt.Sprintf(format, args...)
-	return Error{StatusCode: StatusBadRequest, DisplayErrorMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 2)}
+	return Error{StatusCode: status, DisplayErrorMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 3)}
+}
+
+func BadRequest(format string, args ...interface{}) Error {
+	return New(StatusBadRequest, format, args...)
 }
 
 func Unauthorized(format string, args ...interface{}) Error {
-	message := fmt.Sprintf(format, args...)
-	return Error{StatusCode: StatusUnauthorized, DisplayErrorMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 2)}
+	return New(StatusUnauthorized, format, args...)
 }
 
 func Forbidden(format string, args ...interface{}) Error {
-	message := fmt.Sprintf(format, args...)
-	return Error{StatusCode: StatusForbidden, DisplayErrorMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 2)}
+	return New(StatusForbidden, format, args...)
 }
 
-func NotFound(format string, args ...interface{}) Error {
-	message := fmt.Sprintf(format, args...)
-	return Error{StatusCode: StatusNotFound, DisplayErrorMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 2)}
-}
+func NotFound(format string, args ...interface{}) Error { return New(StatusNotFound, format, args...) }
 
-func Conflict(format string, args ...interface{}) Error {
-	message := fmt.Sprintf(format, args...)
-	return Error{StatusCode: StatusConflict, DisplayErrorMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 2)}
-}
+func Conflict(format string, args ...interface{}) Error { return New(StatusConflict, format, args...) }
 
 func RequestEntityTooLarge(format string, args ...interface{}) Error {
-	message := fmt.Sprintf(format, args...)
-	return Error{StatusCode: StatusRequestEntityTooLarge, DisplayErrorMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 2)}
+	return New(StatusRequestEntityTooLarge, format, args...)
+}
+
+func ServiceUnavailable(format string, args ...interface{}) Error {
+	return New(StatusServiceUnavailable, format, args...)
 }
 
 func ClientError(err error) Error {

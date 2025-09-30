@@ -6,6 +6,7 @@ import (
 	"github.com/anton2920/gofa/alloc"
 	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/database"
+	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/time"
 	"github.com/anton2920/gofa/trace"
@@ -35,7 +36,7 @@ func (w *Response) DelCookie(name string) {
 	trace.End(t)
 }
 
-func (w *Response) SetCookie(name, value string, expiry int) {
+func (w *Response) SetCookie(name, value string, expiry int64) {
 	t := trace.Begin("")
 
 	const secure = "; HttpOnly; Secure; SameSite=Strict"
@@ -60,7 +61,7 @@ func (w *Response) SetCookie(name, value string, expiry int) {
 }
 
 /* SetCookieUnsafe is useful for debugging purposes. It's also more compatible with older browsers. */
-func (w *Response) SetCookieUnsafe(name, value string, expiry int) {
+func (w *Response) SetCookieUnsafe(name, value string, expiry int64) {
 	t := trace.Begin("")
 
 	const expires = "; Expires="
@@ -176,4 +177,66 @@ func (w *Response) Reset() {
 	w.Headers.Reset()
 	w.Body = w.Body[:0]
 	w.Arena.Reset()
+}
+
+func FillResponses(c *Conn, ws []Response) {
+	t := trace.Begin("")
+
+	for i := 0; i < len(ws); i++ {
+		w := &ws[i]
+
+		c.ResponseBuffer = append(c.ResponseBuffer, Version2String[c.Version]...)
+		c.ResponseBuffer = append(c.ResponseBuffer, ' ')
+		c.ResponseBuffer = append(c.ResponseBuffer, Status2String[w.StatusCode]...)
+		c.ResponseBuffer = append(c.ResponseBuffer, ' ')
+		c.ResponseBuffer = append(c.ResponseBuffer, Status2Reason[w.StatusCode]...)
+
+		if !w.Headers.Has("Date") {
+			dateBuf := c.DateRFC822
+			if dateBuf == nil {
+				dateBuf = make([]byte, time.RFC822Len)
+				time.PutTmRFC822(dateBuf, time.ToTm(time.Now()))
+			}
+			c.ResponseBuffer = append(c.ResponseBuffer, "Date: "...)
+			c.ResponseBuffer = append(c.ResponseBuffer, dateBuf...)
+			c.ResponseBuffer = append(c.ResponseBuffer, "\r\n"...)
+		}
+
+		if !w.Headers.Has("Server") {
+			c.ResponseBuffer = append(c.ResponseBuffer, "Server: gofa/http\r\n"...)
+		}
+
+		if !w.Headers.Has("Content-Type") {
+			c.ResponseBuffer = append(c.ResponseBuffer, "Content-Type: text/plain; charset=\"UTF-8\"\r\n"...)
+		}
+
+		if !w.Headers.Has("Content-Length") {
+			lengthBuf := make([]byte, ints.Bufsize)
+			n := slices.PutInt(lengthBuf, len(w.Body))
+
+			c.ResponseBuffer = append(c.ResponseBuffer, "Content-Length: "...)
+			c.ResponseBuffer = append(c.ResponseBuffer, lengthBuf[:n]...)
+			c.ResponseBuffer = append(c.ResponseBuffer, "\r\n"...)
+		}
+
+		for i := 0; i < len(w.Headers.Keys); i++ {
+			key := w.Headers.Keys[i]
+			c.ResponseBuffer = append(c.ResponseBuffer, key...)
+			c.ResponseBuffer = append(c.ResponseBuffer, ": "...)
+			for j := 0; j < len(w.Headers.Values[i]); j++ {
+				value := w.Headers.Values[i][j]
+				if j > 0 {
+					c.ResponseBuffer = append(c.ResponseBuffer, ","...)
+				}
+				c.ResponseBuffer = append(c.ResponseBuffer, value...)
+			}
+			c.ResponseBuffer = append(c.ResponseBuffer, "\r\n"...)
+		}
+
+		c.ResponseBuffer = append(c.ResponseBuffer, "\r\n"...)
+		c.ResponseBuffer = append(c.ResponseBuffer, w.Body...)
+		w.Reset()
+	}
+
+	trace.End(t)
 }

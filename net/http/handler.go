@@ -4,6 +4,7 @@ import (
 	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/cpu"
 	"github.com/anton2920/gofa/debug"
+	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/log"
 	"github.com/anton2920/gofa/mime/multipart"
@@ -17,7 +18,7 @@ type Router func(*Response, *Request, session.Session) error
 func RequestHandler(w *Response, r *Request, session session.Session, router Router) (err error) {
 	defer func() {
 		if p := recover(); p != nil {
-			err = error.NewPanic(p)
+			err = errors.NewPanic(p)
 		}
 	}()
 
@@ -30,6 +31,7 @@ func RequestHandler(w *Response, r *Request, session session.Session, router Rou
 		case MethodPost:
 			if len(r.Body) > 0 {
 				contentType := r.Headers.Get("Content-Type")
+				println("HERE!", contentType)
 				switch {
 				case contentType == "application/x-www-form-urlencoded":
 					err = url.ParseQuery(&r.Form, bytes.AsString(r.Body))
@@ -39,7 +41,7 @@ func RequestHandler(w *Response, r *Request, session session.Session, router Rou
 			}
 		}
 		if err != nil {
-			CilentError(err)
+			ClientError(err)
 		}
 	}
 
@@ -53,7 +55,7 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 		w := &ws[i]
 		r := &rs[i]
 
-		start := cpu.GetPerformanceCounter()
+		start := cpu.ReadPerformanceCounter()
 		w.Headers.Set("Content-Type", `text/html; charset="UTF-8"`)
 		level := log.LevelDebug
 
@@ -61,13 +63,13 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 		if len(session.Token) == 0 {
 			session = session.New(0)
 			if debug.Debug {
-				w.SetCookieUnsafe(cookie, session.Token, int(session.Expiry))
+				w.SetCookieUnsafe(cookie, session.Token, session.Expiry)
 			} else {
-				w.SetCookie(cookie, session.Token, int(session.Expiry))
+				w.SetCookie(cookie, session.Token, session.Expiry)
 			}
 		}
 
-		err := router(w, r, session)
+		err := RequestHandler(w, r, session, router)
 		if err != nil {
 			if (w.StatusCode >= StatusBadRequest) && (w.StatusCode < StatusInternalServerError) {
 				level = log.LevelWarn
@@ -80,21 +82,21 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 			w.Headers.Set("Connection", "close")
 		}
 
-		end := cpu.GetPerformanceCounter()
+		end := cpu.ReadPerformanceCounter()
 		elapsed := end - start
 
-		log.Logf(level, "[%21s] %7s %s -> %v (%v), %4dus", strings.And(r.Address, r.Headers.Get("X-Forwarded-For")), r.Method, r.URL.Path, w.StatusCode, err, elapsed.ToUsec())
+		log.Logf(level, "[%21s] %7s %s -> %v (%v), %4dus", strings.And(r.RemoteAddr, r.Headers.Get("X-Forwarded-For")), r.Method, r.URL.Path, w.StatusCode, err, elapsed.ToMicroseconds())
 	}
 }
 
-func ConnectionHandler(c *Conn, handler func([]Response, []Request)) {
+func ConnectionHandler(l *Listener, c *Conn, handler func([]Response, []Request)) {
 	const pipeline = 64
 
 	rs := make([]Request, pipeline)
 	ws := make([]Response, pipeline)
 
 	for !c.Closed {
-		n, err := ReadRequests(c, rs)
+		n, err := c.ReadRequests(rs)
 		if err != nil {
 			log.Errorf("Failed to read HTTP requests: %v", err)
 			break
@@ -104,7 +106,7 @@ func ConnectionHandler(c *Conn, handler func([]Response, []Request)) {
 
 		handler(ws[:n], rs[:n])
 
-		n, err = WriteResponses(c, ws[:n])
+		n, err = c.WriteResponses(ws[:n])
 		if err != nil {
 			log.Errorf("Failed to write HTTP responses: %v", err)
 			break
