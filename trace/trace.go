@@ -11,7 +11,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/bools"
-	"github.com/anton2920/gofa/intel"
+	"github.com/anton2920/gofa/cpu"
 	"github.com/anton2920/gofa/pointers"
 	_ "github.com/anton2920/gofa/time"
 )
@@ -22,8 +22,8 @@ type Anchor struct {
 
 	HitCount int
 
-	ElapsedCyclesExclusive intel.Cycles /* time for anchor itself. */
-	ElapsedCyclesInclusive intel.Cycles /* time for anchor plus time of its children. */
+	ElapsedCyclesExclusive cpu.Cycles /* time for anchor itself. */
+	ElapsedCyclesInclusive cpu.Cycles /* time for anchor plus time of its children. */
 }
 
 type Block struct {
@@ -33,8 +33,8 @@ type Block struct {
 	ParentIndex int32
 	AnchorIndex int32
 
-	StartCycles               intel.Cycles
-	OldElapsedCyclesInclusive intel.Cycles
+	StartCycles               cpu.Cycles
+	OldElapsedCyclesInclusive cpu.Cycles
 }
 
 type Anchors []Anchor
@@ -43,8 +43,8 @@ type Profiler struct {
 	Anchors       Anchors
 	CurrentParent int32
 
-	StartCycles intel.Cycles
-	EndCycles   intel.Cycles
+	StartCycles cpu.Cycles
+	EndCycles   cpu.Cycles
 }
 
 var GlobalProfiler Profiler
@@ -54,9 +54,7 @@ func init() {
 	GlobalProfiler.Anchors = make(Anchors, 64*1024)
 }
 
-func (as Anchors) Len() int {
-	return len(as)
-}
+func (as Anchors) Len() int { return len(as) }
 
 func (as Anchors) Less(i, j int) bool {
 	a := &as[i]
@@ -89,9 +87,7 @@ func (as Anchors) Less(i, j int) bool {
 	}
 }
 
-func (as Anchors) Swap(i, j int) {
-	as[i], as[j] = as[j], as[i]
-}
+func (as Anchors) Swap(i, j int) { as[i], as[j] = as[j], as[i] }
 
 /* GetCallerPC returns a value of %IP register that is going to be used by RET instruction. arg0 is the address of the first agrument function of interest accepts. */
 //go:nosplit
@@ -120,13 +116,13 @@ func begin(pc uintptr, label string) Block {
 	anchor := &GlobalProfiler.Anchors[b.AnchorIndex]
 	b.OldElapsedCyclesInclusive = anchor.ElapsedCyclesInclusive
 
-	b.StartCycles = intel.RDTSC()
+	b.StartCycles = cpu.ReadPerformanceCounter()
 	return b
 }
 
 //go:nosplit
 func Begin(label string) Block {
-	intel.LFENCE()
+	cpu.LoadFence()
 	return begin(GetCallerPC(unsafe.Pointer(&label)), label)
 }
 
@@ -135,20 +131,20 @@ func BeginProfile() {
 		GlobalProfiler.Anchors[i] = Anchor{}
 	}
 	GlobalProfiler.CurrentParent = 0
-	GlobalProfiler.StartCycles = intel.RDTSC()
+	GlobalProfiler.StartCycles = cpu.ReadPerformanceCounter()
 }
 
-func CyclesToNsec(c intel.Cycles) float64 {
-	return 1000000000 * float64(c) / float64(intel.CPUHz)
+func CyclesToNanoseconds(c cpu.Cycles) float64 {
+	return 1000000000 * float64(c) / float64(cpu.CPUHz)
 }
 
-func CyclesToMsec(c intel.Cycles) float64 {
-	return 1000 * float64(c) / float64(intel.CPUHz)
+func CyclesToMilliseconds(c cpu.Cycles) float64 {
+	return 1000 * float64(c) / float64(cpu.CPUHz)
 }
 
 //go:nosplit
 func End(b Block) {
-	elapsed := intel.RDTSC() - b.StartCycles
+	elapsed := cpu.ReadPerformanceCounter() - b.StartCycles
 	anchor := &GlobalProfiler.Anchors[b.AnchorIndex]
 	parent := &GlobalProfiler.Anchors[b.ParentIndex]
 	GlobalProfiler.CurrentParent = b.ParentIndex
@@ -169,13 +165,13 @@ func End(b Block) {
 }
 
 func EndAndPrintProfile() {
-	GlobalProfiler.EndCycles = intel.RDTSC()
+	GlobalProfiler.EndCycles = cpu.ReadPerformanceCounter()
 	totalElapsed := GlobalProfiler.EndCycles - GlobalProfiler.StartCycles
 
-	var totalCycles intel.Cycles
+	var totalCycles cpu.Cycles
 	var totalHits int
 
-	fmt.Fprintf(os.Stderr, "[gofa/trace]: Total time: %.4fms\n", CyclesToMsec(totalElapsed))
+	fmt.Fprintf(os.Stderr, "[trace]: Total time: %.4fms\n", CyclesToMilliseconds(totalElapsed))
 
 	sort.Sort(GlobalProfiler.Anchors)
 
@@ -197,13 +193,13 @@ func EndAndPrintProfile() {
 	}
 }
 
-func PrintTimeElapsed(label string, totalElapsed, elapsedCyclesExclusive, elapsedCyclesInclusive intel.Cycles, hitCount int) {
+func PrintTimeElapsed(label string, totalElapsed, elapsedCyclesExclusive, elapsedCyclesInclusive cpu.Cycles, hitCount int) {
 	percent := 100 * (float64(elapsedCyclesExclusive) / float64(totalElapsed))
 
-	fmt.Fprintf(os.Stderr, "[gofa/trace]: \t %s[%d]: flat: [%.4fms %.2f%% %.2fns/op]", label, hitCount, CyclesToMsec(elapsedCyclesExclusive), percent, CyclesToNsec(elapsedCyclesExclusive)/float64(hitCount))
+	fmt.Fprintf(os.Stderr, "[trace]: \t %s[%d]: flat: [%.4fms %.2f%% %.2fns/op]", label, hitCount, CyclesToMilliseconds(elapsedCyclesExclusive), percent, CyclesToNanoseconds(elapsedCyclesExclusive)/float64(hitCount))
 	if elapsedCyclesInclusive > elapsedCyclesExclusive {
 		percentWidthChildren := 100 * (float64(elapsedCyclesInclusive) / float64(totalElapsed))
-		fmt.Fprintf(os.Stderr, ", cum [%.4fms %.2f%% %.2fns/op]", CyclesToMsec(elapsedCyclesInclusive), percentWidthChildren, CyclesToNsec(elapsedCyclesInclusive)/float64(hitCount))
+		fmt.Fprintf(os.Stderr, ", cum [%.4fms %.2f%% %.2fns/op]", CyclesToMilliseconds(elapsedCyclesInclusive), percentWidthChildren, CyclesToNanoseconds(elapsedCyclesInclusive)/float64(hitCount))
 	}
 	fmt.Fprintf(os.Stderr, "\n")
 }
