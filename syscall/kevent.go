@@ -7,7 +7,7 @@ type Kevent_t struct {
 	Filter int16
 	Flags  uint16
 	Fflags uint32
-	Data   int
+	Data   int64
 	Udata  unsafe.Pointer
 	Ext    [4]uint
 }
