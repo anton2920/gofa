@@ -5,6 +5,6 @@ package cpu
 
 import "github.com/anton2920/gofa/cpu/intel"
 
-func ReadPerformanceCounter() Cycles {
-	return Cycles(intel.RDTSC())
+func LoadFence() {
+	intel.LFENCE()
 }

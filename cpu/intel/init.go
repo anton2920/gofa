@@ -70,7 +70,7 @@ func init() {
 			buffer := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&brand[0])), Len: len(brand) * int(unsafe.Sizeof(brand[0])), Cap: len(brand) * int(unsafe.Sizeof(brand[0]))}))
 			BrandString = string(buffer)
 
-			/* NOTE(anton2920): eliding \x00 bytes at the end. */
+			/* Eliding '\x00' byte at the end. */
 			for BrandString[len(BrandString)-1] == '\x00' {
 				BrandString = BrandString[:len(BrandString)-1]
 			}
