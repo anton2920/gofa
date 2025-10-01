@@ -18,7 +18,8 @@ type Router func(*Response, *Request, session.Session) error
 func RequestHandler(w *Response, r *Request, session session.Session, router Router) (err error) {
 	defer func() {
 		if p := recover(); p != nil {
-			err = errors.NewPanic(p)
+			r.Error = errors.NewPanic(p)
+			err = router(w, r, session)
 		}
 	}()
 
