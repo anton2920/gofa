@@ -5,8 +5,8 @@ import (
 	"github.com/anton2920/gofa/time"
 )
 
-func (h *HTML) FormBegin(method string, action string, attrs ...Attributes) {
-	h.TagBegin("form", h.Theme.Form, h.AppendAttributes(attrs, Attributes{Method: method, Action: action}))
+func (h *HTML) FormBegin(method string, attrs ...Attributes) {
+	h.TagBegin("form", h.Theme.Form, h.AppendAttributes(attrs, Attributes{Method: method}))
 }
 
 func (h *HTML) FormEnd() {
