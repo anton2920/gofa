@@ -189,6 +189,7 @@ func (h *HTML) TagBegin(tag string, attrs ...Attributes) {
 		DisplayStringAttribute(h, "id", attr.ID)
 		DisplayStringAttribute(h, "method", attr.Method)
 		DisplayStringAttribute(h, "name", attr.Name)
+		DisplayStringAttribute(h, "rel", attr.Rel)
 		DisplayStringAttribute(h, "src", attr.Src)
 		DisplayStringAttribute(h, "style", attr.Style)
 		DisplayStringAttribute(h, "type", attr.Type)
@@ -255,6 +256,10 @@ func (h *HTML) Title(title string) {
 
 func (h *HTML) TitleEnd() {
 	h.TagEnd("title")
+}
+
+func (h *HTML) Link(attrs ...Attributes) {
+	h.TagBegin("link", attrs...)
 }
 
 func (h *HTML) BodyBegin(attrs ...Attributes) {

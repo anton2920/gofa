@@ -19,6 +19,7 @@ type Attributes struct {
 	ID      string
 	Method  string
 	Name    string
+	Rel     string
 	Src     string
 	Style   string
 	Type    string
@@ -114,6 +115,7 @@ func (h *HTML) MergeAttributes(attrs ...Attributes) Attributes {
 		strings.Replace(&result.ID, attr.ID)
 		strings.Replace(&result.Method, attr.Method)
 		strings.Replace(&result.Name, attr.Name)
+		strings.Replace(&result.Rel, attr.Rel)
 		strings.Replace(&result.Src, attr.Src)
 		strings.Replace(&result.Style, attr.Style)
 		strings.Replace(&result.Type, attr.Type)
