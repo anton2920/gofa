@@ -16,7 +16,7 @@ func init() {
 
 		osEnd := Now()
 		osElapsed := int64(0)
-		osWaitTime := osHz * millisecondsToWait / int64(Millisecond)
+		osWaitTime := osHz * millisecondsToWait / (Second / Millisecond)
 
 		for osElapsed < osWaitTime {
 			osEnd = Now()
