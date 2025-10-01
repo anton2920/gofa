@@ -94,7 +94,7 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 	}
 }
 
-func ConnectionHandler(l *Listener, c *Conn, handler func([]Response, []Request, Router), router Router) {
+func ConnectionHandler(c *Conn, router Router) {
 	const pipeline = 64
 
 	rs := make([]Request, pipeline)
@@ -109,7 +109,7 @@ func ConnectionHandler(l *Listener, c *Conn, handler func([]Response, []Request,
 			break
 		}
 
-		handler(ws[:n], rs[:n], router)
+		RequestsHandler(ws[:n], rs[:n], router)
 
 		n, err = c.WriteResponses(ws[:n])
 		if err != nil {
@@ -122,5 +122,5 @@ func ConnectionHandler(l *Listener, c *Conn, handler func([]Response, []Request,
 		log.Warnf("Failed to close HTTP connection: %v", err)
 	}
 
-	l.ConnPool.Put(c)
+	c.ConnPool.Put(c)
 }

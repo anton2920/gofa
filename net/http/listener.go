@@ -82,6 +82,8 @@ func (l *Listener) Accept(opts ...ConnOptions) (*Conn, error) {
 		syscall.Close(sock)
 		panic("handle too many connections")
 	}
+	c.ConnPool = l.ConnPool
+
 	c.Socket = os.Handle(sock)
 	c.RequestBuffer = rb
 

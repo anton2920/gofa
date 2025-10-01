@@ -33,6 +33,7 @@ type Conn struct {
 	Check int32
 	Version
 
+	*ConnPool
 	alloc.Arena
 
 	Socket     os.Handle
