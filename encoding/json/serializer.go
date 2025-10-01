@@ -1,9 +1,9 @@
 package json
 
 import (
+	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
-	"github.com/anton2920/gofa/util"
 )
 
 type Serializer struct {
@@ -113,5 +113,5 @@ func (s *Serializer) Bytes() []byte {
 }
 
 func (s Serializer) String() string {
-	return util.Slice2String(s.Buffer[:s.Pos])
+	return bytes.AsString(s.Buffer[:s.Pos])
 }
