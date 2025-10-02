@@ -44,6 +44,10 @@ type Theme struct {
 	Textarea Attributes
 	UL       Attributes
 
+	/* Default CSS and JS. */
+	HeadLink   Attributes
+	HeadScript Attributes
+
 	/* Custom components. */
 	Error Attributes
 
@@ -116,7 +120,8 @@ func (h *HTML) TString(s string) {
 
 func (h *HTML) Dtoa(d int64) string {
 	const format = "2006-01-02"
-	return stdtime.Unix(d+int64(h.Timezone)*time.Hour/time.Second, 0).UTC().Format(format)
+	v := d + int64(h.Timezone)*time.Hour
+	return stdtime.Unix(v/time.Second, v%time.Second).UTC().Format(format)
 }
 
 func (h *HTML) Itoa(x int) string {
@@ -133,9 +138,10 @@ func (h *HTML) Itoa1(x int) string {
 }
 
 /* TODO(anton2920): unify this and 'Dtoa'. */
-func (h *HTML) Ttoa(d int64) string {
+func (h *HTML) Ttoa(t int64) string {
 	const format = "2006-01-02 15:04:05"
-	return stdtime.Unix(d+int64(h.Timezone)*time.Hour/time.Second, 0).UTC().Format(format)
+	v := t + int64(h.Timezone)*time.Hour
+	return stdtime.Unix(v/time.Second, v%time.Second).UTC().Format(format)
 }
 
 func (h *HTML) IndexedName(name string, index int) string {
@@ -237,6 +243,9 @@ func (h *HTML) HeadBegin() {
 	h.TagBegin("head")
 	h.String(`<meta charset="UTF-8">`)
 	h.String(`<meta name="viewport" content="width=device-width, initial-scale=1.0">`)
+
+	h.Link(h.Theme.HeadLink)
+	h.Script("", h.Theme.HeadScript)
 }
 
 func (h *HTML) HeadEnd() {
@@ -259,6 +268,20 @@ func (h *HTML) TitleEnd() {
 
 func (h *HTML) Link(attrs ...Attributes) {
 	h.TagBegin("link", attrs...)
+}
+
+func (h *HTML) ScriptBegin(attrs ...Attributes) {
+	h.TagBegin("script", attrs...)
+}
+
+func (h *HTML) Script(script string, attrs ...Attributes) {
+	h.ScriptBegin(attrs...)
+	h.String(script)
+	h.ScriptEnd()
+}
+
+func (h *HTML) ScriptEnd(attrs ...Attributes) {
+	h.TagEnd("script")
 }
 
 func (h *HTML) BodyBegin(attrs ...Attributes) {
