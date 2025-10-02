@@ -223,9 +223,13 @@ func (h *HTML) TagBegin(tag string, attrs ...Attributes) {
 }
 
 func (h *HTML) TagEnd(tag string) {
+	t := trace.Begin("")
+
 	h.String(`</`)
 	h.String(tag)
 	h.String(`>`)
+
+	trace.End(t)
 }
 
 func (h *HTML) Begin() {
