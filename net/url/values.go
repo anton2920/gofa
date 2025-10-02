@@ -7,6 +7,7 @@ import (
 	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/errors"
+	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/trace"
@@ -204,7 +205,7 @@ func (vs *Values) Has(key string) bool {
 func (vs *Values) HasID(id database.ID) bool {
 	t := trace.Begin("")
 
-	buffer := make([]byte, 20)
+	buffer := make([]byte, ints.Bufsize)
 	n := slices.PutInt(buffer, int(id))
 	has := vs.Has(bytes.AsString(buffer[:n]))
 
@@ -215,7 +216,7 @@ func (vs *Values) HasID(id database.ID) bool {
 func (vs *Values) HasInt(value int) bool {
 	t := trace.Begin("")
 
-	buffer := make([]byte, 20)
+	buffer := make([]byte, ints.Bufsize)
 	n := slices.PutInt(buffer, value)
 	has := vs.Has(bytes.AsString(buffer[:n]))
 
@@ -224,9 +225,13 @@ func (vs *Values) HasInt(value int) bool {
 }
 
 func (vs *Values) Reset() {
+	t := trace.Begin("")
+
 	vs.Keys = vs.Keys[:0]
 	vs.Values = vs.Values[:0]
 	vs.Arena.Reset()
+
+	trace.End(t)
 }
 
 func (vs *Values) Set(key string, value string) {
@@ -257,22 +262,16 @@ func (vs *Values) Set(key string, value string) {
 	trace.End(t)
 }
 
-func (vs *Values) SetID(key string, value database.ID) {
+func (vs *Values) SetInt(key string, value int) {
 	t := trace.Begin("")
 
-	buffer := vs.Arena.NewSlice(20)
-	n := slices.PutInt(buffer, int(value))
+	buffer := vs.Arena.NewSlice(ints.Bufsize)
+	n := slices.PutInt(buffer, value)
 	vs.Set(key, bytes.AsString(buffer[:n]))
 
 	trace.End(t)
 }
 
-func (vs *Values) SetInt(key string, value int) {
-	t := trace.Begin("")
-
-	buffer := vs.Arena.NewSlice(20)
-	n := slices.PutInt(buffer, value)
-	vs.Set(key, bytes.AsString(buffer[:n]))
-
-	trace.End(t)
+func (vs *Values) SetID(key string, id database.ID) {
+	vs.SetInt(key, int(id))
 }
