@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/errors"
+	"github.com/anton2920/gofa/trace"
 )
 
 type ConnPoolItem struct {
@@ -30,22 +31,29 @@ func NewConnPool(n int) *ConnPool {
 }
 
 func (p *ConnPool) Get() (*Conn, error) {
+	t := trace.Begin("")
+
 	p.Lock()
 
 	item := p.Head
 	if item == nil {
 		p.Unlock()
+		trace.End(t)
 		return nil, errors.New("no space left")
 	}
 	p.Head = item.Next
 
 	p.Unlock()
+	trace.End(t)
 	return &item.Conn, nil
 }
 
 func (p *ConnPool) Put(conn *Conn) {
+	t := trace.Begin("")
+
 	if (conn == nil) || (uintptr(unsafe.Pointer(conn)) < uintptr(unsafe.Pointer(&p.Conns[0].Conn))) || (uintptr(unsafe.Pointer(conn)) > uintptr(unsafe.Pointer(&p.Conns[len(p.Conns)-1].Conn))) {
 		/* Do nothing as pointer does not come from the pool. */
+		trace.End(t)
 		return
 	}
 	*conn = Conn{}
@@ -57,9 +65,12 @@ func (p *ConnPool) Put(conn *Conn) {
 	p.Head = item
 
 	p.Unlock()
+	trace.End(t)
 }
 
 func (p *ConnPool) PutAll() {
+	t := trace.Begin("")
+
 	p.Lock()
 
 	for i := len(p.Conns) - 1; i >= 0; i-- {
@@ -69,4 +80,5 @@ func (p *ConnPool) PutAll() {
 	}
 
 	p.Unlock()
+	trace.End(t)
 }

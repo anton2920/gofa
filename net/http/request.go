@@ -50,12 +50,16 @@ func (r *Request) Cookie(name string) string {
 }
 
 func (r *Request) Reset() {
+	t := trace.Begin("")
+
 	r.URL.Query.Reset()
 	r.Headers.Reset()
 	r.Body = r.Body[:0]
 	r.Form.Reset()
 	r.Files.Reset()
 	r.Error = nil
+
+	trace.End(t)
 }
 
 func ParseRequestsV1(c *Conn, rs []Request) int {
@@ -131,7 +135,8 @@ forRequests:
 			r.ProtoMinor = 1
 			c.Version = Version11
 		default:
-			r.Error = BadRequest("invalid protocol %q", request[pos:pos+lineEnd])
+			err = BadRequest("invalid protocol %q", request[pos:pos+lineEnd])
+			break forRequests
 		}
 		pos += len(r.Proto) + len("\r\n")
 
@@ -169,7 +174,6 @@ forRequests:
 			}
 
 			if len(request[pos:]) < contentLength {
-				i--
 				break
 			}
 

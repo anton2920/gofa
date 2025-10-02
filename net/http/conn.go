@@ -57,6 +57,8 @@ type ConnOptions struct {
 }
 
 func MergeConnOptions(opts ...ConnOptions) ConnOptions {
+	t := trace.Begin("")
+
 	var result ConnOptions
 
 	for i := 0; i < len(opts); i++ {
@@ -65,11 +67,15 @@ func MergeConnOptions(opts ...ConnOptions) ConnOptions {
 		ints.Replace(&result.RequestBufferSize, opt.RequestBufferSize)
 	}
 
+	trace.End(t)
 	return result
 }
 
 func (c *Conn) Close() error {
+	t := trace.Begin("")
+
 	if c.Closed {
+		trace.End(t)
 		return nil
 	}
 
@@ -77,7 +83,10 @@ func (c *Conn) Close() error {
 	c.Arena.Reset()
 	c.Closed = true
 
-	return os.Close(c.Socket)
+	err := os.Close(c.Socket)
+
+	trace.End(t)
+	return err
 }
 
 func (c *Conn) ReadRequests(rs []Request) (int, error) {
@@ -103,8 +112,10 @@ func (c *Conn) ReadRequests(rs []Request) (int, error) {
 	}
 	c.RequestBuffer.Produce(int(n))
 
+	reqs := ParseRequests(c, rs)
+
 	trace.End(t)
-	return ParseRequests(c, rs), nil
+	return reqs, nil
 }
 
 func (c *Conn) WriteResponses(ws []Response) (int, error) {
@@ -113,6 +124,7 @@ func (c *Conn) WriteResponses(ws []Response) (int, error) {
 	var err error
 
 	if c.Closed {
+		trace.End(t)
 		panic("write to a closed connection")
 	}
 

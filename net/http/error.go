@@ -43,6 +43,10 @@ func Forbidden(format string, args ...interface{}) Error {
 
 func NotFound(format string, args ...interface{}) Error { return New(StatusNotFound, format, args...) }
 
+func MethodNotAllowed(format string, args ...interface{}) Error {
+	return New(StatusMethodNotAllowed, format, args...)
+}
+
 func Conflict(format string, args ...interface{}) Error { return New(StatusConflict, format, args...) }
 
 func RequestEntityTooLarge(format string, args ...interface{}) Error {

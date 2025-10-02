@@ -96,10 +96,11 @@ func (w *Response) Redirect(path string, code Status) {
 	trace.End(t)
 }
 
+/* TODO(anton2920): remove in favor of 'h.Redirect(h.PathWithID(path, id), status)'. */
 func (w *Response) RedirectID(prefix string, id database.ID, code Status) {
 	t := trace.Begin("")
 
-	buffer := w.Arena.NewSlice(len(prefix) + 20)
+	buffer := w.Arena.NewSlice(len(prefix) + ints.Bufsize)
 	n := copy(buffer, prefix)
 	n += slices.PutInt(buffer[n:], int(id))
 
@@ -115,7 +116,6 @@ func (w *Response) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-/* WriteHTML writes to w the escaped html. equivalent of the plain text data b. */
 func (w *Response) WriteHTML(b []byte) {
 	w.WriteHTMLString(bytes.AsString(b))
 }
@@ -125,14 +125,8 @@ func (w *Response) WriteFloat64(f float64) {
 }
 
 func (w *Response) WriteInt(i int) {
-	buffer := make([]byte, 20)
+	buffer := make([]byte, ints.Bufsize)
 	n := slices.PutInt(buffer, i)
-	w.Body = append(w.Body, buffer[:n]...)
-}
-
-func (w *Response) WriteID(id database.ID) {
-	buffer := make([]byte, 20)
-	n := slices.PutInt(buffer, int(id))
 	w.Body = append(w.Body, buffer[:n]...)
 }
 
@@ -142,8 +136,6 @@ func (w *Response) WriteString(s string) (int, error) {
 }
 
 func (w *Response) WriteHTMLString(s string) {
-	t := trace.Begin("")
-
 	last := 0
 	for i := 0; i < len(s); i++ {
 		var seq string
@@ -168,15 +160,17 @@ func (w *Response) WriteHTMLString(s string) {
 		last = i + 1
 	}
 	w.Body = append(w.Body, s[last:]...)
-
-	trace.End(t)
 }
 
 func (w *Response) Reset() {
+	t := trace.Begin("")
+
 	w.StatusCode = StatusOK
 	w.Headers.Reset()
 	w.Body = w.Body[:0]
 	w.Arena.Reset()
+
+	trace.End(t)
 }
 
 func FillResponses(c *Conn, ws []Response) {
