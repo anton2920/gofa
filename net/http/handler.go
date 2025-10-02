@@ -10,16 +10,21 @@ import (
 	"github.com/anton2920/gofa/mime/multipart"
 	"github.com/anton2920/gofa/net/url"
 	"github.com/anton2920/gofa/session"
+	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
+	"github.com/anton2920/gofa/trace"
 )
 
 type Router func(*Response, *Request, session.Session) error
 
 func RequestHandler(w *Response, r *Request, session session.Session, router Router) (err error) {
+	t := trace.Begin("")
+
 	defer func() {
 		if p := recover(); p != nil {
 			r.Error = errors.NewPanic(p)
 			err = router(w, r, session)
+			trace.End(t)
 		}
 	}()
 
@@ -41,14 +46,18 @@ func RequestHandler(w *Response, r *Request, session session.Session, router Rou
 			}
 		}
 		if err != nil {
-			ClientError(err)
+			r.Error = ClientError(err)
 		}
 	}
 
-	return router(w, r, session)
+	err = router(w, r, session)
+	trace.End(t)
+	return
 }
 
 func RequestsHandler(ws []Response, rs []Request, router Router) {
+	t := trace.Begin("")
+
 	const cookie = "Token"
 
 	for i := 0; i < ints.Min(len(ws), len(rs)); i++ {
@@ -56,7 +65,13 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 		r := &rs[i]
 
 		if r.URL.Path == "/plaintext" {
-			w.WriteString("Hello, world!\n")
+			const response = "Hello, world!\n"
+			switch r.Method {
+			default:
+				w.WriteString(response)
+			case MethodHead:
+				w.Headers.Set("Content-Length", "14")
+			}
 			continue
 		}
 
@@ -83,6 +98,13 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 			}
 		}
 
+		if r.Method == MethodHead {
+			buffer := w.Arena.NewSlice(ints.Bufsize)
+			n := slices.PutInt(buffer, len(w.Body))
+			w.Headers.Set("Content-Length", bytes.AsString(buffer[:n]))
+			w.Body = w.Body[:0]
+		}
+
 		if r.Headers.Get("Connection") == "close" {
 			w.Headers.Set("Connection", "close")
 		}
@@ -92,6 +114,8 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 
 		log.Logf(level, "[%21s] %7s %s -> %v (%v), %4dus", strings.And(r.RemoteAddr, r.Headers.Get("X-Forwarded-For")), r.Method, r.URL.Path, w.StatusCode, err, elapsed.ToMicroseconds())
 	}
+
+	trace.End(t)
 }
 
 func ConnectionHandler(c *Conn, router Router) {
