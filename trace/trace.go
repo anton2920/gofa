@@ -17,6 +17,8 @@ import (
 )
 
 type Anchor struct {
+	ParentIndex int32
+
 	PC    uintptr /* for lazy function name resolution. */
 	Label string  /* for names of non-function blocks. */
 
@@ -173,6 +175,21 @@ func End(b Block) {
 
 	anchor.PC = b.PC
 	anchor.Label = b.Label
+	anchor.ParentIndex = b.ParentIndex
+}
+
+func PrintTimeElapsed(label string, totalElapsed cpu.Cycles, curr *Anchor, parent *Anchor) {
+	percentTotal := 100 * (float64(curr.ElapsedCyclesExclusive) / float64(totalElapsed))
+	percentParent := 100 * (float64(curr.ElapsedCyclesExclusive) / float64(parent.ElapsedCyclesInclusive))
+	fmt.Fprintf(os.Stderr, "[trace]: \t %s[%d]: flat [%.4fms %.2f%%/%.2f%% %.2fns/op]", label, curr.HitCount, CyclesToMilliseconds(curr.ElapsedCyclesExclusive), percentTotal, percentParent, CyclesToNanoseconds(curr.ElapsedCyclesExclusive)/float64(curr.HitCount))
+
+	if curr.ElapsedCyclesInclusive > curr.ElapsedCyclesExclusive {
+		percentWithChildrenTotal := 100 * (float64(curr.ElapsedCyclesInclusive) / float64(totalElapsed))
+		percentWithChildrenParent := 100 * (float64(curr.ElapsedCyclesInclusive) / float64(parent.ElapsedCyclesInclusive))
+		fmt.Fprintf(os.Stderr, ", cum [%.4fms %.2f%%/%.2f%% %.2fns/op]", CyclesToMilliseconds(curr.ElapsedCyclesInclusive), percentWithChildrenTotal, percentWithChildrenParent, CyclesToNanoseconds(curr.ElapsedCyclesInclusive)/float64(curr.HitCount))
+	}
+
+	fmt.Fprintf(os.Stderr, "\n")
 }
 
 func EndAndPrintProfile() {
@@ -184,33 +201,32 @@ func EndAndPrintProfile() {
 
 	fmt.Fprintf(os.Stderr, "[trace]: Total time: %.4fms\n", CyclesToMilliseconds(totalElapsed))
 
+	/* NOTE(anton2920): Anchor.ParentIndex uses original order, so we need to preserve it after Sort. */
+	backup := make(Anchors, len(GlobalProfiler.Anchors))
+	copy(backup, GlobalProfiler.Anchors)
+
 	sort.Sort(GlobalProfiler.Anchors)
 
 	for i := 0; i < len(GlobalProfiler.Anchors); i++ {
 		anchor := &GlobalProfiler.Anchors[i]
+		parent := &backup[anchor.ParentIndex]
 
 		if anchor.HitCount > 0 {
 			label := anchor.Label
 			if len(label) == 0 {
 				label = runtime.FuncForPC(anchor.PC).Name()
 			}
-			PrintTimeElapsed(label, totalElapsed, anchor.ElapsedCyclesExclusive, anchor.ElapsedCyclesInclusive, anchor.HitCount)
+			PrintTimeElapsed(label, totalElapsed, anchor, parent)
 			totalCycles += anchor.ElapsedCyclesExclusive
 			totalHits += anchor.HitCount
 		}
 	}
 	if totalHits > 0 {
-		PrintTimeElapsed("= Grand total", totalElapsed, totalCycles, 0, totalHits)
-	}
-}
+		var curr, parent Anchor
 
-func PrintTimeElapsed(label string, totalElapsed, elapsedCyclesExclusive, elapsedCyclesInclusive cpu.Cycles, hitCount int) {
-	percent := 100 * (float64(elapsedCyclesExclusive) / float64(totalElapsed))
+		curr.ElapsedCyclesExclusive = totalCycles
+		curr.HitCount = totalHits
 
-	fmt.Fprintf(os.Stderr, "[trace]: \t %s[%d]: flat [%.4fms %.2f%% %.2fns/op]", label, hitCount, CyclesToMilliseconds(elapsedCyclesExclusive), percent, CyclesToNanoseconds(elapsedCyclesExclusive)/float64(hitCount))
-	if elapsedCyclesInclusive > elapsedCyclesExclusive {
-		percentWidthChildren := 100 * (float64(elapsedCyclesInclusive) / float64(totalElapsed))
-		fmt.Fprintf(os.Stderr, ", cum [%.4fms %.2f%% %.2fns/op]", CyclesToMilliseconds(elapsedCyclesInclusive), percentWidthChildren, CyclesToNanoseconds(elapsedCyclesInclusive)/float64(hitCount))
+		PrintTimeElapsed("= Grand total", totalElapsed, &curr, &parent)
 	}
-	fmt.Fprintf(os.Stderr, "\n")
 }
