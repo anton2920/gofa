@@ -103,18 +103,21 @@ func ConnectionHandler(c *Conn, router Router) {
 	for !c.Closed {
 		n, err := c.ReadRequests(rs)
 		if err != nil {
+			if n == 0 {
+				break
+			}
 			log.Errorf("Failed to read HTTP requests: %v", err)
-			break
-		} else if n == 0 {
 			break
 		}
 
-		RequestsHandler(ws[:n], rs[:n], router)
+		if n > 0 {
+			RequestsHandler(ws[:n], rs[:n], router)
 
-		n, err = c.WriteResponses(ws[:n])
-		if err != nil {
-			log.Errorf("Failed to write HTTP responses: %v", err)
-			break
+			n, err = c.WriteResponses(ws[:n])
+			if err != nil {
+				log.Errorf("Failed to write HTTP responses: %v", err)
+				break
+			}
 		}
 	}
 

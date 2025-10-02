@@ -59,7 +59,7 @@ func (s Status) String() string {
 }
 
 func init() {
-	for i := VersionNone + 1; i <= Version11; i++ {
+	for i := VersionNone; i <= Version11; i++ {
 		var row []string
 
 		for j := 0; j < len(Status2String); j++ {

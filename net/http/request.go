@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/anton2920/gofa/bytes"
+	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/mime/multipart"
 	"github.com/anton2920/gofa/net/url"
 	"github.com/anton2920/gofa/strings"
@@ -57,9 +58,10 @@ func (r *Request) Reset() {
 	r.Error = nil
 }
 
-func ParseRequestsV1(c *Conn, rs []Request) (int, error) {
+func ParseRequestsV1(c *Conn, rs []Request) int {
 	t := trace.Begin("")
 
+	var err error
 	var pos int
 	var i int
 
@@ -77,13 +79,12 @@ forRequests:
 		/* Parsing request line. */
 		lineEnd := strings.FindSubstring(request[pos:], "\r\n")
 		if lineEnd == -1 {
-			i--
 			break
 		}
 
 		sp := strings.FindChar(request[pos:pos+lineEnd], ' ')
 		if sp == -1 {
-			r.Error = BadRequest("expected method, found %q", request[pos:])
+			err = BadRequest("expected method, found %q", request[pos:])
 			break
 		}
 		r.Method = c.Arena.CopyString(request[pos : pos+sp])
@@ -92,7 +93,7 @@ forRequests:
 
 		uriEnd := strings.FindChar(request[pos:pos+lineEnd], ' ')
 		if uriEnd == -1 {
-			r.Error = BadRequest("expected space after URI, found %q", request[pos:pos+lineEnd])
+			err = BadRequest("expected space after URI, found %q", request[pos:pos+lineEnd])
 			break
 		}
 
@@ -110,7 +111,7 @@ forRequests:
 		}
 
 		if request[pos:pos+len("HTTP/")] != "HTTP/" {
-			r.Error = BadRequest("expected protocol, found %q", request[pos:pos+lineEnd])
+			err = BadRequest("expected protocol, found %q", request[pos:pos+lineEnd])
 			break
 		}
 		switch request[pos : pos+lineEnd] {
@@ -138,7 +139,6 @@ forRequests:
 		for {
 			lineEnd := strings.FindSubstring(request[pos:], "\r\n")
 			if lineEnd == -1 {
-				i--
 				break forRequests
 			} else if lineEnd == 0 {
 				pos += len("\r\n")
@@ -148,7 +148,7 @@ forRequests:
 			header := request[pos : pos+lineEnd]
 			colon := strings.FindChar(header, ':')
 			if colon == -1 {
-				r.Error = BadRequest("expected HTTP header, got %q", header)
+				err = BadRequest("expected HTTP header, got %q", header)
 				break forRequests
 			}
 
@@ -164,7 +164,7 @@ forRequests:
 		if r.Headers.Has("Content-Length") {
 			contentLength, err := r.Headers.GetInt("Content-Length")
 			if (err != nil) || (contentLength < 0) {
-				r.Error = BadRequest("invalid Content-Length value: %q", r.Headers.Get("Content-Length"))
+				err = BadRequest("invalid Content-Length value: %q", r.Headers.Get("Content-Length"))
 				break
 			}
 
@@ -178,26 +178,31 @@ forRequests:
 		}
 	}
 
-	rBuf.Consume(pos)
+	if (err == nil) && (i > 0) {
+		rBuf.Consume(pos)
+	} else if err != nil {
+		rBuf.Consume(len(request))
+		rs[i].Error = err
+		i = ints.Or(i, 1)
+	}
 
 	trace.End(t)
-	return i + 1, nil
+	return i
 }
 
-func ParseRequests(c *Conn, rs []Request) (int, error) {
+func ParseRequests(c *Conn, rs []Request) int {
 	t := trace.Begin("")
 
-	var err error
 	var n int
 
 	switch c.Version {
 	case VersionNone, Version09, Version10, Version11:
-		n, err = ParseRequestsV1(c, rs)
+		n = ParseRequestsV1(c, rs)
 	default:
 		trace.End(t)
 		panic("unsupported version")
 	}
 
 	trace.End(t)
-	return n, err
+	return n
 }

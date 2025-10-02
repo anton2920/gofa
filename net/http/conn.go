@@ -1,6 +1,7 @@
 package http
 
 import (
+	"io"
 	"unsafe"
 
 	"github.com/anton2920/gofa/alloc"
@@ -23,9 +24,10 @@ const (
 )
 
 var Version2String = [...]string{
-	Version09: "HTTP/0.9",
-	Version10: "HTTP/1.0",
-	Version11: "HTTP/1.1",
+	VersionNone: "HTTP/1.1",
+	Version09:   "HTTP/0.9",
+	Version10:   "HTTP/1.0",
+	Version11:   "HTTP/1.1",
 }
 
 type Conn struct {
@@ -85,7 +87,7 @@ func (c *Conn) ReadRequests(rs []Request) (int, error) {
 	if (c.Closed) || (len(rs) == 0) {
 		trace.End(t)
 		return 0, nil
-	} else if len(buf) == 0 {
+	} else if (len(buf) == 0) && (len(rs) > 0) {
 		rs[0].Error = RequestEntityTooLarge("no space left in buffer")
 		trace.End(t)
 		return 1, nil
@@ -95,11 +97,14 @@ func (c *Conn) ReadRequests(rs []Request) (int, error) {
 	if err != nil {
 		trace.End(t)
 		return -1, err
+	} else if n == 0 {
+		trace.End(t)
+		return 0, io.EOF
 	}
 	c.RequestBuffer.Produce(int(n))
 
 	trace.End(t)
-	return ParseRequests(c, rs)
+	return ParseRequests(c, rs), nil
 }
 
 func (c *Conn) WriteResponses(ws []Response) (int, error) {
@@ -116,7 +121,7 @@ func (c *Conn) WriteResponses(ws []Response) (int, error) {
 	n, err := os.Write(c.Socket, c.ResponseBuffer[c.ResponsePos:])
 	if err != nil {
 		trace.End(t)
-		return -1, err
+		return int(n), err
 	}
 	c.ResponsePos += int(n)
 
