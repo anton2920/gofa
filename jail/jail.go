@@ -10,6 +10,7 @@ import (
 	stdsyscall "syscall"
 
 	"github.com/anton2920/gofa/bytes"
+	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/syscall"
 )
@@ -22,10 +23,10 @@ type Jail struct {
 
 const (
 	JailNamePrefix = "gofa-"
-	MaxJailNameLen = len(JailNamePrefix) + 20
+	MaxJailNameLen = len(JailNamePrefix) + ints.Bufsize
 
 	MaxJailRctlPrefixLen = len("jail:") + MaxJailNameLen + len(":")
-	MaxJailRctlRuleLen   = MaxJailRctlPrefixLen + 20
+	MaxJailRctlRuleLen   = MaxJailRctlPrefixLen + ints.Bufsize
 )
 
 var (
