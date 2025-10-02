@@ -152,6 +152,10 @@ func (h *HTML) AppendAttributes(user []Attributes, sys Attributes) Attributes {
 	return h.MergeAttributes(append(user, sys)...)
 }
 
+func Action(action string) Attributes {
+	return Attributes{Action: action}
+}
+
 func Class(class string) Attributes {
 	return Attributes{Class: class}
 }
