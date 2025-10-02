@@ -51,7 +51,7 @@ var GlobalProfiler Profiler
 
 func init() {
 	/* NOTE(anton2920): len must be a power of two for fast modulus calculation. */
-	GlobalProfiler.Anchors = make(Anchors, 64*1024)
+	GlobalProfiler.Anchors = make(Anchors, 1024)
 }
 
 func (as Anchors) Len() int { return len(as) }
@@ -97,8 +97,24 @@ func GetCallerPC(arg0 unsafe.Pointer) uintptr {
 
 //go:nosplit
 func anchorIndexForPC(pc uintptr) int32 {
-	idx := int32(int(pc) & (len(GlobalProfiler.Anchors) - 1))
-	return idx + int32(bools.ToInt(idx == 0))
+	anchors := GlobalProfiler.Anchors
+
+	start := int(pc) & (len(GlobalProfiler.Anchors) - 1)
+	start += bools.ToInt(start == 0)
+	if (pc == anchors[start].PC) || (anchors[start].PC == 0) {
+		return int32(start)
+	}
+
+	var idx int
+	for idx = start + 1; (pc != anchors[idx].PC) && (anchors[idx].PC != 0) && (idx != start); {
+		idx = (idx + 1) & (len(GlobalProfiler.Anchors) - 1)
+		idx += bools.ToInt(idx == 0)
+	}
+	if idx == start {
+		panic("not enough space for new anchor")
+	}
+
+	return int32(idx)
 }
 
 //go:nosplit
@@ -155,11 +171,6 @@ func End(b Block) {
 	anchor.ElapsedCyclesExclusive += elapsed
 	anchor.HitCount++
 
-	if (anchor.PC > 0) && (anchor.PC != b.PC) {
-		/* NOTE(anton2920): LOL. */
-		println("anchor.PC", anchor.PC, "b.PC", b.PC)
-		panic("PC collision, you're f**cked!")
-	}
 	anchor.PC = b.PC
 	anchor.Label = b.Label
 }
@@ -196,7 +207,7 @@ func EndAndPrintProfile() {
 func PrintTimeElapsed(label string, totalElapsed, elapsedCyclesExclusive, elapsedCyclesInclusive cpu.Cycles, hitCount int) {
 	percent := 100 * (float64(elapsedCyclesExclusive) / float64(totalElapsed))
 
-	fmt.Fprintf(os.Stderr, "[trace]: \t %s[%d]: flat: [%.4fms %.2f%% %.2fns/op]", label, hitCount, CyclesToMilliseconds(elapsedCyclesExclusive), percent, CyclesToNanoseconds(elapsedCyclesExclusive)/float64(hitCount))
+	fmt.Fprintf(os.Stderr, "[trace]: \t %s[%d]: flat [%.4fms %.2f%% %.2fns/op]", label, hitCount, CyclesToMilliseconds(elapsedCyclesExclusive), percent, CyclesToNanoseconds(elapsedCyclesExclusive)/float64(hitCount))
 	if elapsedCyclesInclusive > elapsedCyclesExclusive {
 		percentWidthChildren := 100 * (float64(elapsedCyclesInclusive) / float64(totalElapsed))
 		fmt.Fprintf(os.Stderr, ", cum [%.4fms %.2f%% %.2fns/op]", CyclesToMilliseconds(elapsedCyclesInclusive), percentWidthChildren, CyclesToNanoseconds(elapsedCyclesInclusive)/float64(hitCount))
