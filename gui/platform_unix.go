@@ -8,6 +8,6 @@ import (
 )
 
 func platformSleep(duration int64) error {
-	tp := syscall.Timespec{Sec: duration / time.NsecPerSec, Nsec: duration % time.NsecPerSec}
+	tp := syscall.Timespec{Sec: duration / time.Second, Nsec: duration % time.Second}
 	return syscall.Nanosleep(&tp, nil)
 }

@@ -1,8 +1,8 @@
 package gui
 
 import (
+	"github.com/anton2920/gofa/cpu"
 	"github.com/anton2920/gofa/gui/color"
-	"github.com/anton2920/gofa/intel"
 	"github.com/anton2920/gofa/time"
 	"github.com/anton2920/gofa/trace"
 )
@@ -25,12 +25,15 @@ type Window struct {
 	Height int
 	Flags  WindowFlags
 
-	CursorVisible bool
+	LastSyncCycles cpu.Cycles
 
-	LastSync intel.Cycles
+	FrameTime float32
+	FPS       float32
+
+	CursorVisible bool
 }
 
-func NewWindow(title string, width, height int, flags WindowFlags) (*Window, error) {
+func NewWindow(title string, width int, height int, flags WindowFlags) (*Window, error) {
 	w := Window{Title: title, Width: width, Height: height, Flags: flags, CursorVisible: true}
 
 	if err := platformNewWindow(&w, 0, 0); err != nil {
@@ -114,17 +117,31 @@ func (w *Window) HideCursor() {
 func (w *Window) SyncFPS(fps int) {
 	t := trace.Begin("")
 
-	now := intel.RDTSC()
-	durationBetweenPauses := now - w.LastSync
-	targetRate := int64(time.MsecPerSec / float64(fps) * (time.NsecPerSec / time.MsecPerSec))
+	now := cpu.ReadPerformanceCounter()
+	durationBetweenPauses := (now - w.LastSyncCycles).ToNanoseconds()
 
-	duration := targetRate - durationBetweenPauses.ToNsec()
-	if duration > 0 {
-		platformSleep(duration)
-		now = intel.RDTSC()
+	var targetRate int64
+	if fps > 0 {
+		targetRate = int64(float64(time.Second/time.Millisecond) / float64(fps) * float64(time.Millisecond))
 	}
-	// println(int(time.MsecPerSec/float64(durationBetweenPauses.ToMsec())), "FPS")
-	w.LastSync = now
+	dt := durationBetweenPauses
+
+	duration := targetRate - durationBetweenPauses
+	if duration > 0 {
+		dt += duration
+		platformSleep(duration)
+		now = cpu.ReadPerformanceCounter()
+	}
+
+	if w.LastSyncCycles == 0 {
+		dt = 0
+	}
+	w.LastSyncCycles = now
+
+	w.FrameTime = float32(dt) / float32(time.Second)
+	w.FPS = 1 / w.FrameTime
+
+	// fmt.Printf("[gui]: Between: %d, Pause: %d, FrameTime: %g, FPS: %g\n", durationBetweenPauses, duration, w.FrameTime, w.FPS)
 
 	trace.End(t)
 }
