@@ -76,7 +76,7 @@ func (q *Queue) HasEvents() bool {
 func (q *Queue) SyncFPS(fps int) {
 	now := cpu.ReadPerformanceCounter()
 	durationBetweenPauses := now - q.LastSync
-	targetRate := int64(1000 / float64(fps) * float64(time.Millisecond))
+	targetRate := int64(float64(time.Second/time.Millisecond) / float64(fps) * float64(time.Millisecond))
 
 	duration := targetRate - durationBetweenPauses.ToNanoseconds()
 	if duration > 0 {
