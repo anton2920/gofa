@@ -124,6 +124,13 @@ func (h *HTML) Dtoa(d int64) string {
 	return stdtime.Unix(v/time.Second, v%time.Second).UTC().Format(format)
 }
 
+func (h *HTML) Dtoa1(d int64) string {
+	if d == 0 {
+		return ""
+	}
+	return h.Dtoa(d)
+}
+
 func (h *HTML) Itoa(x int) string {
 	buf := h.Arena.NewSlice(ints.Bufsize)
 	n := slices.PutInt(buf, x)
