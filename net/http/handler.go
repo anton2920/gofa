@@ -79,17 +79,17 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 		w.Headers.Set("Content-Type", `text/html; charset="UTF-8"`)
 		level := log.LevelDebug
 
-		session := session.Get(r.Cookie(cookie))
-		if len(session.Token) == 0 {
-			session = session.New(0)
+		s := session.Get(r.Cookie(cookie))
+		if len(s.Token) == 0 {
+			s = session.New(0)
 			if debug.Debug {
-				w.SetCookieUnsafe(cookie, session.Token, session.Expiry)
+				w.SetCookieUnsafe(cookie, s.Token, s.Expiry)
 			} else {
-				w.SetCookie(cookie, session.Token, session.Expiry)
+				w.SetCookie(cookie, s.Token, s.Expiry)
 			}
 		}
 
-		err := RequestHandler(w, r, session, router)
+		err := RequestHandler(w, r, s, router)
 		if err != nil {
 			if (w.StatusCode >= StatusBadRequest) && (w.StatusCode < StatusInternalServerError) {
 				level = log.LevelWarn
