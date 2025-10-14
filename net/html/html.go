@@ -15,6 +15,7 @@ import (
 	"github.com/anton2920/gofa/net/http"
 	"github.com/anton2920/gofa/session"
 	"github.com/anton2920/gofa/slices"
+	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/time"
 	"github.com/anton2920/gofa/trace"
 )
@@ -100,7 +101,21 @@ func (h *HTML) LStringColon(s string) {
 }
 
 func (h *HTML) LStringPlural(s string, n int) {
-	h.LString(s[:len(s)-bools.ToInt(n == 1)])
+	const suffix = "ies"
+
+	if !strings.EndsWith(s, suffix) {
+		h.LString(s[:len(s)-bools.ToInt(n == 1)])
+	} else {
+		buf := h.Arena.NewSlice(len(s))
+		copy(buf, s)
+
+		if n == 1 {
+			buf = buf[:len(s)-len(suffix)+1]
+			buf[len(buf)-1] = 'y'
+		}
+
+		h.LString(bytes.AsString(buf))
+	}
 }
 
 func (h *HTML) String(s string) {
@@ -173,12 +188,23 @@ func (h *HTML) DoublyIndexedName(name string, index1 int, index2 int) string {
 	return bytes.AsString(buf[:n])
 }
 
-func (h *HTML) PathWithID(path string, id database.ID) string {
+func (h *HTML) PathID(path string, id database.ID) string {
 	var n int
 
 	buf := h.Arena.NewSlice(len(path) + ints.Bufsize)
 	n += copy(buf[n:], path)
 	n += slices.PutInt(buf[n:], int(id))
+
+	return bytes.AsString(buf[:n])
+}
+
+func (h *HTML) PathIDPath(path1 string, id database.ID, path2 string) string {
+	var n int
+
+	buf := h.Arena.NewSlice(len(path1) + ints.Bufsize + len(path2))
+	n += copy(buf[n:], path1)
+	n += slices.PutInt(buf[n:], int(id))
+	n += copy(buf[n:], path2)
 
 	return bytes.AsString(buf[:n])
 }
