@@ -89,16 +89,6 @@ func (session Session) Update() {
 	SessionsLock.Unlock()
 }
 
-/* NOTE(anton2920): this function exists only so I don't have to solve name collisions of variable 'session' and this package. */
-func (session Session) GenerateToken() string {
-	return GenerateToken()
-}
-
-/* NOTE(anton2920): this function exists only so I don't have to solve name collisions of variable 'session' and this package. */
-func (session Session) New(id database.ID) Session {
-	return New(id)
-}
-
 func GenerateToken() string {
 	defer trace.End(trace.Begin(""))
 
