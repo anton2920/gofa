@@ -368,10 +368,10 @@ func (h *HTML) Error(err error, attrs ...Attributes) {
 
 	if err != nil {
 		if httpError, ok := err.(http.Error); ok {
-			h.StatusCode = httpError.StatusCode
+			h.Status = httpError.StatusCode
 			message = httpError.DisplayErrorMessage
 		} else if _, ok := err.(errors.Panic); ok {
-			h.StatusCode = http.StatusInternalServerError
+			h.Status = http.StatusInternalServerError
 			message = http.ServerDisplayErrorMessage
 		} else {
 			log.Panicf("Unsupported error type: %T (%v)", err, err)

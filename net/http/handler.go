@@ -91,7 +91,7 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 
 		err := RequestHandler(w, r, s, router)
 		if err != nil {
-			if (w.StatusCode >= StatusBadRequest) && (w.StatusCode < StatusInternalServerError) {
+			if (w.Status >= StatusBadRequest) && (w.Status < StatusInternalServerError) {
 				level = log.LevelWarn
 			} else {
 				level = log.LevelError
@@ -112,7 +112,7 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 		end := cpu.ReadPerformanceCounter()
 		elapsed := end - start
 
-		log.Logf(level, "[%21s] %7s %s -> %v (%v), %4dus", strings.And(r.RemoteAddr, r.Headers.Get("X-Forwarded-For")), r.Method, r.URL.Path, w.StatusCode, err, elapsed.ToMicroseconds())
+		log.Logf(level, "[%21s] %7s %s -> %v (%v), %4dus", strings.And(r.RemoteAddr, r.Headers.Get("X-Forwarded-For")), r.Method, r.URL.Path, w.Status, err, elapsed.ToMicroseconds())
 	}
 
 	trace.End(t)

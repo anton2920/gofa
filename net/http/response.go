@@ -13,11 +13,12 @@ import (
 )
 
 type Response struct {
-	Arena alloc.Arena
+	alloc.Arena
 
-	StatusCode Status
-	Headers    Headers
-	Body       []byte
+	Status
+	Headers
+
+	Body []byte
 }
 
 func (w *Response) DelCookie(name string) {
@@ -91,7 +92,7 @@ func (w *Response) Redirect(path string, code Status) {
 
 	w.Headers.Set("Location", bytes.AsString(pathBuf))
 	w.Body = w.Body[:0]
-	w.StatusCode = code
+	w.Status = code
 
 	trace.End(t)
 }
@@ -106,7 +107,7 @@ func (w *Response) RedirectID(prefix string, id database.ID, code Status) {
 
 	w.Headers.Set("Location", bytes.AsString(buffer[:n]))
 	w.Body = w.Body[:0]
-	w.StatusCode = code
+	w.Status = code
 
 	trace.End(t)
 }
@@ -165,7 +166,7 @@ func (w *Response) WriteHTMLString(s string) {
 func (w *Response) Reset() {
 	t := trace.Begin("")
 
-	w.StatusCode = StatusOK
+	w.Status = StatusOK
 	w.Headers.Reset()
 	w.Body = w.Body[:0]
 	w.Arena.Reset()
@@ -179,7 +180,7 @@ func FillResponses(c *Conn, ws []Response) {
 	for i := 0; i < len(ws); i++ {
 		w := &ws[i]
 
-		c.ResponseBuffer = append(c.ResponseBuffer, StatusLines[c.Version][w.StatusCode]...)
+		c.ResponseBuffer = append(c.ResponseBuffer, StatusLines[c.Version][w.Status]...)
 
 		if !w.Headers.Has("Date") {
 			dateBuf := c.DateRFC822
