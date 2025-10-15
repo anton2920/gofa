@@ -6,7 +6,6 @@ import (
 
 	"github.com/anton2920/gofa/bools"
 	"github.com/anton2920/gofa/bytes"
-	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/debug"
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/ints"
@@ -19,44 +18,6 @@ import (
 	"github.com/anton2920/gofa/time"
 	"github.com/anton2920/gofa/trace"
 )
-
-type Theme struct {
-	/* HTML tags. */
-	A        Attributes
-	Body     Attributes
-	Button   Attributes
-	Checkbox Attributes
-	Div      Attributes
-	Form     Attributes
-	H1       Attributes
-	H2       Attributes
-	H3       Attributes
-	H4       Attributes
-	H5       Attributes
-	H6       Attributes
-	Img      Attributes
-	Input    Attributes
-	LI       Attributes
-	Label    Attributes
-	OL       Attributes
-	P        Attributes
-	Select   Attributes
-	Span     Attributes
-	Textarea Attributes
-	UL       Attributes
-
-	/* Default CSS and JS. */
-	HeadLink   Attributes
-	HeadScript Attributes
-
-	/* Custom components. */
-	Error Attributes
-
-	PageSelector                Attributes
-	PageSelectorButton          Attributes
-	PageSelectorButtonActive    Attributes
-	PageSelectorButtonContainer Attributes
-}
 
 type HTML struct {
 	*http.Response
@@ -188,27 +149,6 @@ func (h *HTML) DoublyIndexedName(name string, index1 int, index2 int) string {
 	return bytes.AsString(buf[:n])
 }
 
-func (h *HTML) PathID(path string, id database.ID) string {
-	var n int
-
-	buf := h.Arena.NewSlice(len(path) + ints.Bufsize)
-	n += copy(buf[n:], path)
-	n += slices.PutInt(buf[n:], int(id))
-
-	return bytes.AsString(buf[:n])
-}
-
-func (h *HTML) PathIDPath(path1 string, id database.ID, path2 string) string {
-	var n int
-
-	buf := h.Arena.NewSlice(len(path1) + ints.Bufsize + len(path2))
-	n += copy(buf[n:], path1)
-	n += slices.PutInt(buf[n:], int(id))
-	n += copy(buf[n:], path2)
-
-	return bytes.AsString(buf[:n])
-}
-
 func (h *HTML) TagBegin(tag string, attrs ...Attributes) {
 	t := trace.Begin("")
 
@@ -269,7 +209,11 @@ func (h *HTML) Begin() {
 	h.String(`<!DOCTYPE html>`)
 	h.String(`<html lang="`)
 	h.String(l10n.Language2HTMLLang[h.Language])
-	h.String(`" data-bs-theme="light">`)
+	if h.ColorScheme > 0 {
+		h.String(`" data-bs-theme="`)
+		h.String(session.ColorScheme2String[h.ColorScheme])
+		h.String(`">`)
+	}
 }
 
 func (h *HTML) End() {
