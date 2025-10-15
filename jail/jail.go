@@ -188,28 +188,31 @@ func New(template string, wd string) (Jail, error) {
 		return Jail{}, err
 	}
 
-	prefix := make([]byte, MaxJailRctlPrefixLen)
-	n = PutRctlPrefix(prefix, name[:len(name)-1])
-	prefix = prefix[:n+1]
+	/* TODO(anton2920): replace with something that works in jail. */
+	/*
+		prefix := make([]byte, MaxJailRctlPrefixLen)
+		n = PutRctlPrefix(prefix, name[:len(name)-1])
+		prefix = prefix[:n+1]
 
-	rule := make([]byte, MaxJailRctlRuleLen)
-	rules := [...]string{
-		"maxproc:deny=16",
-		"vmemoryuse:deny=2684354560",
-		"memoryuse:deny=536870912",
-		"swapuse:deny=536870912",
-	}
-	for i := 0; i < len(rules); i++ {
-		n := PutRctlRule(rule, prefix[:len(prefix)-1], rules[i])
-
-		if err := syscall.RctlAddRule(rule[:n+1]); err != nil {
-			syscall.RctlRemoveRule(prefix)
-			syscall.JailRemove(j.ID)
-			syscall.Unmount(bytes.AsString(tmp), 0)
-			syscall.Unmount(bytes.AsString(path), 0)
-			return Jail{}, fmt.Errorf("failed to add rule %d for jail: %v", i, err)
+		rule := make([]byte, MaxJailRctlRuleLen)
+		rules := [...]string{
+			"maxproc:deny=16",
+			"vmemoryuse:deny=2684354560",
+			"memoryuse:deny=536870912",
+			"swapuse:deny=536870912",
 		}
-	}
+		for i := 0; i < len(rules); i++ {
+			n := PutRctlRule(rule, prefix[:len(prefix)-1], rules[i])
+
+			if err := syscall.RctlAddRule(rule[:n+1]); err != nil {
+				syscall.RctlRemoveRule(prefix)
+				syscall.JailRemove(j.ID)
+				syscall.Unmount(bytes.AsString(tmp), 0)
+				syscall.Unmount(bytes.AsString(path), 0)
+				return Jail{}, fmt.Errorf("failed to add rule %d for jail: %v", i, err)
+			}
+		}
+	*/
 
 	return j, nil
 }
