@@ -368,7 +368,7 @@ func (h *HTML) Error(err error, attrs ...Attributes) {
 
 	if err != nil {
 		if httpError, ok := err.(http.Error); ok {
-			h.Status = httpError.StatusCode
+			h.Status = httpError.Status
 			message = httpError.DisplayErrorMessage
 		} else if _, ok := err.(errors.Panic); ok {
 			h.Status = http.StatusInternalServerError

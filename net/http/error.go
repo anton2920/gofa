@@ -7,7 +7,7 @@ import (
 )
 
 type Error struct {
-	StatusCode          Status
+	Status
 	DisplayErrorMessage string
 	LogError            error
 }
@@ -26,7 +26,7 @@ func (err Error) Error() string {
 
 func New(status Status, format string, args ...interface{}) Error {
 	message := fmt.Sprintf(format, args...)
-	return Error{StatusCode: status, DisplayErrorMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 3)}
+	return Error{Status: status, DisplayErrorMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 3)}
 }
 
 func BadRequest(format string, args ...interface{}) Error {
@@ -58,9 +58,9 @@ func ServiceUnavailable(format string, args ...interface{}) Error {
 }
 
 func ClientError(err error) Error {
-	return Error{StatusCode: StatusBadRequest, DisplayErrorMessage: ClientDisplayErrorMessage, LogError: errors.WrapWithTrace(err, 2)}
+	return Error{Status: StatusBadRequest, DisplayErrorMessage: ClientDisplayErrorMessage, LogError: errors.WrapWithTrace(err, 2)}
 }
 
 func ServerError(err error) Error {
-	return Error{StatusCode: StatusInternalServerError, DisplayErrorMessage: ServerDisplayErrorMessage, LogError: errors.WrapWithTrace(err, 2)}
+	return Error{Status: StatusInternalServerError, DisplayErrorMessage: ServerDisplayErrorMessage, LogError: errors.WrapWithTrace(err, 2)}
 }
