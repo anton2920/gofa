@@ -6,9 +6,24 @@ import (
 	"github.com/anton2920/gofa/time"
 )
 
+type ColorScheme int32
+
 type Customization struct {
 	l10n.Language
 	time.Timezone
+	ColorScheme
+}
+
+const (
+	ColorSchemeAuto = ColorScheme(iota)
+	ColorSchemeLight
+	ColorSchemeDark
+)
+
+var ColorScheme2String = [...]string{
+	ColorSchemeAuto:  "auto",
+	ColorSchemeLight: "light",
+	ColorSchemeDark:  "dark",
 }
 
 func FillCustomizationFromRequest(vs url.Values, customization *Customization) {
@@ -17,4 +32,7 @@ func FillCustomizationFromRequest(vs url.Values, customization *Customization) {
 
 	tz, _ := vs.GetInt("Timezone")
 	customization.Timezone = time.Timezone(tz)
+
+	clr, _ := vs.GetInt("ColorScheme")
+	customization.ColorScheme = ColorScheme(clr)
 }
