@@ -97,19 +97,25 @@ func (w *Response) Redirect(path string, code Status) {
 	trace.End(t)
 }
 
-/* TODO(anton2920): remove in favor of 'h.Redirect(h.PathWithID(path, id), status)'. */
-func (w *Response) RedirectID(prefix string, id database.ID, code Status) {
-	t := trace.Begin("")
+func (w *Response) PathID(path string, id database.ID) string {
+	var n int
 
-	buffer := w.Arena.NewSlice(len(prefix) + ints.Bufsize)
-	n := copy(buffer, prefix)
-	n += slices.PutInt(buffer[n:], int(id))
+	buf := w.Arena.NewSlice(len(path) + ints.Bufsize)
+	n += copy(buf[n:], path)
+	n += slices.PutInt(buf[n:], int(id))
 
-	w.Headers.Set("Location", bytes.AsString(buffer[:n]))
-	w.Body = w.Body[:0]
-	w.Status = code
+	return bytes.AsString(buf[:n])
+}
 
-	trace.End(t)
+func (w *Response) PathIDPath(path1 string, id database.ID, path2 string) string {
+	var n int
+
+	buf := w.Arena.NewSlice(len(path1) + ints.Bufsize + len(path2))
+	n += copy(buf[n:], path1)
+	n += slices.PutInt(buf[n:], int(id))
+	n += copy(buf[n:], path2)
+
+	return bytes.AsString(buf[:n])
 }
 
 func (w *Response) Write(b []byte) (int, error) {
