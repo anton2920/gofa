@@ -290,9 +290,11 @@ func (h *HTML) ABegin(href string, attrs ...Attributes) {
 }
 
 func (h *HTML) A(href string, value string, attrs ...Attributes) {
-	h.ABegin(href, attrs...)
-	h.LString(value)
-	h.AEnd()
+	if len(href) > 0 {
+		h.ABegin(href, attrs...)
+		h.LString(value)
+		h.AEnd()
+	}
 }
 
 func (h *HTML) AEnd() {
