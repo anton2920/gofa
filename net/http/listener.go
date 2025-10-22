@@ -83,7 +83,7 @@ func (l *Listener) Accept(opts ...ConnOptions) (*Conn, error) {
 		return nil, fmt.Errorf("failed to accept incoming connection: %w", err)
 	}
 
-	rb, err := buffer.NewCircular(ints.Or(opt.RequestBufferSize, os.PageSize))
+	rb, err := buffer.NewCircular(ints.Or(opt.RequestBufferSize, 1024*os.PageSize))
 	if err != nil {
 		syscall.Close(sock)
 		trace.End(t)
