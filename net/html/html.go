@@ -209,11 +209,13 @@ func (h *HTML) Begin() {
 	h.String(`<!DOCTYPE html>`)
 	h.String(`<html lang="`)
 	h.String(l10n.Language2HTMLLang[h.Language])
+	h.String(`"`)
 	if h.ColorScheme > 0 {
-		h.String(`" data-bs-theme="`)
+		h.String(` data-bs-theme="`)
 		h.String(session.ColorScheme2String[h.ColorScheme])
-		h.String(`">`)
+		h.String(`"`)
 	}
+	h.String(`>`)
 }
 
 func (h *HTML) End() {
