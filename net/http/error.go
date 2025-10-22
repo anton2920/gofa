@@ -24,37 +24,45 @@ func (err Error) Error() string {
 	return err.LogError.Error()
 }
 
-func New(status Status, format string, args ...interface{}) Error {
+func NewError(status Status, format string, args ...interface{}) Error {
 	message := fmt.Sprintf(format, args...)
-	return Error{Status: status, DisplayErrorMessage: message, LogError: errors.WrapWithTrace(errors.New(message), 3)}
+	return Error{Status: status, DisplayErrorMessage: message, LogError: errors.WrapWithTrace(errors.Error(message), 3)}
 }
 
 func BadRequest(format string, args ...interface{}) Error {
-	return New(StatusBadRequest, format, args...)
+	return NewError(StatusBadRequest, format, args...)
 }
 
 func Unauthorized(format string, args ...interface{}) Error {
-	return New(StatusUnauthorized, format, args...)
+	return NewError(StatusUnauthorized, format, args...)
 }
 
 func Forbidden(format string, args ...interface{}) Error {
-	return New(StatusForbidden, format, args...)
+	return NewError(StatusForbidden, format, args...)
 }
 
-func NotFound(format string, args ...interface{}) Error { return New(StatusNotFound, format, args...) }
+func NotFound(format string, args ...interface{}) Error {
+	return NewError(StatusNotFound, format, args...)
+}
 
 func MethodNotAllowed(format string, args ...interface{}) Error {
-	return New(StatusMethodNotAllowed, format, args...)
+	return NewError(StatusMethodNotAllowed, format, args...)
 }
 
-func Conflict(format string, args ...interface{}) Error { return New(StatusConflict, format, args...) }
+func Conflict(format string, args ...interface{}) Error {
+	return NewError(StatusConflict, format, args...)
+}
 
 func RequestEntityTooLarge(format string, args ...interface{}) Error {
-	return New(StatusRequestEntityTooLarge, format, args...)
+	return NewError(StatusRequestEntityTooLarge, format, args...)
+}
+
+func InternalServerError(format string, args ...interface{}) Error {
+	return NewError(StatusInternalServerError, format, args...)
 }
 
 func ServiceUnavailable(format string, args ...interface{}) Error {
-	return New(StatusServiceUnavailable, format, args...)
+	return NewError(StatusServiceUnavailable, format, args...)
 }
 
 func ClientError(err error) Error {
