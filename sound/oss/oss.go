@@ -2,7 +2,6 @@ package oss
 
 import (
 	"fmt"
-	"unsafe"
 
 	"github.com/anton2920/gofa/os"
 	"github.com/anton2920/gofa/syscall"
@@ -14,16 +13,18 @@ type Device struct {
 	DeviceParameters
 }
 
-var (
-	SNDCTL_DSP_SETFMT   = syscall.IOWR('P', 5, uint(unsafe.Sizeof(int32(0))))
-	SNDCTL_DSP_CHANNELS = syscall.IOWR('P', 6, uint(unsafe.Sizeof(int32(0))))
-	SNDCTL_DSP_SPEED    = syscall.IOWR('P', 2, uint(unsafe.Sizeof(int32(0))))
+type Mode int32
+
+const (
+	ModeInput = Mode(iota)
+	ModeOutput
+	ModeInputOutput
 )
 
-func Open(path string, params ...DeviceParameters) (*Device, error) {
+func Open(path string, mode Mode, params ...DeviceParameters) (*Device, error) {
 	var d Device
 
-	fd, err := syscall.Open(path, syscall.O_WRONLY, 0)
+	fd, err := syscall.Open(path, int32(mode), 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed ot open audio device: %v", err)
 	}

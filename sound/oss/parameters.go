@@ -45,6 +45,12 @@ const (
 	FormatU24BE = 0x00080000 /* Big endian unsigned 24-bit */
 )
 
+var (
+	SNDCTL_DSP_SETFMT   = syscall.IOWR('P', 5, uint(unsafe.Sizeof(int32(0))))
+	SNDCTL_DSP_CHANNELS = syscall.IOWR('P', 6, uint(unsafe.Sizeof(int32(0))))
+	SNDCTL_DSP_SPEED    = syscall.IOWR('P', 2, uint(unsafe.Sizeof(int32(0))))
+)
+
 func MergeDeviceParameters(params ...DeviceParameters) DeviceParameters {
 	var result DeviceParameters
 
@@ -89,7 +95,7 @@ func SamplingRate(hz int) DeviceParameters {
 	return DeviceParameters{SamplingRate: hz}
 }
 
-func WaveHeader(header wave.Header) DeviceParameters {
+func ParametersFromWAVE(header wave.Header) DeviceParameters {
 	var result DeviceParameters
 
 	result.Channels = int(header.NumChannels)
