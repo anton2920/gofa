@@ -23,17 +23,16 @@ type HTML struct {
 	*http.Response
 	*http.Request
 
-	session.Session
 	Theme Theme
 }
 
-func New(w *http.Response, r *http.Request, session session.Session, theme Theme) HTML {
-	return HTML{Response: w, Request: r, Session: session, Theme: theme}
+func New(w *http.Response, r *http.Request, theme Theme) HTML {
+	return HTML{Response: w, Request: r, Theme: theme}
 }
 
 /* TODO(anton2920): check whether it allocates memory. */
 func (h *HTML) WithoutTheme() *HTML {
-	return &HTML{Response: h.Response, Request: h.Request, Session: h.Session}
+	return &HTML{Response: h.Response, Request: h.Request}
 }
 
 func (h *HTML) Bytes(bs []byte) {
