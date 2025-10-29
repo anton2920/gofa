@@ -5,11 +5,14 @@ import (
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/mime/multipart"
 	"github.com/anton2920/gofa/net/url"
+	"github.com/anton2920/gofa/session"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/trace"
 )
 
 type Request struct {
+	session.Session
+
 	Method string
 	URL    url.URL
 

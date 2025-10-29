@@ -15,15 +15,15 @@ import (
 	"github.com/anton2920/gofa/trace"
 )
 
-type Router func(*Response, *Request, session.Session) error
+type Router func(*Response, *Request) error
 
-func RequestHandler(w *Response, r *Request, session session.Session, router Router) (err error) {
+func RequestHandler(w *Response, r *Request, router Router) (err error) {
 	t := trace.Begin("")
 
 	defer func() {
 		if p := recover(); p != nil {
 			r.Error = errors.NewPanic(p)
-			err = router(w, r, session)
+			err = router(w, r)
 			trace.End(t)
 		}
 	}()
@@ -50,7 +50,7 @@ func RequestHandler(w *Response, r *Request, session session.Session, router Rou
 		}
 	}
 
-	err = router(w, r, session)
+	err = router(w, r)
 	trace.End(t)
 	return
 }
@@ -79,17 +79,18 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 		w.Headers.Set("Content-Type", `text/html; charset="UTF-8"`)
 		level := log.LevelDebug
 
-		s := session.Get(r.Cookie(cookie))
-		if len(s.Token) == 0 {
-			s = session.New(0)
+		/* TODO(anton2920): store session.Customization on client. */
+		r.Session = session.Get(r.Cookie(cookie))
+		if len(r.Token) == 0 {
+			r.Session = session.New(0)
 			if debug.Debug {
-				w.SetCookieUnsafe(cookie, s.Token, s.Expiry)
+				w.SetCookieUnsafe(cookie, r.Token, r.Expiry)
 			} else {
-				w.SetCookie(cookie, s.Token, s.Expiry)
+				w.SetCookie(cookie, r.Token, r.Expiry)
 			}
 		}
 
-		err := RequestHandler(w, r, s, router)
+		err := RequestHandler(w, r, router)
 		if err != nil {
 			if (w.Status >= StatusBadRequest) && (w.Status < StatusInternalServerError) {
 				level = log.LevelWarn
