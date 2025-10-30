@@ -140,21 +140,22 @@ func (vs *Values) Get(key string) string {
 }
 
 func (vs Values) GetInt(key string) (int, error) {
-	t := trace.Begin("")
-
-	n, err := strconv.Atoi(vs.Get(key))
-
-	trace.End(t)
-	return n, err
+	n, err := vs.GetInt64(key)
+	return int(n), err
 }
 
 func (vs Values) GetInt32(key string) (int32, error) {
+	n, err := vs.GetInt64(key)
+	return int32(n), err
+}
+
+func (vs Values) GetInt64(key string) (int64, error) {
 	t := trace.Begin("")
 
-	n, err := vs.GetInt(key)
+	n, err := strconv.ParseInt(vs.Get(key), 10, 64)
 
 	trace.End(t)
-	return int32(n), err
+	return n, err
 }
 
 func (vs Values) GetID(key string) (database.ID, error) {

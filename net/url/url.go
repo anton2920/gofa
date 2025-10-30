@@ -3,7 +3,7 @@ package url
 import "github.com/anton2920/gofa/trace"
 
 type URL struct {
-	Path     string
+	Path     Path
 	RawQuery string
 
 	Query Values
