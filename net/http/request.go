@@ -106,12 +106,12 @@ forRequests:
 
 		queryBegin := strings.FindChar(request[pos:pos+uriEnd], '?')
 		if queryBegin != -1 {
-			r.URL.Path = c.Arena.CopyString(request[pos : pos+queryBegin])
+			r.URL.Path = url.Path(c.Arena.CopyString(request[pos : pos+queryBegin]))
 			r.URL.RawQuery = c.Arena.CopyString(request[pos+queryBegin+1 : pos+uriEnd])
 			pos += len(r.URL.Path) + len(r.URL.RawQuery) + 2
 			lineEnd -= len(r.URL.Path) + len(r.URL.RawQuery) + 2
 		} else {
-			r.URL.Path = c.Arena.CopyString(request[pos : pos+uriEnd])
+			r.URL.Path = url.Path(c.Arena.CopyString(request[pos : pos+uriEnd]))
 			r.URL.RawQuery = ""
 			pos += len(r.URL.Path) + 1
 			lineEnd -= len(r.URL.Path) + 1
