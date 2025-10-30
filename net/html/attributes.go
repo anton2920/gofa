@@ -160,12 +160,16 @@ func Class(class string) Attributes {
 	return Attributes{Class: class}
 }
 
+func Disabled(disabled bool) Attributes {
+	return Attributes{Disabled: disabled}
+}
+
 func Enctype(enctype string) Attributes {
 	return Attributes{Enctype: enctype}
 }
 
-func FormNoValidate() Attributes {
-	return Attributes{FormNoValidate: true}
+func FormNoValidate(formNoValidate bool) Attributes {
+	return Attributes{FormNoValidate: formNoValidate}
 }
 
 func MaxLength(n int) Attributes {
@@ -180,8 +184,12 @@ func Name(name string) Attributes {
 	return Attributes{Name: name}
 }
 
-func Required() Attributes {
-	return Attributes{Required: true}
+func Readonly(readonly bool) Attributes {
+	return Attributes{Readonly: readonly}
+}
+
+func Required(required bool) Attributes {
+	return Attributes{Required: required}
 }
 
 func Style(s string) Attributes {
