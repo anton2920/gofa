@@ -3,6 +3,7 @@ package json
 import (
 	"bytes"
 
+	"github.com/anton2920/gofa/encoding"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/trace"
 )
@@ -10,6 +11,8 @@ import (
 type Deserializer struct {
 	Error error
 }
+
+var _ encoding.Deserializer = new(Deserializer)
 
 func UnescapeJSONString(s string) string {
 	t := trace.Begin("")
@@ -37,102 +40,87 @@ func UnescapeJSONString(s string) string {
 	return buf.String()
 }
 
-func (d *Deserializer) Init(buf []byte) {
-	t := trace.Begin("")
-
-	trace.End(t)
+func (d *Deserializer) Begin() bool {
+	return true
 }
 
-func (d *Deserializer) GetObjectBegin() bool {
-	t := trace.Begin("")
-
-	trace.End(t)
-	return false
+func (d *Deserializer) End() bool {
+	return true
 }
 
-func (d *Deserializer) GetObjectEnd() bool {
+func (d *Deserializer) ObjectBegin() bool {
 	t := trace.Begin("")
 
 	trace.End(t)
 	return false
 }
 
-func (d *Deserializer) GetArrayBegin() bool {
+func (d *Deserializer) Key(key *string) bool {
 	t := trace.Begin("")
 
 	trace.End(t)
 	return false
 }
 
-func (d *Deserializer) GetArrayEnd() bool {
+func (d *Deserializer) ObjectEnd() bool {
 	t := trace.Begin("")
 
 	trace.End(t)
 	return false
 }
 
-func (d *Deserializer) GetSliceBegin(n *int) bool {
+func (d *Deserializer) ArrayBegin() bool {
 	t := trace.Begin("")
 
 	trace.End(t)
 	return false
 }
 
-func (d *Deserializer) GetSliceEnd() bool {
-	return d.GetArrayEnd()
-}
-
-func (d *Deserializer) GetComma() bool {
+func (d *Deserializer) Next() bool {
 	t := trace.Begin("")
 
 	trace.End(t)
 	return false
 }
 
-func (d *Deserializer) GetKey(key *string) bool {
+func (d *Deserializer) ArrayEnd() bool {
 	t := trace.Begin("")
 
 	trace.End(t)
 	return false
 }
 
-func (d *Deserializer) GetString(s *string) bool {
+func (d *Deserializer) Bool(b *bool) bool {
 	t := trace.Begin("")
 
 	trace.End(t)
 	return false
 }
 
-func (d *Deserializer) GetInt(i *int) bool {
+func (d *Deserializer) Int32(i *int32) bool {
 	t := trace.Begin("")
 
 	trace.End(t)
 	return false
 }
 
-func (d *Deserializer) GetInt32(i *int32) bool {
+func (d *Deserializer) Uint32(i *uint32) bool {
 	t := trace.Begin("")
 
 	trace.End(t)
 	return false
 }
 
-func (d *Deserializer) GetUint32(i *uint32) bool {
+func (d *Deserializer) Int64(i *int64) bool {
 	t := trace.Begin("")
 
 	trace.End(t)
 	return false
 }
 
-func (d *Deserializer) GetInt64(i *int64) bool {
+func (d *Deserializer) String(s *string) bool {
 	t := trace.Begin("")
 
 	trace.End(t)
 	return false
-}
-
-func (d *Deserializer) Reset() {
-	t := trace.Begin("")
-
-	trace.End(t)
 }
