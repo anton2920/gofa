@@ -44,24 +44,27 @@ func (p *Path) Match(format string, args ...interface{}) bool {
 		path = path[len(match):]
 		format = format[len(match):]
 
-		slashP := strings.FindChar(path, '/')
-		if slashP == -1 {
-			slashP = len(path)
+		/* NOTE(anton2920): this assumes that format strings are /%[a-z]/. */
+		nextF := percent - len(match) + 2
+
+		var nextP int
+		if nextF >= len(format) {
+			nextP = len(path)
+		} else {
+			nextP = strings.FindChar(path, format[nextF])
+			if nextP == -1 {
+				nextP = len(path)
+			}
 		}
 
-		slashF := strings.FindChar(format, '/')
-		if slashF == -1 {
-			slashF = len(format)
-		}
-
-		n, err := fmt.Sscanf(path[:slashP], format[:slashF], args[narg:]...)
+		n, err := fmt.Sscanf(path[:nextP], format[:nextF], args[narg:]...)
 		if (n == 0) && (err != nil) {
 			trace.End(t)
 			return false
 		}
 		narg += n
 
-		path = path[slashP:]
-		format = format[2:]
+		path = path[nextP:]
+		format = format[nextF:]
 	}
 }
