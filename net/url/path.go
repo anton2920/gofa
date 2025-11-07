@@ -53,7 +53,10 @@ func (p *Path) Match(format string, args ...interface{}) bool {
 		} else {
 			nextP = strings.FindChar(path, format[nextF])
 			if nextP == -1 {
-				nextP = len(path)
+				nextP = strings.FindChar(path, '/')
+				if nextP == -1 {
+					nextP = len(path)
+				}
 			}
 		}
 
