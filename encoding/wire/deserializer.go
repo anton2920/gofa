@@ -25,7 +25,7 @@ func (d *Deserializer) Begin(expectedVersion byte) bool {
 	t := trace.Begin("")
 
 	var actualVersion byte
-	if d.GetByte(&actualVersion) {
+	if d.Byte(&actualVersion) {
 		if expectedVersion != actualVersion {
 			d.Error = fmt.Errorf("expected version 0x%X, got 0x%X", expectedVersion, actualVersion)
 		}
@@ -35,7 +35,7 @@ func (d *Deserializer) Begin(expectedVersion byte) bool {
 	return d.Error == nil
 }
 
-func (d *Deserializer) GetType(expectedType ValueType) bool {
+func (d *Deserializer) Type(expectedType ValueType) bool {
 	t := trace.Begin("")
 
 	if d.Error != nil {
@@ -53,10 +53,10 @@ func (d *Deserializer) GetType(expectedType ValueType) bool {
 	return d.Error == nil
 }
 
-func (d *Deserializer) GetByte(b *byte) bool {
+func (d *Deserializer) Byte(b *byte) bool {
 	t := trace.Begin("")
 
-	if d.GetType(ValueTypeByte) {
+	if d.Type(ValueTypeByte) {
 		*b = d.Buffer[d.Pos]
 		d.Pos += int(unsafe.Sizeof(*b))
 
@@ -68,19 +68,19 @@ func (d *Deserializer) GetByte(b *byte) bool {
 	return false
 }
 
-func (d *Deserializer) GetInt8(i *int8) bool {
+func (d *Deserializer) Int8(i *int8) bool {
 	t := trace.Begin("")
 
-	ok := d.GetByte((*byte)(unsafe.Pointer(i)))
+	ok := d.Byte((*byte)(unsafe.Pointer(i)))
 
 	trace.End(t)
 	return ok
 }
 
-func (d *Deserializer) GetInt32(i *int32) bool {
+func (d *Deserializer) Int32(i *int32) bool {
 	t := trace.Begin("")
 
-	if d.GetType(ValueTypeInt32) {
+	if d.Type(ValueTypeInt32) {
 		*i = int32(d.Buffer[d.Pos+0]) << 0
 		*i |= int32(d.Buffer[d.Pos+1]) << 8
 		*i |= int32(d.Buffer[d.Pos+2]) << 16
@@ -95,21 +95,21 @@ func (d *Deserializer) GetInt32(i *int32) bool {
 	return false
 }
 
-func (d *Deserializer) GetFlags(f *bits.Flags) bool {
+func (d *Deserializer) Flags(f *bits.Flags) bool {
 	t := trace.Begin("")
 
-	ok := d.GetInt32((*int32)(unsafe.Pointer(f)))
+	ok := d.Int32((*int32)(unsafe.Pointer(f)))
 
 	trace.End(t)
 	return ok
 }
 
-func (d *Deserializer) GetString(s *string) bool {
+func (d *Deserializer) String(s *string) bool {
 	t := trace.Begin("")
 
-	if d.GetType(ValueTypeString) {
+	if d.Type(ValueTypeString) {
 		var l int32
-		if d.GetInt32(&l) {
+		if d.Int32(&l) {
 			/* TODO(anton2920): this allocates memory! */
 			*s = string(d.Buffer[d.Pos : d.Pos+int(l)])
 			d.Pos += int(l)
@@ -123,11 +123,11 @@ func (d *Deserializer) GetString(s *string) bool {
 	return false
 }
 
-func (d *Deserializer) GetSliceBegin(l *int32) bool {
+func (d *Deserializer) SliceBegin(l *int32) bool {
 	t := trace.Begin("")
 
-	if d.GetType(ValueTypeSlice) {
-		ok := d.GetInt32(l)
+	if d.Type(ValueTypeSlice) {
+		ok := d.Int32(l)
 
 		trace.End(t)
 		return ok
