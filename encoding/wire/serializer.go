@@ -1,60 +1,27 @@
 package wire
 
-import (
-	"github.com/anton2920/gofa/bits"
-	"github.com/anton2920/gofa/trace"
-)
+import "github.com/anton2920/gofa/trace"
 
 type Serializer struct {
 	Buffer []byte
 }
 
-func (s *Serializer) Begin(version byte) {
+func (s *Serializer) Begin(version int) {
 	t := trace.Begin("")
 
-	s.Byte(version)
+	s.Int32(int32(version))
 
 	trace.End(t)
 }
 
-func (s *Serializer) Type(typ ValueType) {
-	t := trace.Begin("")
-
-	s.Buffer = append(s.Buffer, byte(typ))
-
-	trace.End(t)
+func (s *Serializer) Int32(n int32) {
+	s.Uint32(uint32(n))
 }
 
-func (s *Serializer) Byte(b byte) {
+func (s *Serializer) Uint32(n uint32) {
 	t := trace.Begin("")
 
-	s.Type(ValueTypeByte)
-	s.Buffer = append(s.Buffer, b)
-
-	trace.End(t)
-}
-
-func (s *Serializer) Int8(i int8) {
-	t := trace.Begin("")
-
-	s.Byte(byte(i))
-
-	trace.End(t)
-}
-
-func (s *Serializer) Int32(i int32) {
-	t := trace.Begin("")
-
-	s.Type(ValueTypeInt32)
-	s.Buffer = append(s.Buffer, byte((i>>0)&0xFF), byte((i>>8)&0xFF), byte((i>>16)&0xFF), byte((i>>24)&0xFF))
-
-	trace.End(t)
-}
-
-func (s *Serializer) Flags(f bits.Flags) {
-	t := trace.Begin("")
-
-	s.Int32(int32(f))
+	s.Buffer = append(s.Buffer, byte((n>>0)&0xFF), byte((n>>8)&0xFF), byte((n>>16)&0xFF), byte((n>>24)&0xFF))
 
 	trace.End(t)
 }
@@ -62,18 +29,8 @@ func (s *Serializer) Flags(f bits.Flags) {
 func (s *Serializer) String(str string) {
 	t := trace.Begin("")
 
-	s.Type(ValueTypeString)
 	s.Int32(int32(len(str)))
 	s.Buffer = append(s.Buffer, str...)
-
-	trace.End(t)
-}
-
-func (s *Serializer) SliceBegin(l int) {
-	t := trace.Begin("")
-
-	s.Type(ValueTypeSlice)
-	s.Int32(int32(l))
 
 	trace.End(t)
 }
