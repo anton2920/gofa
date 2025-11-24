@@ -38,7 +38,7 @@ type Event struct {
 	Fflags     uint32
 	Data       int64
 	UserData   unsafe.Pointer
-	_          [4]uint
+	_          [4]uint64
 }
 
 func (e *Event) EndOfFile() bool {
@@ -64,7 +64,7 @@ func platformNewEventQueue(q *Queue) error {
 	return nil
 }
 
-func platformQueueAddSocket(q *Queue, l int32, request Request, trigger Trigger, userData unsafe.Pointer) error {
+func platformQueueAddSocket(q *Queue, s int32, request Request, trigger Trigger, userData unsafe.Pointer) error {
 	var flags uint16 = syscall.EV_ADD
 	if trigger == TriggerEdge {
 		flags |= syscall.EV_CLEAR
@@ -72,10 +72,10 @@ func platformQueueAddSocket(q *Queue, l int32, request Request, trigger Trigger,
 
 	events := make([]syscall.Kevent_t, 0, 2)
 	if (request & RequestRead) == RequestRead {
-		events = append(events, syscall.Kevent_t{Ident: uintptr(l), Filter: syscall.EVFILT_READ, Flags: flags, Udata: userData})
+		events = append(events, syscall.Kevent_t{Ident: uintptr(s), Filter: syscall.EVFILT_READ, Flags: flags, Udata: userData})
 	}
 	if (request & RequestWrite) == RequestWrite {
-		events = append(events, syscall.Kevent_t{Ident: uintptr(l), Filter: syscall.EVFILT_WRITE, Flags: flags, Udata: userData})
+		events = append(events, syscall.Kevent_t{Ident: uintptr(s), Filter: syscall.EVFILT_WRITE, Flags: flags, Udata: userData})
 	}
 
 	if _, err := syscall.Kevent(q.kq, events, nil, nil); err != nil {
