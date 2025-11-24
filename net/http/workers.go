@@ -19,9 +19,16 @@ func Worker(q *event.Queue, router Router) {
 	rs := make([]Request, Pipeline)
 	ws := make([]Response, Pipeline)
 
+	getEvents := func(q *event.Queue, events []event.Event) (int, error) {
+		t := trace.Begin("github.com/anton2920/gofa/event.(*Queue).GetEvents")
+		n, err := q.GetEvents(events)
+		trace.End(t)
+		return n, err
+	}
+
 	events := make([]event.Event, 64)
 	for {
-		n, err := q.GetEvents(events)
+		n, err := getEvents(q, events)
 		if err != nil {
 			log.Errorf("Failed to read events: %v", err)
 		}

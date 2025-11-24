@@ -180,6 +180,8 @@ func (w *Response) Reset() {
 	trace.End(t)
 }
 
+var dateBuf = []byte("Mon, 24 Nov 2025 17:49:23 GMT")
+
 func FillResponses(c *Conn, ws []Response) {
 	t := trace.Begin("")
 
@@ -189,8 +191,8 @@ func FillResponses(c *Conn, ws []Response) {
 		c.ResponseBuffer = append(c.ResponseBuffer, StatusLines[c.Version][w.Status]...)
 
 		if !w.Headers.Has("Date") {
-			dateBuf := make([]byte, time.RFC822Len)
-			time.PutTmRFC822(dateBuf, time.ToTm(time.Now()))
+			//dateBuf := make([]byte, time.RFC822Len)
+			//time.PutTmRFC822(dateBuf, time.ToTm(time.Now()))
 			c.ResponseBuffer = append(c.ResponseBuffer, "Date: "...)
 			c.ResponseBuffer = append(c.ResponseBuffer, dateBuf...)
 			c.ResponseBuffer = append(c.ResponseBuffer, "\r\n"...)
