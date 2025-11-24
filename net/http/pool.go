@@ -44,8 +44,12 @@ func (p *ConnPool) Get() (*Conn, error) {
 	p.Head = item.Next
 
 	p.Unlock()
+
+	conn := &item.Conn
+	conn.Closed = false
+
 	trace.End(t)
-	return &item.Conn, nil
+	return conn, nil
 }
 
 func (p *ConnPool) Put(conn *Conn) {
@@ -56,10 +60,6 @@ func (p *ConnPool) Put(conn *Conn) {
 		trace.End(t)
 		return
 	}
-
-	/* TODO(anton2920): check if this operation is atomic. */
-	*conn = Conn{Check: conn.Check}
-
 	p.Lock()
 
 	item := (*ConnPoolItem)(unsafe.Pointer(conn))

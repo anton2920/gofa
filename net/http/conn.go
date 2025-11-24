@@ -7,6 +7,7 @@ import (
 	"github.com/anton2920/gofa/alloc"
 	"github.com/anton2920/gofa/bools"
 	"github.com/anton2920/gofa/buffer"
+	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/os"
 	"github.com/anton2920/gofa/pointers"
@@ -79,8 +80,12 @@ func (c *Conn) Close() error {
 		return nil
 	}
 
+	c.CloseAfterWrite = false
+	c.ResponseBuffer = nil
 	c.RequestBuffer.Free()
+	c.ResponsePos = 0
 	c.Arena.Reset()
+	c.Version = 0
 	c.Closed = true
 
 	err := os.Close(c.Socket)
@@ -95,13 +100,12 @@ func (c *Conn) ReadRequests(rs []Request) (int, error) {
 	t := trace.Begin("")
 
 	buf := c.RequestBuffer.RemainingSlice()
-	if (c.Closed) || (len(rs) == 0) {
+	if c.Closed {
 		trace.End(t)
 		return 0, nil
-	} else if (len(buf) == 0) && (len(rs) > 0) {
-		rs[0].Error = RequestEntityTooLarge("no space left in buffer")
+	} else if len(buf) == 0 {
 		trace.End(t)
-		return 1, nil
+		return -1, errors.New("no space left in buffer")
 	}
 
 	n, err := os.Read(c.Socket, buf)

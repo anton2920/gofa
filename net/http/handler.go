@@ -126,7 +126,7 @@ func Serve(c *Conn, router Router) {
 	ws := make([]Response, Pipeline)
 
 	for !c.Closed {
-		n, err := c.ReadRequests(rs)
+		n, err := c.ReadRequests(nil)
 		if err != nil {
 			if n == 0 {
 				break
@@ -135,11 +135,14 @@ func Serve(c *Conn, router Router) {
 			break
 		}
 
-		if n > 0 {
+		for {
+			n := ParseRequests(c, rs)
+			if n == 0 {
+				break
+			}
 			RequestsHandler(ws[:n], rs[:n], router)
 
-			n, err = c.WriteResponses(ws[:n])
-			if err != nil {
+			if _, err = c.WriteResponses(ws[:n]); err != nil {
 				log.Errorf("Failed to write HTTP responses: %v", err)
 				break
 			}

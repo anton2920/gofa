@@ -44,8 +44,7 @@ func Worker(q *event.Queue, router Router) {
 
 			switch e.Type {
 			case event.TypeRead:
-				n, err = c.ReadRequests(rs)
-				if err != nil {
+				if _, err = c.ReadRequests(nil); err != nil {
 					if err.(syscall.Error).Errno != syscall.EAGAIN {
 						continue
 					}
@@ -53,7 +52,11 @@ func Worker(q *event.Queue, router Router) {
 					c.Close()
 					continue
 				}
-				if n > 0 {
+				for {
+					n := ParseRequests(c, rs)
+					if n == 0 {
+						break
+					}
 					RequestsHandler(ws[:n], rs[:n], router)
 					FillResponses(c, ws[:n])
 				}
@@ -102,6 +105,7 @@ func (ws *Workers) Add(c *Conn) error {
 		}
 	}
 
+	/* TODO(anton2920): check if TriggerEdge is sufficient. */
 	err = ws.Queues[ws.Current].AddSocket(int32(c.Socket), event.RequestRead|event.RequestWrite, event.TriggerEdge, c.Pointer())
 	ws.Current = (ws.Current + 1) % len(ws.Queues)
 
