@@ -118,9 +118,9 @@ func Exit(status int32) {
 	RawSyscall(SYS_exit, uintptr(status), 0, 0)
 }
 
-func Fcntl(fd, cmd, arg int32) error {
-	_, _, errno := Syscall(SYS_fcntl, uintptr(fd), uintptr(cmd), uintptr(arg))
-	return NewError("fcntl", errno)
+func Fcntl(fd, cmd int32, arg int32) (int32, error) {
+	r1, _, errno := Syscall(SYS_fcntl, uintptr(fd), uintptr(cmd), uintptr(arg))
+	return int32(r1), NewError("fcntl", errno)
 }
 
 func Fstat(fd int32, sb *Stat_t) error {

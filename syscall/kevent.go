@@ -9,7 +9,7 @@ type Kevent_t struct {
 	Fflags uint32
 	Data   int64
 	Udata  unsafe.Pointer
-	Ext    [4]uint
+	Ext    [4]uint64
 }
 
 const (
