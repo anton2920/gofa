@@ -118,7 +118,10 @@ func (c *Conn) ReadRequests(rs []Request) (int, error) {
 	}
 	c.RequestBuffer.Produce(int(n))
 
-	nrs := ParseRequests(c, rs)
+	var nrs int
+	if len(rs) > 0 {
+		nrs = ParseRequests(c, rs)
+	}
 
 	trace.End(t)
 	return nrs, nil
