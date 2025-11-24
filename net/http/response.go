@@ -189,11 +189,8 @@ func FillResponses(c *Conn, ws []Response) {
 		c.ResponseBuffer = append(c.ResponseBuffer, StatusLines[c.Version][w.Status]...)
 
 		if !w.Headers.Has("Date") {
-			dateBuf := c.DateRFC822
-			if dateBuf == nil {
-				dateBuf = make([]byte, time.RFC822Len)
-				time.PutTmRFC822(dateBuf, time.ToTm(time.Now()))
-			}
+			dateBuf := make([]byte, time.RFC822Len)
+			time.PutTmRFC822(dateBuf, time.ToTm(time.Now()))
 			c.ResponseBuffer = append(c.ResponseBuffer, "Date: "...)
 			c.ResponseBuffer = append(c.ResponseBuffer, dateBuf...)
 			c.ResponseBuffer = append(c.ResponseBuffer, "\r\n"...)

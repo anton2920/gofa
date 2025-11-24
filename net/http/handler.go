@@ -17,6 +17,8 @@ import (
 
 type Router func(*Response, *Request) error
 
+const Pipeline = 64
+
 func RequestHandler(w *Response, r *Request, router Router) (err error) {
 	t := trace.Begin("")
 
@@ -113,17 +115,15 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 		end := cpu.ReadPerformanceCounter()
 		elapsed := end - start
 
-		log.Logf(level, "[%21s] %7s %s -> %v (%v), %4dus", strings.And(r.RemoteAddr, r.Headers.Get("X-Forwarded-For")), r.Method, r.URL.Path, w.Status, err, elapsed.ToMicroseconds())
+		log.Logf(level, "[%21s] %7s %s -> %v (%v), %4dus", strings.Or(r.Headers.Get("X-Forwarded-For"), r.RemoteAddr), r.Method, r.URL.Path, w.Status, err, elapsed.ToMicroseconds())
 	}
 
 	trace.End(t)
 }
 
-func ConnectionHandler(c *Conn, router Router) {
-	const pipeline = 64
-
-	rs := make([]Request, pipeline)
-	ws := make([]Response, pipeline)
+func Serve(c *Conn, router Router) {
+	rs := make([]Request, Pipeline)
+	ws := make([]Response, Pipeline)
 
 	for !c.Closed {
 		n, err := c.ReadRequests(rs)
@@ -146,9 +146,5 @@ func ConnectionHandler(c *Conn, router Router) {
 		}
 	}
 
-	if err := c.Close(); err != nil {
-		log.Warnf("Failed to close HTTP connection: %v", err)
-	}
-
-	c.ConnPool.Put(c)
+	c.Close()
 }

@@ -5,9 +5,11 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/alloc"
+	"github.com/anton2920/gofa/bools"
 	"github.com/anton2920/gofa/buffer"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/os"
+	"github.com/anton2920/gofa/pointers"
 	"github.com/anton2920/gofa/trace"
 )
 
@@ -31,25 +33,23 @@ var Version2String = [...]string{
 }
 
 type Conn struct {
-	/* NOTE(anton2920): Check must be the same as the last pointer's bit, if context is in use. */
-	Check int32
-	Version
-
 	*ConnPool
 	alloc.Arena
 
+	Version
 	Socket     os.Handle
 	RemoteAddr string
 
 	RequestBuffer *buffer.Circular
-
-	DateRFC822 []byte
 
 	ResponseBuffer []byte
 	ResponsePos    int
 
 	CloseAfterWrite bool
 	Closed          bool
+
+	/* NOTE(anton2920): Check must be the same as the last pointer's bit, if context is in use. */
+	Check bool
 }
 
 type ConnOptions struct {
@@ -84,6 +84,8 @@ func (c *Conn) Close() error {
 	c.Closed = true
 
 	err := os.Close(c.Socket)
+	c.Check = !c.Check
+	c.ConnPool.Put(c)
 
 	trace.End(t)
 	return err
@@ -112,10 +114,10 @@ func (c *Conn) ReadRequests(rs []Request) (int, error) {
 	}
 	c.RequestBuffer.Produce(int(n))
 
-	reqs := ParseRequests(c, rs)
+	nrs := ParseRequests(c, rs)
 
 	trace.End(t)
-	return reqs, nil
+	return nrs, nil
 }
 
 func (c *Conn) WriteResponses(ws []Response) (int, error) {
@@ -127,21 +129,22 @@ func (c *Conn) WriteResponses(ws []Response) (int, error) {
 		trace.End(t)
 		panic("write to a closed connection")
 	}
-
 	FillResponses(c, ws)
 
-	n, err := os.Write(c.Socket, c.ResponseBuffer[c.ResponsePos:])
-	if err != nil {
-		trace.End(t)
-		return int(n), err
-	}
-	c.ResponsePos += int(n)
+	if len(c.ResponseBuffer[c.ResponsePos:]) > 0 {
+		n, err := os.Write(c.Socket, c.ResponseBuffer[c.ResponsePos:])
+		if err != nil {
+			trace.End(t)
+			return int(n), err
+		}
+		c.ResponsePos += int(n)
 
-	if c.ResponsePos == len(c.ResponseBuffer) {
-		c.ResponseBuffer = c.ResponseBuffer[:0]
-		c.ResponsePos = 0
-		if c.CloseAfterWrite {
-			err = c.Close()
+		if c.ResponsePos == len(c.ResponseBuffer) {
+			c.ResponseBuffer = c.ResponseBuffer[:0]
+			c.ResponsePos = 0
+			if c.CloseAfterWrite {
+				err = c.Close()
+			}
 		}
 	}
 
@@ -149,12 +152,11 @@ func (c *Conn) WriteResponses(ws []Response) (int, error) {
 	return len(ws), err
 }
 
-//go:norace
 func (c *Conn) Pointer() unsafe.Pointer {
-	return unsafe.Pointer(uintptr(unsafe.Pointer(c)) | uintptr(c.Check))
+	return pointers.Add(unsafe.Pointer(c), bools.ToInt(c.Check))
 }
 
-func GetConnFromPointer(ptr unsafe.Pointer) (*Conn, bool) {
+func ConnFromPointer(ptr unsafe.Pointer) (*Conn, bool) {
 	if ptr == nil {
 		return nil, false
 	}
@@ -162,5 +164,9 @@ func GetConnFromPointer(ptr unsafe.Pointer) (*Conn, bool) {
 	check := uintptr(ptr) & 0x1
 	c := (*Conn)(unsafe.Pointer(uintptr(ptr) - check))
 
-	return c, c.Check == int32(check)
+	return c, c.Check == ints.ToBool(int(check))
+}
+
+func RequestBufferSize(size int) ConnOptions {
+	return ConnOptions{RequestBufferSize: size}
 }

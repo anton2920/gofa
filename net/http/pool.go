@@ -56,7 +56,9 @@ func (p *ConnPool) Put(conn *Conn) {
 		trace.End(t)
 		return
 	}
-	*conn = Conn{}
+
+	/* TODO(anton2920): check if this operation is atomic. */
+	*conn = Conn{Check: conn.Check}
 
 	p.Lock()
 
