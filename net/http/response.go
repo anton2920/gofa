@@ -118,6 +118,16 @@ func (w *Response) PathIDPath(path1 string, id database.ID, path2 string) string
 	return bytes.AsString(buf[:n])
 }
 
+func (w *Response) PathPath(path1 string, path2 string) string {
+	var n int
+
+	buf := w.Arena.NewSlice(len(path1) + len(path2))
+	n += copy(buf[n:], path1)
+	n += copy(buf[n:], path2)
+
+	return bytes.AsString(buf[:n])
+}
+
 func (w *Response) Write(b []byte) (int, error) {
 	w.Body = append(w.Body, b...)
 	return len(b), nil
