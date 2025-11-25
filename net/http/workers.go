@@ -53,11 +53,10 @@ func Worker(q *event.Queue, router Router) {
 			case event.TypeRead:
 				if _, err = c.ReadRequests(nil); err != nil {
 					if err.(syscall.Error).Errno != syscall.EAGAIN {
+						log.Errorf("Failed to read HTTP requests: %v", err)
+						c.Close()
 						continue
 					}
-					log.Errorf("Failed to read HTTP requests: %v", err)
-					c.Close()
-					continue
 				}
 				for {
 					n := ParseRequests(c, rs)
@@ -70,9 +69,11 @@ func Worker(q *event.Queue, router Router) {
 				fallthrough
 			case event.TypeWrite:
 				if _, err := c.WriteResponses(nil); err != nil {
-					log.Errorf("Failed to write HTTP responses: %v", err)
-					c.Close()
-					continue
+					if err.(syscall.Error).Errno != syscall.EAGAIN {
+						log.Errorf("Failed to write HTTP responses: %v", err)
+						c.Close()
+						continue
+					}
 				}
 			}
 		}
