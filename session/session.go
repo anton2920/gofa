@@ -67,7 +67,7 @@ func Get(token string) Session {
 	session.Expiry = now + time.Week
 
 	SessionsLock.Lock()
-	Sessions[token] = session
+	Sessions[session.Token] = session
 	SessionsLock.Unlock()
 
 	return session
