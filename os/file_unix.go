@@ -6,7 +6,6 @@ package os
 import (
 	"github.com/anton2920/gofa/os/unix"
 	"github.com/anton2920/gofa/syscall"
-	"github.com/anton2920/gofa/trace"
 )
 
 /* TODO(anton2920): rewrite using 'unix' package. */
@@ -20,19 +19,9 @@ func Close(handle Handle) error {
 }
 
 func Read(handle Handle, buf []byte) (int64, error) {
-	t := trace.Begin("")
-
-	n, err := unix.Read(int32(handle), buf)
-
-	trace.End(t)
-	return n, err
+	return unix.Read(int32(handle), buf)
 }
 
 func Write(handle Handle, buf []byte) (int64, error) {
-	t := trace.Begin("")
-
-	n, err := unix.Write(int32(handle), buf)
-
-	trace.End(t)
-	return n, err
+	return unix.Write(int32(handle), buf)
 }
