@@ -1,8 +1,11 @@
 package alloc
 
 import (
+	"unsafe"
+
 	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/ints"
+	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/trace"
 )
 
@@ -43,6 +46,14 @@ func (a *Arena) CopyString(s string) string {
 
 	trace.End(t)
 	return bytes.AsString(ret)
+}
+
+func (a *Arena) EscapeString(s string) string {
+	bs := strings.AsBytes(s)
+	if (uintptr(unsafe.Pointer(&bs[0])) >= uintptr(unsafe.Pointer(&a.Buffer[0]))) && (uintptr(unsafe.Pointer(&bs[0])) <= uintptr(unsafe.Pointer(&a.Buffer[a.Used-1]))) {
+		return string(bs)
+	}
+	return s
 }
 
 func (a *Arena) Reset() {
