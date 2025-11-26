@@ -23,6 +23,8 @@ type HTML struct {
 	*http.Response
 	*http.Request
 
+	withoutTheme *HTML
+
 	Theme Theme
 }
 
@@ -30,9 +32,13 @@ func New(w *http.Response, r *http.Request, theme Theme) HTML {
 	return HTML{Response: w, Request: r, Theme: theme}
 }
 
-/* TODO(anton2920): check whether it allocates memory. */
 func (h *HTML) WithoutTheme() *HTML {
-	return &HTML{Response: h.Response, Request: h.Request}
+	if h.withoutTheme == nil {
+		h.withoutTheme = new(HTML)
+		h.withoutTheme.Response = h.Response
+		h.withoutTheme.Request = h.Request
+	}
+	return h.withoutTheme
 }
 
 func (h *HTML) Bytes(bs []byte) {
@@ -66,7 +72,7 @@ func (h *HTML) LStringPlural(s string, n int) {
 	if !strings.EndsWith(s, suffix) {
 		h.LString(s[:len(s)-bools.ToInt(n == 1)])
 	} else {
-		buf := h.Arena.NewSlice(len(s))
+		buf := h.Response.Arena.NewSlice(len(s))
 		copy(buf, s)
 
 		if n == 1 {
@@ -107,7 +113,7 @@ func (h *HTML) Dtoa1(d int64) string {
 }
 
 func (h *HTML) Itoa(x int) string {
-	buf := h.Arena.NewSlice(ints.Bufsize)
+	buf := h.Response.Arena.NewSlice(ints.Bufsize)
 	n := slices.PutInt(buf, x)
 	return bytes.AsString(buf[:n])
 }
@@ -129,7 +135,7 @@ func (h *HTML) Ttoa(t int64) string {
 func (h *HTML) IndexedName(name string, index int) string {
 	var n int
 
-	buf := h.Arena.NewSlice(len(name) + ints.Bufsize)
+	buf := h.Response.Arena.NewSlice(len(name) + ints.Bufsize)
 	n += copy(buf[n:], name)
 	n += slices.PutInt(buf[n:], index)
 
@@ -139,7 +145,7 @@ func (h *HTML) IndexedName(name string, index int) string {
 func (h *HTML) DoublyIndexedName(name string, index1 int, index2 int) string {
 	var n int
 
-	buf := h.Arena.NewSlice(len(name) + ints.Bufsize + ints.Bufsize + 1)
+	buf := h.Response.Arena.NewSlice(len(name) + ints.Bufsize + ints.Bufsize + 1)
 	n += copy(buf[n:], name)
 	n += slices.PutInt(buf[n:], index1)
 	n += copy(buf[n:], ".")

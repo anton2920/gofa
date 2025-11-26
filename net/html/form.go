@@ -19,7 +19,7 @@ func (h *HTML) Input(typ string, attrs ...Attributes) {
 
 func (h *HTML) HiddenBool(name string, b bool) {
 	if b {
-		h.Input("hidden", Attributes{Name: name})
+		h.WithoutTheme().Input("hidden", Attributes{Name: name})
 	}
 }
 
@@ -29,13 +29,13 @@ func (h *HTML) HiddenID(name string, id database.ID) {
 
 func (h *HTML) HiddenInt(name string, x int) {
 	if x > 0 {
-		h.Input("hidden", Attributes{Name: name, Value: h.Itoa(x)})
+		h.WithoutTheme().Input("hidden", Attributes{Name: name, Value: h.Itoa(x)})
 	}
 }
 
 func (h *HTML) HiddenString(name string, s string) {
 	if len(s) > 0 {
-		h.Input("hidden", Attributes{Name: name, Value: s})
+		h.WithoutTheme().Input("hidden", Attributes{Name: name, Value: s})
 	}
 }
 

@@ -106,7 +106,7 @@ func (h *HTML) MergeAttributes(attrs ...Attributes) Attributes {
 	for i := 0; i < len(attrs); i++ {
 		attr := &attrs[i]
 
-		MergeString(&h.Arena, &result.Class, attr.Class)
+		MergeString(&h.Response.Arena, &result.Class, attr.Class)
 
 		strings.Replace(&result.Accept, attr.Accept)
 		strings.Replace(&result.Action, attr.Action)
