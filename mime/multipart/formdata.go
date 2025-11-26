@@ -29,7 +29,7 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 	var pos int
 	for {
 		/* Parsing boundary. */
-		lineEnd := strings.FindChar(form[pos:], '\r')
+		lineEnd := strings.FindSubstring(form[pos:], "\r\n")
 		if lineEnd == 0 {
 			break
 		}
@@ -51,7 +51,7 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 		var isFile bool
 
 		for {
-			lineEnd := strings.FindChar(form[pos:], '\r')
+			lineEnd := strings.FindSubstring(form[pos:], "\r\n")
 			if lineEnd == -1 {
 				trace.End(t)
 				return errors.New("expected new line after header")
@@ -67,7 +67,7 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 				trace.End(t)
 				return errors.New("invalid header")
 			}
-			value = stdstrings.TrimSpace(value)
+			value = strings.TrimSpace(value)
 
 			switch key {
 			case "Content-Disposition":
