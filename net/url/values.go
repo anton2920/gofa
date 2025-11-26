@@ -14,13 +14,11 @@ import (
 )
 
 type Values struct {
-	Arena alloc.Arena
-
 	Keys   []string
 	Values [][]string
 }
 
-func ParseQuery(vs *Values, query string) error {
+func ParseQuery(arena *alloc.Arena, vs *Values, query string) error {
 	t := trace.Begin("")
 
 	var err error
@@ -37,7 +35,7 @@ func ParseQuery(vs *Values, query string) error {
 		}
 		key, value, _ := strings.Cut(key, "=")
 
-		keyBuffer := vs.Arena.NewSlice(len(key))
+		keyBuffer := arena.NewSlice(len(key))
 		n, ok := QueryDecode(keyBuffer, key)
 		if !ok {
 			if err == nil {
@@ -47,7 +45,7 @@ func ParseQuery(vs *Values, query string) error {
 		}
 		key = bytes.AsString(keyBuffer[:n])
 
-		valueBuffer := vs.Arena.NewSlice(len(value))
+		valueBuffer := arena.NewSlice(len(value))
 		n, ok = QueryDecode(valueBuffer, value)
 		if !ok {
 			if err == nil {
@@ -226,13 +224,8 @@ func (vs *Values) HasInt(value int) bool {
 }
 
 func (vs *Values) Reset() {
-	t := trace.Begin("")
-
 	vs.Keys = vs.Keys[:0]
 	vs.Values = vs.Values[:0]
-	vs.Arena.Reset()
-
-	trace.End(t)
 }
 
 func (vs *Values) Set(key string, value string) {
@@ -263,12 +256,13 @@ func (vs *Values) Set(key string, value string) {
 	trace.End(t)
 }
 
+/* TODO(anton2920): remove this function altogether. */
 func (vs *Values) SetInt(key string, value int) {
 	t := trace.Begin("")
 
-	buffer := vs.Arena.NewSlice(ints.Bufsize)
+	buffer := make([]byte, ints.Bufsize)
 	n := slices.PutInt(buffer, value)
-	vs.Set(key, bytes.AsString(buffer[:n]))
+	vs.Set(key, string(buffer[:n]))
 
 	trace.End(t)
 }
