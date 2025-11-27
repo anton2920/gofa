@@ -219,8 +219,6 @@ func drawPixmap(dst Pixmap, bounds Rect, x, y int, src Pixmap, pclr *color.Color
 	srcBox := Rect{x, y, x + src.Width, y + src.Height}
 
 	if !bounds.Contains(srcBox) {
-		// runtime.Breakpoint()
-
 		var x0, y0 int
 		x1 := src.Width
 		y1 := src.Height

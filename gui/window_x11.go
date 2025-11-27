@@ -37,8 +37,6 @@ type platformWindow struct {
 }
 
 func platformNewWindow(w *Window, x, y int) error {
-	// runtime.Breakpoint()
-
 	w.display = C.XOpenDisplay(nil)
 	if w.display == nil {
 		return errors.New("failed to open display")
