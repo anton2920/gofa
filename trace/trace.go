@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime"
 	"sort"
+	"time"
 	"unsafe"
 
 	"github.com/anton2920/gofa/bools"
@@ -53,7 +54,7 @@ var GlobalProfiler Profiler
 
 func init() {
 	/* NOTE(anton2920): len must be a power of two for fast modulus calculation. */
-	GlobalProfiler.Anchors = make(Anchors, 1024)
+	GlobalProfiler.Anchors = make(Anchors, 8192)
 }
 
 func (as Anchors) Len() int { return len(as) }
@@ -200,6 +201,9 @@ func EndAndPrintProfile() {
 	var totalHits int
 
 	fmt.Fprintf(os.Stderr, "[trace]: Total time: %.4fms\n", CyclesToMilliseconds(totalElapsed))
+
+	/* NOTE(anton2920): before accessing anchors, wait for possible background work to stop. */
+	time.Sleep(200 * time.Millisecond)
 
 	/* NOTE(anton2920): Anchor.ParentIndex uses original order, so we need to preserve it after Sort. */
 	backup := make(Anchors, len(GlobalProfiler.Anchors))
