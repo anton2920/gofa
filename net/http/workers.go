@@ -70,7 +70,7 @@ func Worker(q *event.Queue, router Router) {
 
 				fallthrough
 			case event.TypeWrite:
-				if _, err := c.WriteFilledResponses(); err != nil {
+				if _, err := c.WriteResponseData(); err != nil {
 					if err.(syscall.Error).Errno != syscall.EAGAIN {
 						log.Errorf("Failed to write HTTP responses: %v", err)
 						c.Close()

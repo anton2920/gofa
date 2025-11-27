@@ -54,8 +54,6 @@ func (r *Request) Cookie(name string) string {
 }
 
 func (r *Request) Reset() {
-	//t := trace.Begin("")
-
 	r.URL.Query.Reset()
 	r.Headers.Reset()
 	r.Body = r.Body[:0]
@@ -63,8 +61,6 @@ func (r *Request) Reset() {
 	r.Files.Reset()
 	r.Arena.Reset()
 	r.Error = nil
-
-	//trace.End(t)
 }
 
 func ParseRequestsV1(c *Conn, rs []Request) int {

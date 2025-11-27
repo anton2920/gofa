@@ -112,7 +112,7 @@ func (c *Conn) ReadRequestData() (int64, error) {
 	return n, nil
 }
 
-func (c *Conn) WriteFilledResponses() (int64, error) {
+func (c *Conn) WriteResponseData() (int64, error) {
 	t := trace.Begin("")
 
 	var err error

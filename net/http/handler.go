@@ -58,7 +58,7 @@ func RequestHandler(w *Response, r *Request, router Router) (err error) {
 }
 
 func RequestsHandler(ws []Response, rs []Request, router Router) {
-	//t := trace.Begin("")
+	t := trace.Begin("")
 
 	const cookie = "Token"
 
@@ -118,7 +118,7 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 		log.Logf(level, "[%21s] %7s %s -> %v (%v), %4dus", strings.Or(r.Headers.Get("X-Forwarded-For"), r.RemoteAddr), r.Method, r.URL.Path, w.Status, err, elapsed.ToMicroseconds())
 	}
 
-	//trace.End(t)
+	trace.End(t)
 }
 
 func Serve(c *Conn, router Router) {
@@ -143,7 +143,7 @@ func Serve(c *Conn, router Router) {
 			RequestsHandler(ws[:n], rs[:n], router)
 			FillResponses(c, ws[:n])
 
-			if _, err = c.WriteFilledResponses(); err != nil {
+			if _, err = c.WriteResponseData(); err != nil {
 				log.Errorf("Failed to write HTTP responses: %v", err)
 				c.Close()
 				break

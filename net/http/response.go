@@ -180,14 +180,10 @@ func (w *Response) WriteHTMLString(s string) {
 }
 
 func (w *Response) Reset() {
-	//t := trace.Begin("")
-
 	w.Status = StatusOK
 	w.Headers.Reset()
 	w.Body = w.Body[:0]
 	w.Arena.Reset()
-
-	//trace.End(t)
 }
 
 var dateBuf = []byte("Mon, 24 Nov 2025 17:49:23 GMT")
