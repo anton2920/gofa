@@ -45,6 +45,7 @@ func (hs *Headers) Del(key string) {
 			copy(hs.Values[i:], hs.Values[i+1:])
 			hs.Keys = hs.Keys[:len(hs.Keys)-1]
 			hs.Values = hs.Values[:len(hs.Values)-1]
+			break
 		}
 	}
 
@@ -103,12 +104,8 @@ func (hs *Headers) Has(key string) bool {
 }
 
 func (hs *Headers) Reset() {
-	t := trace.Begin("")
-
 	hs.Keys = hs.Keys[:0]
 	hs.Values = hs.Values[:0]
-
-	trace.End(t)
 }
 
 func (hs *Headers) Set(key string, value string) {

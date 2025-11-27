@@ -13,10 +13,10 @@ import (
 )
 
 type Response struct {
-	alloc.Arena
+	Arena alloc.Arena
 
-	Status
-	Headers
+	Status  Status
+	Headers Headers
 
 	Body []byte
 }
@@ -180,14 +180,14 @@ func (w *Response) WriteHTMLString(s string) {
 }
 
 func (w *Response) Reset() {
-	t := trace.Begin("")
+	//t := trace.Begin("")
 
 	w.Status = StatusOK
 	w.Headers.Reset()
 	w.Body = w.Body[:0]
 	w.Arena.Reset()
 
-	trace.End(t)
+	//trace.End(t)
 }
 
 var dateBuf = []byte("Mon, 24 Nov 2025 17:49:23 GMT")
@@ -241,7 +241,14 @@ func FillResponses(c *Conn, ws []Response) {
 
 		c.ResponseBuffer = append(c.ResponseBuffer, "\r\n"...)
 		c.ResponseBuffer = append(c.ResponseBuffer, w.Body...)
+
+		//connection := w.Headers.Get("Connection")
 		w.Reset()
+
+		//if connection == "close" {
+		//	c.CloseAfterWrite = true
+		//	break
+		//}
 	}
 
 	trace.End(t)

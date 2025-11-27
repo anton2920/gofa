@@ -1,16 +1,15 @@
 package http
 
 import (
-	"io"
+	"reflect"
+
 	"unsafe"
 
-	"github.com/anton2920/gofa/alloc"
-	"github.com/anton2920/gofa/bools"
 	"github.com/anton2920/gofa/buffer"
-	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/os"
 	"github.com/anton2920/gofa/pointers"
+	"github.com/anton2920/gofa/syscall"
 	"github.com/anton2920/gofa/trace"
 )
 
@@ -34,23 +33,22 @@ var Version2String = [...]string{
 }
 
 type Conn struct {
-	*ConnPool
-	alloc.Arena
+	ConnPool *ConnPool
 
-	Version
-	Socket     os.Handle
-	RemoteAddr string
+	Version Version
+	Socket  os.Handle
 
-	RequestBuffer *buffer.Circular
+	RequestBuffer buffer.Circular
 
 	ResponseBuffer []byte
-	ResponsePos    int
+	ResponsePos    int64
 
+	Error error
+
+	remoteAddr      [21]byte
 	CloseAfterWrite bool
 	Closed          bool
-
-	/* NOTE(anton2920): Check must be the same as the last pointer's bit, if context is in use. */
-	Check bool
+	Check           uint8 /* NOTE(anton2920): Check must be the same as the last pointer's bit, if context is in use. */
 }
 
 type ConnOptions struct {
@@ -58,8 +56,6 @@ type ConnOptions struct {
 }
 
 func MergeConnOptions(opts ...ConnOptions) ConnOptions {
-	t := trace.Begin("")
-
 	var result ConnOptions
 
 	for i := 0; i < len(opts); i++ {
@@ -68,15 +64,15 @@ func MergeConnOptions(opts ...ConnOptions) ConnOptions {
 		ints.Replace(&result.RequestBufferSize, opt.RequestBufferSize)
 	}
 
-	trace.End(t)
 	return result
 }
 
-func (c *Conn) Close() error {
-	t := trace.Begin("")
+func (c *Conn) RemoteAddr() string {
+	return *(*string)(unsafe.Pointer(&reflect.StringHeader{Data: uintptr(unsafe.Pointer(&c.remoteAddr)), Len: len(c.remoteAddr)}))
+}
 
+func (c *Conn) Close() error {
 	if c.Closed {
-		trace.End(t)
 		return nil
 	}
 
@@ -84,69 +80,53 @@ func (c *Conn) Close() error {
 	c.ResponseBuffer = nil
 	c.RequestBuffer.Free()
 	c.ResponsePos = 0
-	c.Arena.Reset()
 	c.Version = 0
-	c.Closed = true
+	c.Error = nil
 
+	c.Closed = true
+	c.Check = 1 - c.Check
 	err := os.Close(c.Socket)
-	c.Check = !c.Check
 	c.ConnPool.Put(c)
 
-	trace.End(t)
 	return err
 }
 
-func (c *Conn) ReadRequests(rs []Request) (int, error) {
+func (c *Conn) ReadRequestData() (int64, error) {
 	t := trace.Begin("")
 
 	buf := c.RequestBuffer.RemainingSlice()
-	if c.Closed {
+	if len(buf) == 0 {
+		c.Error = RequestEntityTooLarge("no space left in buffer")
 		trace.End(t)
 		return 0, nil
-	} else if len(buf) == 0 {
-		trace.End(t)
-		return -1, errors.New("no space left in buffer")
 	}
 
-	n, err := os.Read(c.Socket, buf)
+	n, err := syscall.Read(int32(c.Socket), buf)
 	if err != nil {
 		trace.End(t)
 		return -1, err
-	} else if n == 0 {
-		trace.End(t)
-		return 0, io.EOF
 	}
 	c.RequestBuffer.Produce(int(n))
 
-	var nrs int
-	if len(rs) > 0 {
-		nrs = ParseRequests(c, rs)
-	}
-
 	trace.End(t)
-	return nrs, nil
+	return n, nil
 }
 
-func (c *Conn) WriteResponses(ws []Response) (int, error) {
+func (c *Conn) WriteFilledResponses() (int64, error) {
 	t := trace.Begin("")
 
 	var err error
-
-	if c.Closed {
-		trace.End(t)
-		panic("write to a closed connection")
-	}
-	FillResponses(c, ws)
+	var n int64
 
 	if len(c.ResponseBuffer[c.ResponsePos:]) > 0 {
-		n, err := os.Write(c.Socket, c.ResponseBuffer[c.ResponsePos:])
+		n, err = syscall.Write(int32(c.Socket), c.ResponseBuffer[c.ResponsePos:])
 		if err != nil {
 			trace.End(t)
-			return int(n), err
+			return -1, err
 		}
-		c.ResponsePos += int(n)
+		c.ResponsePos += n
 
-		if c.ResponsePos == len(c.ResponseBuffer) {
+		if c.ResponsePos == int64(len(c.ResponseBuffer)) {
 			c.ResponseBuffer = c.ResponseBuffer[:0]
 			c.ResponsePos = 0
 			if c.CloseAfterWrite {
@@ -156,11 +136,11 @@ func (c *Conn) WriteResponses(ws []Response) (int, error) {
 	}
 
 	trace.End(t)
-	return len(ws), err
+	return n, err
 }
 
 func (c *Conn) Pointer() unsafe.Pointer {
-	return pointers.Add(unsafe.Pointer(c), bools.ToInt(c.Check))
+	return pointers.Add(unsafe.Pointer(c), int(c.Check))
 }
 
 func ConnFromPointer(ptr unsafe.Pointer) (*Conn, bool) {
@@ -171,7 +151,7 @@ func ConnFromPointer(ptr unsafe.Pointer) (*Conn, bool) {
 	check := uintptr(ptr) & 0x1
 	c := (*Conn)(unsafe.Pointer(uintptr(ptr) - check))
 
-	return c, c.Check == ints.ToBool(int(check))
+	return c, c.Check == uint8(check)
 }
 
 func RequestBufferSize(size int) ConnOptions {

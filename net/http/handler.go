@@ -17,7 +17,7 @@ import (
 
 type Router func(*Response, *Request) error
 
-const Pipeline = 64
+const Pipeline = 16
 
 func RequestHandler(w *Response, r *Request, router Router) (err error) {
 	t := trace.Begin("")
@@ -34,14 +34,14 @@ func RequestHandler(w *Response, r *Request, router Router) (err error) {
 		switch r.Method {
 		case MethodGet:
 			if len(r.URL.RawQuery) > 0 {
-				err = r.URL.ParseQuery()
+				err = r.URL.ParseQuery(&r.Arena)
 			}
 		case MethodPost:
 			if len(r.Body) > 0 {
 				contentType := r.Headers.Get("Content-Type")
 				switch {
 				case contentType == "application/x-www-form-urlencoded":
-					err = url.ParseQuery(&r.Form, bytes.AsString(r.Body))
+					err = url.ParseQuery(&r.Arena, &r.Form, bytes.AsString(r.Body))
 				case strings.StartsWith(contentType, "multipart/form-data; boundary="):
 					err = multipart.ParseFormData(contentType, &r.Form, &r.Files, r.Body)
 				}
@@ -58,21 +58,21 @@ func RequestHandler(w *Response, r *Request, router Router) (err error) {
 }
 
 func RequestsHandler(ws []Response, rs []Request, router Router) {
-	t := trace.Begin("")
+	//t := trace.Begin("")
 
 	const cookie = "Token"
 
-	for i := 0; i < ints.Min(len(ws), len(rs)); i++ {
+	for i := 0; i < len(rs); i++ {
 		w := &ws[i]
 		r := &rs[i]
 
-		if r.URL.Path == "/plaintext" {
+		if (r.Error == nil) && (r.URL.Path == "/plaintext") {
 			const response = "Hello, world!\n"
 			switch r.Method {
 			default:
 				w.WriteString(response)
-			case MethodHead:
-				w.Headers.Set("Content-Length", "14")
+				//case MethodHead:
+				//	w.Headers.Set("Content-Length", "14")
 			}
 			continue
 		}
@@ -118,7 +118,7 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 		log.Logf(level, "[%21s] %7s %s -> %v (%v), %4dus", strings.Or(r.Headers.Get("X-Forwarded-For"), r.RemoteAddr), r.Method, r.URL.Path, w.Status, err, elapsed.ToMicroseconds())
 	}
 
-	trace.End(t)
+	//trace.End(t)
 }
 
 func Serve(c *Conn, router Router) {
@@ -126,12 +126,12 @@ func Serve(c *Conn, router Router) {
 	ws := make([]Response, Pipeline)
 
 	for !c.Closed {
-		n, err := c.ReadRequests(nil)
+		n, err := c.ReadRequestData()
 		if err != nil {
-			if n == 0 {
-				break
-			}
 			log.Errorf("Failed to read HTTP requests: %v", err)
+			break
+		}
+		if n == 0 {
 			break
 		}
 
@@ -141,9 +141,11 @@ func Serve(c *Conn, router Router) {
 				break
 			}
 			RequestsHandler(ws[:n], rs[:n], router)
+			FillResponses(c, ws[:n])
 
-			if _, err = c.WriteResponses(ws[:n]); err != nil {
+			if _, err = c.WriteFilledResponses(); err != nil {
 				log.Errorf("Failed to write HTTP responses: %v", err)
+				c.Close()
 				break
 			}
 		}

@@ -7,7 +7,6 @@ import (
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/log"
 	"github.com/anton2920/gofa/syscall"
-	"github.com/anton2920/gofa/trace"
 )
 
 type Workers struct {
@@ -19,16 +18,17 @@ func Worker(q *event.Queue, router Router) {
 	rs := make([]Request, Pipeline)
 	ws := make([]Response, Pipeline)
 
-	getEvents := func(q *event.Queue, events []event.Event) (int, error) {
-		t := trace.Begin("github.com/anton2920/gofa/event.(*Queue).GetEvents")
-		n, err := q.GetEvents(events)
-		trace.End(t)
-		return n, err
-	}
+	//getEvents := func(q *event.Queue, events []event.Event) (int, error) {
+	//	t := trace.Begin("github.com/anton2920/gofa/event.(*Queue).GetEvents")
+	//	n, err := q.GetEvents(events)
+	//	trace.End(t)
+	//	return n, err
+	//}
 
 	events := make([]event.Event, 64)
 	for {
-		n, err := getEvents(q, events)
+		//n, err := getEvents(q, events)
+		n, err := q.GetEvents(events)
 		if err != nil {
 			log.Errorf("Failed to read events: %v", err)
 		}
@@ -51,14 +51,15 @@ func Worker(q *event.Queue, router Router) {
 
 			switch e.Type {
 			case event.TypeRead:
-				if _, err = c.ReadRequests(nil); err != nil {
+				if _, err := c.ReadRequestData(); err != nil {
 					if err.(syscall.Error).Errno != syscall.EAGAIN {
 						log.Errorf("Failed to read HTTP requests: %v", err)
 						c.Close()
-						continue
+						break
 					}
 				}
-				for {
+
+				for c.RequestBuffer.UnconsumedLen() > 0 {
 					n := ParseRequests(c, rs)
 					if n == 0 {
 						break
@@ -66,9 +67,10 @@ func Worker(q *event.Queue, router Router) {
 					RequestsHandler(ws[:n], rs[:n], router)
 					FillResponses(c, ws[:n])
 				}
+
 				fallthrough
 			case event.TypeWrite:
-				if _, err := c.WriteResponses(nil); err != nil {
+				if _, err := c.WriteFilledResponses(); err != nil {
 					if err.(syscall.Error).Errno != syscall.EAGAIN {
 						log.Errorf("Failed to write HTTP responses: %v", err)
 						c.Close()
@@ -97,26 +99,21 @@ func NewWorkers(router Router, n int) (*Workers, error) {
 }
 
 func (ws *Workers) Add(c *Conn) error {
-	t := trace.Begin("")
-
 	/* TODO(anton2920): remove syscall! */
 	flags, err := syscall.Fcntl(int32(c.Socket), syscall.F_GETFL, 0)
 	if err != nil {
-		trace.End(t)
 		return fmt.Errorf("failed to get connection flags: %v", err)
 	}
 	if flags&syscall.O_NONBLOCK == 0 {
 		flags |= syscall.O_NONBLOCK
 		if _, err := syscall.Fcntl(int32(c.Socket), syscall.F_SETFL, flags); err != nil {
-			trace.End(t)
 			return fmt.Errorf("failed to set connection to non-blocking: %v", err)
 		}
 	}
 
 	/* TODO(anton2920): check if TriggerEdge is sufficient. */
-	err = ws.Queues[ws.Current].AddSocket(int32(c.Socket), event.RequestRead|event.RequestWrite, event.TriggerEdge, c.Pointer())
+	err = ws.Queues[ws.Current].AddSocket(int32(c.Socket), event.RequestRead, event.TriggerEdge, c.Pointer())
 	ws.Current = (ws.Current + 1) % len(ws.Queues)
 
-	trace.End(t)
 	return err
 }
