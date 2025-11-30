@@ -112,7 +112,7 @@ func (ws *Workers) Add(c *Conn) error {
 	}
 
 	/* TODO(anton2920): check if TriggerEdge is sufficient. */
-	err = ws.Queues[ws.Current].AddSocket(int32(c.Socket), event.RequestRead, event.TriggerEdge, c.Pointer())
+	err = ws.Queues[ws.Current].AddSocket(int32(c.Socket), event.RequestRead|event.RequestWrite, event.TriggerEdge, c.Pointer())
 	ws.Current = (ws.Current + 1) % len(ws.Queues)
 
 	return err
