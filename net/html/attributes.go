@@ -19,6 +19,7 @@ type Attributes struct {
 	ID      string
 	Method  string
 	Name    string
+	OnClick string
 	Rel     string
 	Src     string
 	Style   string
@@ -115,6 +116,7 @@ func (h *HTML) MergeAttributes(attrs ...Attributes) Attributes {
 		strings.Replace(&result.ID, attr.ID)
 		strings.Replace(&result.Method, attr.Method)
 		strings.Replace(&result.Name, attr.Name)
+		strings.Replace(&result.OnClick, attr.OnClick)
 		strings.Replace(&result.Rel, attr.Rel)
 		strings.Replace(&result.Src, attr.Src)
 		strings.Replace(&result.Style, attr.Style)
@@ -172,6 +174,10 @@ func FormNoValidate(formNoValidate bool) Attributes {
 	return Attributes{FormNoValidate: formNoValidate}
 }
 
+func ID(id string) Attributes {
+	return Attributes{ID: id}
+}
+
 func MaxLength(n int) Attributes {
 	return Attributes{MaxLength: n}
 }
@@ -192,8 +198,12 @@ func Required(required bool) Attributes {
 	return Attributes{Required: required}
 }
 
-func Style(s string) Attributes {
-	return Attributes{Style: s}
+func Src(src string) Attributes {
+	return Attributes{Src: src}
+}
+
+func Style(style string) Attributes {
+	return Attributes{Style: style}
 }
 
 func Value(value string) Attributes {

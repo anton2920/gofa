@@ -172,6 +172,7 @@ func (h *HTML) TagBegin(tag string, attrs ...Attributes) {
 		DisplayStringAttribute(h, "id", attr.ID)
 		DisplayStringAttribute(h, "method", attr.Method)
 		DisplayStringAttribute(h, "name", attr.Name)
+		DisplayStringAttribute(h, "onclick", attr.OnClick)
 		DisplayStringAttribute(h, "rel", attr.Rel)
 		DisplayStringAttribute(h, "src", attr.Src)
 		DisplayStringAttribute(h, "style", attr.Style)
