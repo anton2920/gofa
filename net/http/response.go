@@ -100,8 +100,12 @@ func (w *Response) Redirect(path string, code Status) {
 func (w *Response) PathID(path string, id database.ID) string {
 	var n int
 
-	buf := w.Arena.NewSlice(len(path) + ints.Bufsize)
+	buf := w.Arena.NewSlice(len(path) + ints.Bufsize + 1)
 	n += copy(buf[n:], path)
+	if path[len(path)-1] != '/' {
+		buf[n] = '/'
+		n++
+	}
 	n += slices.PutInt(buf[n:], int(id))
 
 	return bytes.AsString(buf[:n])
@@ -110,9 +114,17 @@ func (w *Response) PathID(path string, id database.ID) string {
 func (w *Response) PathIDPath(path1 string, id database.ID, path2 string) string {
 	var n int
 
-	buf := w.Arena.NewSlice(len(path1) + ints.Bufsize + len(path2))
+	buf := w.Arena.NewSlice(len(path1) + ints.Bufsize + len(path2) + 2)
 	n += copy(buf[n:], path1)
+	if path1[len(path1)-1] != '/' {
+		buf[n] = '/'
+		n++
+	}
 	n += slices.PutInt(buf[n:], int(id))
+	if path2[0] != '/' {
+		buf[n] = '/'
+		n++
+	}
 	n += copy(buf[n:], path2)
 
 	return bytes.AsString(buf[:n])
@@ -123,6 +135,10 @@ func (w *Response) PathPath(path1 string, path2 string) string {
 
 	buf := w.Arena.NewSlice(len(path1) + len(path2))
 	n += copy(buf[n:], path1)
+	if path1[len(path1)-1] != '/' {
+		buf[n] = '/'
+		n++
+	}
 	n += copy(buf[n:], path2)
 
 	return bytes.AsString(buf[:n])
