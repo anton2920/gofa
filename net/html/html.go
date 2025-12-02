@@ -132,24 +132,18 @@ func (h *HTML) Ttoa(t int64) string {
 	return stdtime.Unix(v/time.Second, v%time.Second).UTC().Format(format)
 }
 
-func (h *HTML) IndexedName(name string, index int) string {
+func (h *HTML) IndexedName(name string, indicies ...int) string {
 	var n int
 
-	buf := h.Response.Arena.NewSlice(len(name) + ints.Bufsize)
+	buf := h.Response.Arena.NewSlice(len(name) + ints.Bufsize*len(indicies) + 2*len(indicies))
 	n += copy(buf[n:], name)
-	n += slices.PutInt(buf[n:], index)
-
-	return bytes.AsString(buf[:n])
-}
-
-func (h *HTML) DoublyIndexedName(name string, index1 int, index2 int) string {
-	var n int
-
-	buf := h.Response.Arena.NewSlice(len(name) + ints.Bufsize + ints.Bufsize + 1)
-	n += copy(buf[n:], name)
-	n += slices.PutInt(buf[n:], index1)
-	n += copy(buf[n:], ".")
-	n += slices.PutInt(buf[n:], index2)
+	for i := 0; i < len(indicies); i++ {
+		index := indicies[i]
+		if i > 0 {
+			n += copy(buf[n:], ".")
+		}
+		n += slices.PutInt(buf[n:], index)
+	}
 
 	return bytes.AsString(buf[:n])
 }
