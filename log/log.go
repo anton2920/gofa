@@ -8,6 +8,8 @@ import (
 	"syscall"
 	"time"
 	"unsafe"
+
+	"github.com/anton2920/gofa/pointers"
 )
 
 type Level int32
@@ -40,8 +42,8 @@ func Logf(level Level, format string, args ...interface{}) {
 	var buffer bytes.Buffer
 
 	buffer.WriteString(time.Now().Format("2006/01/02 15:04:05"))
-	fmt.Fprintf(&buffer, " %5s ", Level2String[level])
-	fmt.Fprintf(&buffer, format, args...)
+	fmt.Fprintf((*bytes.Buffer)(pointers.Noescape(unsafe.Pointer(&buffer))), " %5s ", Level2String[level])
+	fmt.Fprintf((*bytes.Buffer)(pointers.Noescape(unsafe.Pointer(&buffer))), format, args...)
 	if format[len(format)-1] != '\n' {
 		buffer.WriteRune('\n')
 	}
