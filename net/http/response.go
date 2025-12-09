@@ -133,9 +133,9 @@ func (w *Response) PathIDPath(path1 string, id database.ID, path2 string) string
 func (w *Response) PathPath(path1 string, path2 string) string {
 	var n int
 
-	buf := w.Arena.NewSlice(len(path1) + len(path2))
+	buf := w.Arena.NewSlice(len(path1) + len(path2) + 1)
 	n += copy(buf[n:], path1)
-	if path1[len(path1)-1] != '/' {
+	if (path1[len(path1)-1] != '/') && (path2[0] != '/') {
 		buf[n] = '/'
 		n++
 	}
