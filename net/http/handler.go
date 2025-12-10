@@ -1,6 +1,8 @@
 package http
 
 import (
+	"unsafe"
+
 	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/cpu"
 	"github.com/anton2920/gofa/debug"
@@ -9,6 +11,7 @@ import (
 	"github.com/anton2920/gofa/log"
 	"github.com/anton2920/gofa/mime/multipart"
 	"github.com/anton2920/gofa/net/url"
+	"github.com/anton2920/gofa/pointers"
 	"github.com/anton2920/gofa/session"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
@@ -25,7 +28,7 @@ func RequestHandler(w *Response, r *Request, router Router) (err error) {
 	defer func() {
 		if p := recover(); p != nil {
 			r.Error = errors.NewPanic(p)
-			err = router(w, r)
+			err = router((*Response)(pointers.Noescape(unsafe.Pointer(w))), (*Request)(pointers.Noescape(unsafe.Pointer(r))))
 			trace.End(t)
 		}
 	}()
@@ -52,7 +55,7 @@ func RequestHandler(w *Response, r *Request, router Router) (err error) {
 		}
 	}
 
-	err = router(w, r)
+	err = router((*Response)(pointers.Noescape(unsafe.Pointer(w))), (*Request)(pointers.Noescape(unsafe.Pointer(r))))
 	trace.End(t)
 	return
 }
