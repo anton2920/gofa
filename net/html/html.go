@@ -1,7 +1,6 @@
 package html
 
 import (
-	stdtime "time"
 	"unicode"
 
 	"github.com/anton2920/gofa/bools"
@@ -25,10 +24,10 @@ type HTML struct {
 
 	withoutTheme *HTML
 
-	Theme Theme
+	Theme *Theme
 }
 
-func New(w *http.Response, r *http.Request, theme Theme) HTML {
+func New(w *http.Response, r *http.Request, theme *Theme) HTML {
 	return HTML{Response: w, Request: r, Theme: theme}
 }
 
@@ -37,6 +36,7 @@ func (h *HTML) WithoutTheme() *HTML {
 		h.withoutTheme = new(HTML)
 		h.withoutTheme.Response = h.Response
 		h.withoutTheme.Request = h.Request
+		h.withoutTheme.Theme = &nulTheme
 	}
 	return h.withoutTheme
 }
@@ -100,9 +100,12 @@ func (h *HTML) TString(s string) {
 }
 
 func (h *HTML) Dtoa(d int64) string {
-	const format = "2006-01-02"
 	v := d + int64(h.Timezone)*time.Hour
-	return stdtime.Unix(v/time.Second, v%time.Second).UTC().Format(format)
+
+	buf := h.Response.Arena.NewSlice(len("2006-01-02"))
+	n := time.PutTmDate(buf, time.ToTm(v))
+
+	return bytes.AsString(buf[:n])
 }
 
 func (h *HTML) Dtoa1(d int64) string {
@@ -125,11 +128,13 @@ func (h *HTML) Itoa1(x int) string {
 	return h.Itoa(x)
 }
 
-/* TODO(anton2920): unify this and 'Dtoa'. */
 func (h *HTML) Ttoa(t int64) string {
-	const format = "2006-01-02 15:04:05"
 	v := t + int64(h.Timezone)*time.Hour
-	return stdtime.Unix(v/time.Second, v%time.Second).UTC().Format(format)
+
+	buf := h.Response.Arena.NewSlice(len("2006-01-02 15:04:05"))
+	n := time.PutTmDateTime(buf, time.ToTm(v))
+
+	return bytes.AsString(buf[:n])
 }
 
 func (h *HTML) IndexedName(name string, indicies ...int) string {

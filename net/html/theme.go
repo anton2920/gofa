@@ -37,3 +37,5 @@ type Theme struct {
 	PageSelectorButtonActive    Attributes
 	PageSelectorButtonContainer Attributes
 }
+
+var nulTheme Theme

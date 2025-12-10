@@ -151,7 +151,7 @@ func (h *HTML) PrependAttributes(sys Attributes, user []Attributes) Attributes {
 }
 
 func (h *HTML) AppendAttributes(user []Attributes, sys Attributes) Attributes {
-	return h.MergeAttributes(append(user, sys)...)
+	return h.MergeAttributes(h.MergeAttributes(user...), sys)
 }
 
 func Action(action string) Attributes {
