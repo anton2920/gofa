@@ -99,7 +99,7 @@ func ToTm(t int64) Tm {
 
 /* PutTmRFC822 puts tm into buffer as 'Sun, 01 Jan 1970 00:00:00 GMT'. */
 func PutTmRFC822(buf []byte, tm Tm) int {
-	var n, ndigits int
+	var n int
 
 	var wdays = [...]string{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}
 	var months = [...]string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
@@ -113,8 +113,7 @@ func PutTmRFC822(buf []byte, tm Tm) int {
 		buf[n] = '0'
 		n++
 	}
-	ndigits = slices.PutInt(buf[n:], tm.Mday)
-	n += ndigits
+	n += slices.PutInt(buf[n:], tm.Mday)
 	buf[n] = ' '
 	n++
 
@@ -122,8 +121,7 @@ func PutTmRFC822(buf []byte, tm Tm) int {
 	buf[n] = ' '
 	n++
 
-	ndigits = slices.PutInt(buf[n:], tm.Year+1900)
-	n += ndigits
+	n += slices.PutInt(buf[n:], tm.Year+1900)
 	buf[n] = ' '
 	n++
 
@@ -131,8 +129,7 @@ func PutTmRFC822(buf []byte, tm Tm) int {
 		buf[n] = '0'
 		n++
 	}
-	ndigits = slices.PutInt(buf[n:], tm.Hour)
-	n += ndigits
+	n += slices.PutInt(buf[n:], tm.Hour)
 	buf[n] = ':'
 	n++
 
@@ -140,8 +137,7 @@ func PutTmRFC822(buf []byte, tm Tm) int {
 		buf[n] = '0'
 		n++
 	}
-	ndigits = slices.PutInt(buf[n:], tm.Min)
-	n += ndigits
+	n += slices.PutInt(buf[n:], tm.Min)
 	buf[n] = ':'
 	n++
 
@@ -149,8 +145,7 @@ func PutTmRFC822(buf []byte, tm Tm) int {
 		buf[n] = '0'
 		n++
 	}
-	ndigits = slices.PutInt(buf[n:], tm.Sec)
-	n += ndigits
+	n += slices.PutInt(buf[n:], tm.Sec)
 	buf[n] = ' '
 	n++
 
@@ -159,4 +154,58 @@ func PutTmRFC822(buf []byte, tm Tm) int {
 	buf[n+2] = 'T'
 
 	return n + 3
+}
+
+/* PutTmDate puts time in 'tm' in '2006-01-02' format. */
+func PutTmDate(buf []byte, tm Tm) int {
+	var n int
+
+	n += slices.PutInt(buf[n:], tm.Year+1900)
+	buf[n] = '-'
+	n++
+
+	if tm.Mday < 10 {
+		buf[n] = '0'
+		n++
+	}
+	n += slices.PutInt(buf[n:], tm.Mon)
+	buf[n] = '-'
+	n++
+
+	n += slices.PutInt(buf[n:], tm.Mday)
+
+	return n
+}
+
+/* PutTmTime puts time in 'tm' in '2006-01-02 15:04:05' format. */
+func PutTmDateTime(buf []byte, tm Tm) int {
+	var n int
+
+	n += PutTmDate(buf[n:], tm)
+	buf[n] = ' '
+	n++
+
+	if tm.Hour < 10 {
+		buf[n] = '0'
+		n++
+	}
+	n += slices.PutInt(buf[n:], tm.Hour)
+	buf[n] = ':'
+	n++
+
+	if tm.Min < 10 {
+		buf[n] = '0'
+		n++
+	}
+	n += slices.PutInt(buf[n:], tm.Min)
+	buf[n] = ':'
+	n++
+
+	if tm.Sec < 10 {
+		buf[n] = '0'
+		n++
+	}
+	n += slices.PutInt(buf[n:], tm.Sec)
+
+	return n
 }
