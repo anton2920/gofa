@@ -164,7 +164,7 @@ func PutTmDate(buf []byte, tm Tm) int {
 	buf[n] = '-'
 	n++
 
-	if tm.Mday < 10 {
+	if tm.Mon < 10 {
 		buf[n] = '0'
 		n++
 	}
