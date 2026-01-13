@@ -13,6 +13,8 @@ type Path string
 func (p *Path) Match(format string, args ...interface{}) bool {
 	t := trace.Begin("")
 
+	const ellipsis = "..."
+
 	var narg int
 	var ok bool
 
@@ -20,14 +22,14 @@ func (p *Path) Match(format string, args ...interface{}) bool {
 	for {
 		percent := strings.FindChar(format, '%')
 		if percent == -1 {
-			const ellipsis = "..."
-
 			if !strings.EndsWith(format, ellipsis) {
 				ok = path == format
 			} else {
 				format = format[:len(format)-len(ellipsis)]
 				ok = strings.StartsWith(path, format)
 			}
+
+			//runtime.Breakpoint()
 			if ok {
 				*p = Path(path[len(format):])
 			}
@@ -52,7 +54,7 @@ func (p *Path) Match(format string, args ...interface{}) bool {
 			nextP = len(path)
 		} else {
 			nextP = strings.FindChar(path, format[nextF])
-			if nextP == -1 {
+			if (nextP == -1) || (strings.StartsWith(format[nextF:], ellipsis)) {
 				nextP = strings.FindChar(path, '/')
 				if nextP == -1 {
 					nextP = len(path)

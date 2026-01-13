@@ -14,11 +14,13 @@ func MustMatch(t *testing.T, path *Path, format string, args ...interface{}) {
 }
 
 func TestPathMatch(t *testing.T) {
+	name := t.Name() + "/"
+
 	t.Run("/company/1/edit", func(t *testing.T) {
 		t.Parallel()
 
 		var id database.ID
-		path := Path("/company/1/edit")
+		path := Path(t.Name()[len(name):])
 		MustMatch(t, &path, "/company...")
 		MustMatch(t, &path, "/%d...", &id)
 		MustMatch(t, &path, "/edit")
@@ -26,12 +28,24 @@ func TestPathMatch(t *testing.T) {
 			t.Errorf("expected ID=1, got %d", id)
 		}
 	})
+	t.Run("/company/1/logo.jpg", func(t *testing.T) {
+		t.Parallel()
+
+		var id database.ID
+		path := Path(t.Name()[len(name):])
+		MustMatch(t, &path, "/company...")
+		MustMatch(t, &path, "/%d...", &id)
+		MustMatch(t, &path, "/logo.jpg")
+		if id != 1 {
+			t.Errorf("expected ID=1, got %d", id)
+		}
+	})
 	t.Run("(json,wire)", func(t *testing.T) {
 		t.Parallel()
 
-		const expectedList = "json,wire"
+		var expectedList = t.Name()[len(name)+1 : len(t.Name())-1]
 		var actualList string
-		path := Path("(" + expectedList + ")")
+		path := Path(t.Name()[len(name):])
 		MustMatch(t, &path, "(%s)", &actualList)
 		if actualList != expectedList {
 			t.Errorf("expected list=%q, got %q", expectedList, actualList)
