@@ -14,3 +14,7 @@ func AsBytes(s string) []byte {
 func Data(s string) *byte {
 	return (*byte)(unsafe.Pointer((*reflect.StringHeader)(unsafe.Pointer(&s)).Data))
 }
+
+func StartsEndsWith(s string, starts string, ends string) bool {
+	return StartsWith(s, starts) && EndsWith(s, ends)
+}
