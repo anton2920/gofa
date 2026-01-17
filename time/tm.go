@@ -164,14 +164,18 @@ func PutTmDate(buf []byte, tm Tm) int {
 	buf[n] = '-'
 	n++
 
-	if tm.Mon < 10 {
+	if tm.Mon+1 < 10 {
 		buf[n] = '0'
 		n++
 	}
-	n += slices.PutInt(buf[n:], tm.Mon)
+	n += slices.PutInt(buf[n:], tm.Mon+1)
 	buf[n] = '-'
 	n++
 
+	if tm.Mday < 10 {
+		buf[n] = '0'
+		n++
+	}
 	n += slices.PutInt(buf[n:], tm.Mday)
 
 	return n
