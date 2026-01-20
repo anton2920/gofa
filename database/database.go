@@ -16,8 +16,12 @@ import (
 type ID int32
 
 type RecordHeader struct {
-	ID
-	bits.Flags
+	ID    ID
+	Flags bits.Flags
+
+	CreatedAt int64
+	UpdatedAt int64
+	DeletedAt int64
 }
 
 type DB struct {
