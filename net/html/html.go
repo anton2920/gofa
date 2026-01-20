@@ -41,32 +41,41 @@ func (h *HTML) WithoutTheme() *HTML {
 	return h.withoutTheme
 }
 
-func (h *HTML) Bytes(bs []byte) {
+func (h *HTML) Backspace() *HTML {
+	h.Response.Body = h.Response.Body[:len(h.Response.Body)-1]
+	return h
+}
+
+func (h *HTML) Bytes(bs []byte) *HTML {
 	h.Write(bs)
+	return h
 }
 
-func (h *HTML) Date(d int64) {
-	h.String(h.Dtoa(d))
+func (h *HTML) Date(d int64) *HTML {
+	return h.String(h.Dtoa(d))
 }
 
-func (h *HTML) Int(n int) {
+func (h *HTML) Int(n int) *HTML {
 	h.WriteInt(n)
+	return h
 }
 
-func (h *HTML) HString(s string) {
+func (h *HTML) HString(s string) *HTML {
 	h.WriteHTMLString(s)
+	return h
 }
 
-func (h *HTML) LString(s string) {
-	h.HString(h.L(s))
+func (h *HTML) LString(s string) *HTML {
+	return h.HString(h.L(s))
 }
 
-func (h *HTML) LStringColon(s string) {
+func (h *HTML) LStringColon(s string) *HTML {
 	h.LString(s)
 	h.String(": ")
+	return h
 }
 
-func (h *HTML) LStringPlural(s string, n int) {
+func (h *HTML) LStringPlural(s string, n int) *HTML {
 	const suffix = "ies"
 
 	if !strings.EndsWith(s, suffix) {
@@ -82,21 +91,26 @@ func (h *HTML) LStringPlural(s string, n int) {
 
 		h.LString(bytes.AsString(buf))
 	}
+
+	return h
 }
 
-func (h *HTML) String(s string) {
+func (h *HTML) String(s string) *HTML {
 	h.WriteString(s)
+	return h
 }
 
-func (h *HTML) Time(t int64) {
+func (h *HTML) Time(t int64) *HTML {
 	h.String(h.Ttoa(t))
+	return h
 }
 
-func (h *HTML) TString(s string) {
+func (h *HTML) TString(s string) *HTML {
 	if s := h.L(s); len(s) > 1 {
 		h.String(string(unicode.ToUpper(rune(s[0]))))
 		h.String(s[1:])
 	}
+	return h
 }
 
 func (h *HTML) Dtoa(d int64) string {
