@@ -3,6 +3,7 @@ package alloc
 import (
 	"unsafe"
 
+	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/trace"
@@ -28,29 +29,23 @@ func (a *Arena) NewSlice(n int) []byte {
 }
 
 func (a *Arena) Copy(bs []byte) []byte {
-	return bs
-	//	t := trace.Begin("")
-	//
-	// 	ret := a.NewSlice(len(bs))
-	//
-	//	copy(ret, bs)
-	//
-	// 	trace.End(t)
-	//
-	//	return ret
+	t := trace.Begin("")
+
+	ret := a.NewSlice(len(bs))
+	copy(ret, bs)
+
+	trace.End(t)
+	return ret
 }
 
 func (a *Arena) CopyString(s string) string {
-	return s
-	//	t := trace.Begin("")
-	//
-	// 	ret := a.NewSlice(len(s))
-	//
-	//	copy(ret, s)
-	//
-	// 	trace.End(t)
-	//
-	//	return bytes.AsString(ret)
+	t := trace.Begin("")
+
+	ret := a.NewSlice(len(s))
+	copy(ret, s)
+
+	trace.End(t)
+	return bytes.AsString(ret)
 }
 
 func (a *Arena) EscapeString(s string) string {
