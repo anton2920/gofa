@@ -114,7 +114,7 @@ func GenerateToken() string {
 
 		/* Making sure that it's unique. */
 		SessionsLock.RLock()
-		_, ok := Sessions[bytes.AsString(buffer)]
+		_, ok := Sessions[bytes.AsString(token)]
 		SessionsLock.RUnlock()
 		if !ok {
 			return string(token)
