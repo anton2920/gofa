@@ -40,7 +40,7 @@ func (r *Request) Cookie(name string) string {
 		cookie := cookies[i]
 		if strings.StartsWith(cookie, name) {
 			cookie = cookie[len(name):]
-			if cookie[0] != '=' {
+			if !strings.StartsWith(cookie, "=") {
 				trace.End(t)
 				return ""
 			}
