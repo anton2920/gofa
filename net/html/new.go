@@ -15,7 +15,19 @@ func (h *HTML) End2() *HTML {
 }
 
 func (h *HTML) HeadBegin2() *HTML {
-	return h.String(` <head>`)
+	h.String(` <head>`)
+
+	h.String(`<meta charset="UTF-8">`)
+	h.String(`<meta name="viewport" content="width=device-width, initial-scale=1.0">`)
+
+	if len(h.Theme.HeadLink.Href) > 0 {
+		h.String(` <link href="`).String(h.Theme.HeadLink.Href).String(`" rel="`).String(h.Theme.HeadLink.Rel).String(`">`)
+	}
+	if len(h.Theme.HeadScript.Src) > 0 {
+		h.String(` <script src="`).String(h.Theme.HeadScript.Src).String(`">`).String(`</script>`)
+	}
+
+	return h
 }
 
 func (h *HTML) HeadEnd2() *HTML {
@@ -48,6 +60,42 @@ func (h *HTML) DivBegin2() *HTML {
 
 func (h *HTML) DivEnd2() *HTML {
 	return h.String(`</div>`)
+}
+
+func (h *HTML) UlBegin2() *HTML {
+	return h.String(` <ul>`)
+}
+
+func (h *HTML) UlEnd2() *HTML {
+	return h.String(`</ul>`)
+}
+
+func (h *HTML) LiBegin2() *HTML {
+	return h.String(` <li>`)
+}
+
+func (h *HTML) LiEnd2() *HTML {
+	return h.String(`</li>`)
+}
+
+func (h *HTML) PBegin2() *HTML {
+	return h.String(` <p>`)
+}
+
+func (h *HTML) PEnd2() *HTML {
+	return h.String(`</p>`)
+}
+
+func (h *HTML) SpanBegin2() *HTML {
+	return h.String(` <span>`).Class_(h.Theme.Span.Class)
+}
+
+func (h *HTML) Span2(span string) *HTML {
+	return h.SpanBegin2().LString(span).SpanEnd2()
+}
+
+func (h *HTML) SpanEnd2() *HTML {
+	return h.String(`</span>`)
 }
 
 func (h *HTML) H1Begin2() *HTML {
@@ -98,6 +146,30 @@ func (h *HTML) H4End2() *HTML {
 	return h.String(`</h4>`)
 }
 
+func (h *HTML) H5Begin2() *HTML {
+	return h.String(` <h5>`).Class_(h.Theme.H5.Class)
+}
+
+func (h *HTML) H52(h5 string) *HTML {
+	return h.H5Begin2().LString(h5).H5End2()
+}
+
+func (h *HTML) H5End2() *HTML {
+	return h.String(`</h5>`)
+}
+
+func (h *HTML) H6Begin2() *HTML {
+	return h.String(` <h6>`).Class_(h.Theme.H6.Class)
+}
+
+func (h *HTML) H62(h6 string) *HTML {
+	return h.H6Begin2().LString(h6).H6End2()
+}
+
+func (h *HTML) H6End2() *HTML {
+	return h.String(`</h6>`)
+}
+
 func (h *HTML) ABegin2(href string) *HTML {
 	return h.String(` <a href="`).String(href).String(`">`).Class_(h.Theme.A.Class)
 }
@@ -140,6 +212,22 @@ func (h *HTML) LabelEnd2() *HTML {
 
 func (h *HTML) Checkbox2() *HTML {
 	return h.WithoutTheme().Input2("checkbox").Class_(h.Theme.Checkbox.Class)
+}
+
+func (h *HTML) SelectBegin2() *HTML {
+	return h.String(` <select>`)
+}
+
+func (h *HTML) SelectEnd2() *HTML {
+	return h.String(`</select>`)
+}
+
+func (h *HTML) OptionBegin2() *HTML {
+	return h.String(` <option>`)
+}
+
+func (h *HTML) OptionEnd2() *HTML {
+	return h.String(`</option>`)
 }
 
 var _class = []byte("class")
@@ -231,7 +319,7 @@ func (h *HTML) Checked(checked bool) *HTML {
 	return h
 }
 
-func (h *HTML) HREF(href string) *HTML {
+func (h *HTML) Href(href string) *HTML {
 	return h.Backspace().String(` href="`).String(href).String(`">`)
 }
 
@@ -248,7 +336,7 @@ func (h *HTML) Name(name string) *HTML {
 }
 
 func (h *HTML) Placeholder(placeholder string) *HTML {
-	return h.Backspace().String(` placeholder="`).String(placeholder).String(`">`)
+	return h.Backspace().String(` placeholder="`).LString(placeholder).String(`">`)
 }
 
 func (h *HTML) Required(required bool) *HTML {
@@ -258,6 +346,13 @@ func (h *HTML) Required(required bool) *HTML {
 	return h
 }
 
+func (h *HTML) Selected(selected bool) *HTML {
+	if selected {
+		h.Backspace().String(" selected>")
+	}
+	return h
+}
+
 func (h *HTML) Value(value string) *HTML {
-	return h.Backspace().String(` value="`).String(value).String(`">`)
+	return h.Backspace().String(` value="`).LString(value).String(`">`)
 }
