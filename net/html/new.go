@@ -70,6 +70,14 @@ func (h *HTML) UlEnd2() *HTML {
 	return h.String(`</ul>`)
 }
 
+func (h *HTML) OlBegin2() *HTML {
+	return h.String(` <ol>`)
+}
+
+func (h *HTML) OlEnd2() *HTML {
+	return h.String(`</ol>`)
+}
+
 func (h *HTML) LiBegin2() *HTML {
 	return h.String(` <li>`)
 }
@@ -82,8 +90,36 @@ func (h *HTML) PBegin2() *HTML {
 	return h.String(` <p>`)
 }
 
+func (h *HTML) P2(p string) *HTML {
+	return h.PBegin2().LString(p).PEnd2()
+}
+
 func (h *HTML) PEnd2() *HTML {
 	return h.String(`</p>`)
+}
+
+func (h *HTML) BBegin2() *HTML {
+	return h.String(` <b>`)
+}
+
+func (h *HTML) B2(b string) *HTML {
+	return h.BBegin2().LString(b).BEnd2()
+}
+
+func (h *HTML) BEnd2() *HTML {
+	return h.String(`</b>`)
+}
+
+func (h *HTML) IBegin2() *HTML {
+	return h.String(` <i>`)
+}
+
+func (h *HTML) I2(i string) *HTML {
+	return h.IBegin2().LString(i).IEnd2()
+}
+
+func (h *HTML) IEnd2() *HTML {
+	return h.String(`</i>`)
 }
 
 func (h *HTML) SpanBegin2() *HTML {
@@ -180,6 +216,10 @@ func (h *HTML) A2(href string, contents string) *HTML {
 
 func (h *HTML) AEnd2() *HTML {
 	return h.String(`</a>`)
+}
+
+func (h *HTML) Img2(alt string, src string) *HTML {
+	return h.String(` <img alt="`).LString(alt).String(`" src="`).String(src).String(`">`)
 }
 
 func (h *HTML) Input2(typ string) *HTML {
