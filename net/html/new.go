@@ -363,11 +363,11 @@ func (h *HTML) Href(href string) *HTML {
 	return h.Backspace().String(` href="`).String(href).String(`">`)
 }
 
-func (h *HTML) MinLength(minLength int) *HTML {
+func (h *HTML) Minlength(minLength int) *HTML {
 	return h.Backspace().String(` minlength="`).Int(minLength).String(`">`)
 }
 
-func (h *HTML) MaxLength(maxLength int) *HTML {
+func (h *HTML) Maxlength(maxLength int) *HTML {
 	return h.Backspace().String(` maxlength="`).Int(maxLength).String(`">`)
 }
 
