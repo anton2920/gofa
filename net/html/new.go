@@ -218,6 +218,10 @@ func (h *HTML) AEnd2() *HTML {
 	return h.String(`</a>`)
 }
 
+func (h *HTML) Link2(href string) *HTML {
+	return h.String(`<link href="`).String(href).String(`">`)
+}
+
 func (h *HTML) Img2(alt string, src string) *HTML {
 	return h.String(` <img alt="`).LString(alt).String(`" src="`).String(src).String(`">`)
 }
@@ -268,6 +272,38 @@ func (h *HTML) OptionBegin2() *HTML {
 
 func (h *HTML) OptionEnd2() *HTML {
 	return h.String(`</option>`)
+}
+
+func (h *HTML) SvgBegin2(width int, height int) *HTML {
+	return h.String(` <svg xmlns="http://www.w3.org/2000/svg" width="`).Int(width).String(`" height="`).Int(height).String(`">`)
+}
+
+func (h *HTML) SvgEnd2() *HTML {
+	return h.String(`</svg>`)
+}
+
+func (h *HTML) TextBegin2(x int, y int) *HTML {
+	return h.String(` <text x="`).Int(x).String(`" y="`).Int(y).String(`">`)
+}
+
+func (h *HTML) TextEnd2() *HTML {
+	return h.String(`</text>`)
+}
+
+func (h *HTML) Path2(d string) *HTML {
+	return h.String(` <path d="`).String(d).String(`"/>`)
+}
+
+func (h *HTML) Circle2(cx int, cy int, r int) *HTML {
+	return h.String(` <circle cx="`).Int(cx).String(`" cy="`).Int(cy).String(`" r="`).Int(r).String(`"/>`)
+}
+
+func (h *HTML) Rect2(x int, y int, width int, height int, rx int) *HTML {
+	return h.String(` <rect x="`).Int(x).String(`" y="`).Int(y).String(`" width="`).Int(width).String(`" height="`).Int(height).String(`" rx="`).Int(rx).String(`"/>`)
+}
+
+func (h *HTML) Line2(x1 int, y1 int, x2 int, y2 int) *HTML {
+	return h.String(` <line x1="`).Int(x1).String(`" y1="`).Int(y1).String(`" x2="`).Int(x2).String(`" y2="`).Int(y2).String(`"/>`)
 }
 
 var _class = []byte("class")
@@ -352,11 +388,51 @@ func (h *HTML) Action(action string) *HTML {
 	return h.Backspace().String(` action="`).String(action).String(`">`)
 }
 
+func (h *HTML) AriaCurrent(current string) *HTML {
+	return h.Backspace().String(` aria-current="`).String(current).String(`">`)
+}
+
+func (h *HTML) AriaLabel(label string) *HTML {
+	return h.Backspace().String(` aria-label="`).String(label).String(`">`)
+}
+
 func (h *HTML) Checked(checked bool) *HTML {
 	if checked {
 		h.Backspace().String(" checked>")
 	}
 	return h
+}
+
+func (h *HTML) DataBsToggle(toggle string) *HTML {
+	return h.Backspace().String(` data-bs-toggle="`).String(toggle).String(`">`)
+}
+
+func (h *HTML) DominantBaseline(baseline string) *HTML {
+	return h.Backspace().String(` dominant-baseline="`).String(baseline).String(`">`)
+}
+
+func (h *HTML) Fill(fill string) *HTML {
+	return h.Backspace().String(` fill="`).String(fill).String(`">`)
+}
+
+func (h *HTML) FontFamily(family string) *HTML {
+	return h.Backspace().String(` font-family="`).String(family).String(`">`)
+}
+
+func (h *HTML) FontSize(size int) *HTML {
+	return h.Backspace().String(` font-size="`).Int(size).String(`">`)
+}
+
+func (h *HTML) FontWeight(weight int) *HTML {
+	return h.Backspace().String(` font-weight="`).Int(weight).String(`">`)
+}
+
+func (h *HTML) For(for_ string) *HTML {
+	return h.Backspace().String(` for="`).String(for_).String(`">`)
+}
+
+func (h *HTML) Id(id string) *HTML {
+	return h.Backspace().String(` id="`).String(id).String(`">`)
 }
 
 func (h *HTML) Href(href string) *HTML {
@@ -375,8 +451,16 @@ func (h *HTML) Name(name string) *HTML {
 	return h.Backspace().String(` name="`).String(name).String(`">`)
 }
 
+func (h *HTML) Onclick(onclick string) *HTML {
+	return h.Backspace().String(` onclick="`).String(onclick).String(`">`)
+}
+
 func (h *HTML) Placeholder(placeholder string) *HTML {
 	return h.Backspace().String(` placeholder="`).LString(placeholder).String(`">`)
+}
+
+func (h *HTML) Rel(rel string) *HTML {
+	return h.Backspace().String(` rel="`).String(rel).String(`">`)
 }
 
 func (h *HTML) Required(required bool) *HTML {
@@ -393,6 +477,26 @@ func (h *HTML) Selected(selected bool) *HTML {
 	return h
 }
 
+func (h *HTML) Stroke(stroke string) *HTML {
+	return h.Backspace().String(` stroke="`).String(stroke).String(`">`)
+}
+
+func (h *HTML) StrokeLinecap(linecap string) *HTML {
+	return h.Backspace().String(` stroke-linecap="`).String(linecap).String(`">`)
+}
+
+func (h *HTML) StrokeLinejoin(linejoin string) *HTML {
+	return h.Backspace().String(` stroke-linejoin="`).String(linejoin).String(`">`)
+}
+
+func (h *HTML) StrokeWidth(width int) *HTML {
+	return h.Backspace().String(` stroke-width="`).Int(width).String(`">`)
+}
+
 func (h *HTML) Value(value string) *HTML {
 	return h.Backspace().String(` value="`).LString(value).String(`">`)
+}
+
+func (h *HTML) Viewbox(viewbox string) *HTML {
+	return h.Backspace().String(` viewbox="`).String(viewbox).String(`">`)
 }
