@@ -21,10 +21,10 @@ func (h *HTML) HeadBegin2() *HTML {
 	h.String(`<meta name="viewport" content="width=device-width, initial-scale=1.0">`)
 
 	if len(h.Theme.HeadLink.Href) > 0 {
-		h.String(` <link href="`).String(h.Theme.HeadLink.Href).String(`" rel="`).String(h.Theme.HeadLink.Rel).String(`">`)
+		h.Link2(h.Theme.HeadLink.Href).Rel("stylesheet")
 	}
 	if len(h.Theme.HeadScript.Src) > 0 {
-		h.String(` <script src="`).String(h.Theme.HeadScript.Src).String(`">`).String(`</script>`)
+		h.ScriptBegin2().Src(h.Theme.HeadScript.Src).ScriptEnd2()
 	}
 
 	return h
@@ -44,6 +44,22 @@ func (h *HTML) Title2(title string) *HTML {
 
 func (h *HTML) TitleEnd2() *HTML {
 	return h.String(`</title>`)
+}
+
+func (h *HTML) StyleBegin2() *HTML {
+	return h.String(` <style>`)
+}
+
+func (h *HTML) StyleEnd2() *HTML {
+	return h.String(`</style>`)
+}
+
+func (h *HTML) ScriptBegin2() *HTML {
+	return h.String(` <script>`)
+}
+
+func (h *HTML) ScriptEnd2() *HTML {
+	return h.String(`</script>`)
 }
 
 func (h *HTML) BodyBegin2() *HTML {
@@ -475,6 +491,10 @@ func (h *HTML) Selected(selected bool) *HTML {
 		h.Backspace().String(" selected>")
 	}
 	return h
+}
+
+func (h *HTML) Src(src string) *HTML {
+	return h.Backspace().String(` src="`).String(src).String(`">`)
 }
 
 func (h *HTML) Stroke(stroke string) *HTML {
