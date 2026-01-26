@@ -4,10 +4,22 @@ import (
 	stdbytes "bytes"
 
 	"github.com/anton2920/gofa/bytes"
+	"github.com/anton2920/gofa/l10n"
+	"github.com/anton2920/gofa/session"
 )
 
 func (h *HTML) Begin2() *HTML {
-	return h.String(`<!DOCTYPE html><html>`)
+	h.String(`<!DOCTYPE html>`)
+	h.String(`<html lang="`)
+	h.String(l10n.Language2HTMLLang[h.Language])
+	h.String(`"`)
+	if h.ColorScheme > 0 {
+		h.String(` data-bs-theme="`)
+		h.String(session.ColorScheme2String[h.ColorScheme])
+		h.String(`"`)
+	}
+	h.String(`>`)
+	return h
 }
 
 func (h *HTML) End2() *HTML {
