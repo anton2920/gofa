@@ -416,6 +416,10 @@ func (h *HTML) Action(action string) *HTML {
 	return h.Backspace().String(` action="`).String(action).String(`">`)
 }
 
+func (h *HTML) Alt(alt string) *HTML {
+	return h.Backspace().String(` alt="`).LString(alt).String(`">`)
+}
+
 func (h *HTML) AriaCurrent(current string) *HTML {
 	return h.Backspace().String(` aria-current="`).String(current).String(`">`)
 }
