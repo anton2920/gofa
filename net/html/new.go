@@ -82,6 +82,14 @@ func (h *HTML) BodyEnd2() *HTML {
 	return h.String(`</body>`)
 }
 
+func (h *HTML) Br2() *HTML {
+	return h.String(` <br>`)
+}
+
+func (h *HTML) Hr2() *HTML {
+	return h.String(` <hr>`)
+}
+
 func (h *HTML) DivBegin2() *HTML {
 	return h.String(` <div>`)
 }
@@ -527,6 +535,10 @@ func (h *HTML) StrokeLinejoin(linejoin string) *HTML {
 
 func (h *HTML) StrokeWidth(width int) *HTML {
 	return h.Backspace().String(` stroke-width="`).Int(width).String(`">`)
+}
+
+func (h *HTML) Style(style string) *HTML {
+	return h.Backspace().String(` style="`).String(style).String(`">`)
 }
 
 func (h *HTML) Value(value string) *HTML {
