@@ -396,3 +396,7 @@ func (h *HTML) Span(s string, attrs ...Attributes) {
 func (h *HTML) SpanEnd() {
 	h.TagEnd("span")
 }
+
+func (h *HTML) Reset() {
+	h.Response.Reset()
+}
