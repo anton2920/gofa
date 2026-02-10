@@ -432,6 +432,10 @@ func (h *HTML) AriaCurrent(current string) *HTML {
 	return h.Backspace().String(` aria-current="`).String(current).String(`">`)
 }
 
+func (h *HTML) AriaHidden(hidden string) *HTML {
+	return h.Backspace().String(` aria-hidden="`).String(hidden).String(`">`)
+}
+
 func (h *HTML) AriaLabel(label string) *HTML {
 	return h.Backspace().String(` aria-label="`).String(label).String(`">`)
 }
@@ -485,6 +489,14 @@ func (h *HTML) Minlength(minLength int) *HTML {
 
 func (h *HTML) Maxlength(maxLength int) *HTML {
 	return h.Backspace().String(` maxlength="`).Int(maxLength).String(`">`)
+}
+
+func (h *HTML) Min(min int) *HTML {
+	return h.Backspace().String(` min="`).Int(min).String(`">`)
+}
+
+func (h *HTML) Max(max int) *HTML {
+	return h.Backspace().String(` max="`).Int(max).String(`">`)
 }
 
 func (h *HTML) Name(name string) *HTML {

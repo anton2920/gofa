@@ -190,6 +190,10 @@ func Name(name string) Attributes {
 	return Attributes{Name: name}
 }
 
+func Placeholder(placeholder string) Attributes {
+	return Attributes{Placeholder: placeholder}
+}
+
 func Readonly(readonly bool) Attributes {
 	return Attributes{Readonly: readonly}
 }
