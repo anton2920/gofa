@@ -4,7 +4,11 @@ import (
 	stdbytes "bytes"
 
 	"github.com/anton2920/gofa/bytes"
+	"github.com/anton2920/gofa/debug"
+	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/l10n"
+	"github.com/anton2920/gofa/log"
+	"github.com/anton2920/gofa/net/http"
 	"github.com/anton2920/gofa/session"
 )
 
@@ -88,6 +92,38 @@ func (h *HTML) Br2() *HTML {
 
 func (h *HTML) Hr2() *HTML {
 	return h.String(` <hr>`)
+}
+
+func (h *HTML) ErrorMessage2(message string) *HTML {
+	if len(message) > 0 {
+		h.DivBegin2()
+		h.LStringColon("Error")
+		h.LString(message)
+		h.DivEnd2()
+	}
+	return h
+}
+
+func (h *HTML) Error2(err error) *HTML {
+	var message string
+
+	if err != nil {
+		if httpError, ok := err.(http.Error); ok {
+			h.Status = httpError.Status
+			message = httpError.DisplayErrorMessage
+		} else if _, ok := err.(errors.Panic); ok {
+			h.Status = http.StatusInternalServerError
+			message = http.ServerDisplayErrorMessage
+		} else {
+			log.Panicf("Unsupported error type: %T (%v)", err, err)
+		}
+
+		if debug.Debug {
+			message = err.Error()
+		}
+	}
+
+	return h.ErrorMessage2(message)
 }
 
 func (h *HTML) DivBegin2() *HTML {
@@ -420,6 +456,10 @@ func (h *HTML) Classes(classes ...string) *HTML {
 	return h
 }
 
+func (h *HTML) Accept(accept string) *HTML {
+	return h.Backspace().String(` accept="`).String(accept).String(`">`)
+}
+
 func (h *HTML) Action(action string) *HTML {
 	return h.Backspace().String(` action="`).String(action).String(`">`)
 }
@@ -453,6 +493,10 @@ func (h *HTML) DataBsToggle(toggle string) *HTML {
 
 func (h *HTML) DominantBaseline(baseline string) *HTML {
 	return h.Backspace().String(` dominant-baseline="`).String(baseline).String(`">`)
+}
+
+func (h *HTML) Enctype(enctype string) *HTML {
+	return h.Backspace().String(` enctype="`).String(enctype).String(`">`)
 }
 
 func (h *HTML) Fill(fill string) *HTML {
