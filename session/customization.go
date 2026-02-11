@@ -18,6 +18,7 @@ const (
 	ColorSchemeAuto = ColorScheme(iota)
 	ColorSchemeLight
 	ColorSchemeDark
+	ColorSchemeCount
 )
 
 var ColorScheme2String = [...]string{
