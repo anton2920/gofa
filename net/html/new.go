@@ -477,7 +477,11 @@ func (h *HTML) AriaHidden(hidden string) *HTML {
 }
 
 func (h *HTML) AriaLabel(label string) *HTML {
-	return h.Backspace().String(` aria-label="`).String(label).String(`">`)
+	return h.Backspace().String(` aria-label="`).LString(label).String(`">`)
+}
+
+func (h *HTML) Autocomplete(autocomplete string) *HTML {
+	return h.Backspace().String(` autocomplete="`).String(autocomplete).String(`">`)
 }
 
 func (h *HTML) Checked(checked bool) *HTML {
@@ -527,12 +531,12 @@ func (h *HTML) Href(href string) *HTML {
 	return h.Backspace().String(` href="`).String(href).String(`">`)
 }
 
-func (h *HTML) Minlength(minLength int) *HTML {
-	return h.Backspace().String(` minlength="`).Int(minLength).String(`">`)
+func (h *HTML) Minlength(minlength int) *HTML {
+	return h.Backspace().String(` minlength="`).Int(minlength).String(`">`)
 }
 
-func (h *HTML) Maxlength(maxLength int) *HTML {
-	return h.Backspace().String(` maxlength="`).Int(maxLength).String(`">`)
+func (h *HTML) Maxlength(maxlength int) *HTML {
+	return h.Backspace().String(` maxlength="`).Int(maxlength).String(`">`)
 }
 
 func (h *HTML) Min(min int) *HTML {
