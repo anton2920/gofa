@@ -302,8 +302,16 @@ func (h *HTML) Input2(typ string) *HTML {
 	return h.String(` <input type="`).String(typ).String(`">`).Class_(h.Theme.Input.Class)
 }
 
+func (h *HTML) ButtonBegin2() *HTML {
+	return h.String(` <button>`)
+}
+
 func (h *HTML) Button2(value string) *HTML {
 	return h.WithoutTheme().Input2("submit").Value(value).Class_(h.Theme.Button.Class)
+}
+
+func (h *HTML) ButtonEnd2() *HTML {
+	return h.String(`</button>`)
 }
 
 func (h *HTML) FormBegin2(method string) *HTML {
@@ -527,6 +535,10 @@ func (h *HTML) Id(id string) *HTML {
 	return h.Backspace().String(` id="`).String(id).String(`">`)
 }
 
+func (h *HTML) Height(height int) *HTML {
+	return h.Backspace().String(` height="`).Int(height).String(`">`)
+}
+
 func (h *HTML) Href(href string) *HTML {
 	return h.Backspace().String(` href="`).String(href).String(`">`)
 }
@@ -607,4 +619,8 @@ func (h *HTML) Value(value string) *HTML {
 
 func (h *HTML) Viewbox(viewbox string) *HTML {
 	return h.Backspace().String(` viewbox="`).String(viewbox).String(`">`)
+}
+
+func (h *HTML) Width(width int) *HTML {
+	return h.Backspace().String(` width="`).Int(width).String(`">`)
 }
