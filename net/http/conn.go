@@ -41,7 +41,7 @@ type Conn struct {
 	RequestBuffer buffer.Circular
 
 	ResponseBuffer []byte
-	ResponsePos    int64
+	ResponsePos    int
 
 	Error error
 
@@ -91,7 +91,7 @@ func (c *Conn) Close() error {
 	return err
 }
 
-func (c *Conn) ReadRequestData() (int64, error) {
+func (c *Conn) ReadRequestData() (int, error) {
 	t := trace.Begin("")
 
 	buf := c.RequestBuffer.RemainingSlice()
@@ -112,11 +112,11 @@ func (c *Conn) ReadRequestData() (int64, error) {
 	return n, nil
 }
 
-func (c *Conn) WriteResponseData() (int64, error) {
+func (c *Conn) WriteResponseData() (int, error) {
 	t := trace.Begin("")
 
 	var err error
-	var n int64
+	var n int
 
 	if len(c.ResponseBuffer[c.ResponsePos:]) > 0 {
 		n, err = syscall.Write(int32(c.Socket), c.ResponseBuffer[c.ResponsePos:])
@@ -126,7 +126,7 @@ func (c *Conn) WriteResponseData() (int64, error) {
 		}
 		c.ResponsePos += n
 
-		if c.ResponsePos == int64(len(c.ResponseBuffer)) {
+		if c.ResponsePos == len(c.ResponseBuffer) {
 			c.ResponseBuffer = c.ResponseBuffer[:0]
 			c.ResponsePos = 0
 			if c.CloseAfterWrite {
