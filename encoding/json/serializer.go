@@ -2,7 +2,6 @@ package json
 
 import (
 	"github.com/anton2920/gofa/bools"
-	"github.com/anton2920/gofa/encoding"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
 )
@@ -12,8 +11,6 @@ type Serializer struct {
 	Pos       int
 	NeedComma bool
 }
-
-var _ encoding.Serializer = new(Serializer)
 
 func (s *Serializer) Comma() {
 	if s.NeedComma {

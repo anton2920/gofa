@@ -3,7 +3,6 @@ package json
 import (
 	"bytes"
 
-	"github.com/anton2920/gofa/encoding"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/trace"
 )
@@ -11,8 +10,6 @@ import (
 type Deserializer struct {
 	Error error
 }
-
-var _ encoding.Deserializer = new(Deserializer)
 
 func UnescapeJSONString(s string) string {
 	t := trace.Begin("")
