@@ -23,6 +23,7 @@ const (
 	SYS_exit             = 1
 	SYS_fcntl            = 92
 	SYS_fstat            = 551
+	SYS_fsync            = 95
 	SYS_ftruncate        = 480
 	SYS_getrandom        = 563
 	SYS_ioctl            = 54
@@ -39,6 +40,7 @@ const (
 	SYS_nanosleep        = 240
 	SYS_nmount           = 378
 	SYS_open             = 5
+	SYS_openat           = 499
 	SYS_pread            = 475
 	SYS_pwrite           = 476
 	SYS_rctl_add_rule    = 528
@@ -126,6 +128,11 @@ func Fcntl(fd, cmd int32, arg int32) (int32, error) {
 func Fstat(fd int32, sb *Stat_t) error {
 	_, _, errno := RawSyscall(SYS_fstat, uintptr(fd), uintptr(unsafe.Pointer(sb)), 0)
 	return NewError("fstat", errno)
+}
+
+func Fsync(fd int32) error {
+	_, _, errno := RawSyscall(SYS_fsync, uintptr(fd), 0, 0)
+	return NewError("fsync", errno)
 }
 
 func Ftruncate(fd int32, length int64) error {
@@ -222,6 +229,14 @@ func Open(path string, flags int32, mode uint16) (int32, error) {
 	return int32(r1), NewError("open", errno)
 }
 
+func OpenAt(fd int32, path string, flags int32, mode uint16) (int32, error) {
+	buffer := make([]byte, PATH_MAX+1)
+	copy(buffer[:PATH_MAX], path)
+
+	r1, _, errno := Syscall6(SYS_openat, uintptr(fd), uintptr(unsafe.Pointer(&buffer[0])), uintptr(flags), uintptr(mode), 0, 0)
+	return int32(r1), NewError("openat", errno)
+}
+
 func Pread(fd int32, buf []byte, offset int64) (int, error) {
 	r1, _, errno := Syscall6(SYS_pread, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)), uintptr(offset), 0, 0)
 	return int(r1), NewError("pread", errno)
@@ -242,9 +257,9 @@ func RctlRemoveRule(filter []byte) error {
 	return NewError("rctl_remove_rule", errno)
 }
 
-func Read(fd int32, buf []byte) (int64, error) {
+func Read(fd int32, buf []byte) (int, error) {
 	r1, _, errno := Syscall(SYS_read, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
-	return int64(r1), NewError("read", errno)
+	return int(r1), NewError("read", errno)
 }
 
 func Rmdir(path string) error {
@@ -304,12 +319,12 @@ func Unmount(path string, flags int32) error {
 	return NewError("unmount", errno)
 }
 
-func Write(fd int32, buf []byte) (int64, error) {
+func Write(fd int32, buf []byte) (int, error) {
 	r1, _, errno := Syscall(SYS_write, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
-	return int64(r1), NewError("write", errno)
+	return int(r1), NewError("write", errno)
 }
 
-func Writev(fd int32, iov []Iovec) (int64, error) {
+func Writev(fd int32, iov []Iovec) (int, error) {
 	r1, _, errno := Syscall(SYS_writev, uintptr(fd), uintptr(unsafe.Pointer(&iov[0])), uintptr(len(iov)))
-	return int64(r1), NewError("writev", errno)
+	return int(r1), NewError("writev", errno)
 }
