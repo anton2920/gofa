@@ -1,32 +1,36 @@
 package bplus
 
 import (
-	"bytes"
 	"fmt"
-	"sync"
 	"unsafe"
 
 	"github.com/anton2920/gofa/errors"
+	"github.com/anton2920/gofa/io/fs"
 	"github.com/anton2920/gofa/trace"
 )
 
 /* Tree is an implementation of a B+tree. */
 type Tree struct {
-	sync.RWMutex
-	Pager
-	Meta
+	Meta Meta
 
+	File fs.VFile
+}
+
+type Tx struct {
+	Tree       *Tree
+	Status     int
 	SearchPath []TreePathItem
+	SavedPages map[int64]int64
 }
 
 type TreeForwardIterator struct {
-	*Tree
-	Leaf
+	Tree    *Tree
+	Leaf    Leaf
 	Current int
 }
 
 type TreePathItem struct {
-	Page
+	Page  Page
 	Index int64
 	Pos   int
 }
@@ -35,8 +39,14 @@ const (
 	//TreeMaxOrder = 1 << 8
 	TreeMaxOrder = 5
 
-	TreeMagic   = 0xFAFEFAAF
+	TreeMagic   = uint64(0xFAFEFAAFDEADBEEF)
 	TreeVersion = 0x1
+)
+
+const (
+	TxStatusInProgress = iota
+	TxStatusAborted
+	TxStatusCommited
 )
 
 func duplicate(buffer []byte, x []byte) []byte {
@@ -46,26 +56,11 @@ func duplicate(buffer []byte, x []byte) []byte {
 	return buffer[:copy(buffer, x)]
 }
 
-func int2Slice(x int) []byte {
-	defer trace.End(trace.Begin(""))
-
-	buf := make([]byte, unsafe.Sizeof(x))
-	*(*uint64)(unsafe.Pointer(&buf[0])) = uint64(x)
-	return buf
-}
-
-func slice2Int(buf []byte) int {
-	defer trace.End(trace.Begin(""))
-
-	return int(*(*int)(unsafe.Pointer(&buf[0])))
-}
-
-func GetTreeAt(pager Pager, index int64) (*Tree, error) {
+func OpenTreeAt(f fs.VFile, index int64) (*Tree, error) {
 	defer trace.End(trace.Begin(""))
 
 	var t Tree
-
-	t.Pager = pager
+	t.File = f
 
 	base, err := t.ReadPageAt(t.Meta.Page(), index)
 	if err != nil {
@@ -91,7 +86,7 @@ func GetTreeAt(pager Pager, index int64) (*Tree, error) {
 
 		pages[End].Init(PageTypeLeaf)
 
-		if _, err := t.Pager.WritePagesAt(pages[:], base); err != nil {
+		if _, err := t.WritePagesAt(pages[:], base); err != nil {
 			return nil, fmt.Errorf("failed to write initial pages: %v", err)
 		}
 
@@ -102,8 +97,9 @@ func GetTreeAt(pager Pager, index int64) (*Tree, error) {
 	}
 
 	if t.Meta.Magic != TreeMagic {
-		return nil, fmt.Errorf("wrong tree magic: %d != %d", TreeMagic, t.Meta.Magic)
+		return nil, fmt.Errorf("wrong tree magic: %16X != %16X", TreeMagic, t.Meta.Magic)
 	}
+	/* TODO(anton2920): check integrity? */
 
 	return &t, nil
 
@@ -112,10 +108,10 @@ func GetTreeAt(pager Pager, index int64) (*Tree, error) {
 func (it *TreeForwardIterator) Next() bool {
 	it.Current++
 	if it.Current >= int(it.Leaf.N) {
-		if it.Leaf.Next == it.Meta.EndSentinel {
+		if it.Leaf.Next == it.Tree.Meta.EndSentinel {
 			return false
 		}
-		if _, err := it.ReadPageAt(it.Leaf.Page(), it.Leaf.Next); err != nil {
+		if _, err := it.Tree.ReadPageAt(it.Leaf.Page(), it.Leaf.Next); err != nil {
 			return false
 		}
 		it.Current = 0
@@ -132,14 +128,61 @@ func (it *TreeForwardIterator) Value() []byte {
 }
 
 func (t *Tree) ReadPageAt(page *Page, index int64) (int64, error) {
-	return t.Pager.ReadPagesAt(Page2Slice(page), index)
+	if _, err := t.File.ReadAt(Page2Bytes(page), index*int64(unsafe.Sizeof(*page))); err != nil {
+		return -1, err
+	}
+	return index, nil
 }
 
 func (t *Tree) WritePageAt(page *Page, index int64) (int64, error) {
-	return t.Pager.WritePagesAt(Page2Slice(page), index)
+	if index == -1 {
+		t.File.Lock()
+		defer t.File.Unlock()
+
+		s, err := t.File.SizeEx(true)
+		if err != nil {
+			return -1, err
+		}
+		index = int64(s) / int64(unsafe.Sizeof(*page))
+	}
+
+	if _, err := t.File.WriteAtEx(Page2Bytes(page), index*int64(unsafe.Sizeof(*page)), true); err != nil {
+		return -1, err
+	}
+
+	return index, nil
 }
 
-func (t *Tree) Begin() (*TreeForwardIterator, error) {
+func (t *Tree) WritePagesAt(pages []Page, index int64) (int64, error) {
+	if index == -1 {
+		t.File.Lock()
+		defer t.File.Unlock()
+
+		s, err := t.File.SizeEx(true)
+		if err != nil {
+			return -1, err
+		}
+		index = int64(s) / int64(unsafe.Sizeof(pages[0]))
+	}
+
+	if _, err := t.File.WriteAtEx(Pages2Bytes(pages), index*int64(unsafe.Sizeof(pages[0])), true); err != nil {
+		return -1, err
+	}
+
+	return index, nil
+}
+
+func (t *Tree) Begin() (*Tx, error) {
+	var tx Tx
+
+	tx.Tree = t
+	tx.SavedPages = make(map[int64]int64)
+	//tx.SearchPath = make([]TreePathItem, 0, 16)
+
+	return &tx, nil
+}
+
+func (t *Tree) Iter() (*TreeForwardIterator, error) {
 	var it TreeForwardIterator
 	var page Page
 
@@ -163,6 +206,63 @@ func (t *Tree) Begin() (*TreeForwardIterator, error) {
 	}
 
 	panic("unreachable")
+}
+
+func (tx *Tx) Commit() error {
+	if tx.Status != TxStatusInProgress {
+		return errors.New("failed to commit Tx that is not in progress")
+	}
+
+	tx.Tree.Meta.LastSeq = 0
+	if _, err := tx.Tree.WritePageAt(tx.Tree.Meta.Page(), 0); err != nil {
+		return fmt.Errorf("failed to update meta page: %v", err)
+	}
+	if err := tx.Tree.File.Sync(); err != nil {
+		return fmt.Errorf("failed to sync tree file: %v", err)
+	}
+
+	return nil
+}
+
+func (tx *Tx) Rollback() error {
+	if tx.Status == TxStatusInProgress {
+		var page Page
+
+		for from, to := range tx.SavedPages {
+			if _, err := tx.Tree.ReadPageAt(&page, to); err != nil {
+				return fmt.Errorf("failed to read page from %d: %v", to, err)
+			}
+			if _, err := tx.Tree.WritePageAt(&page, from); err != nil {
+				return fmt.Errorf("failed to write page to %d: %v", from, err)
+			}
+		}
+
+		if err := tx.Tree.File.Sync(); err != nil {
+			return fmt.Errorf("failed to sync tree file: %v", err)
+		}
+
+		tx.Status = TxStatusAborted
+	}
+	return nil
+}
+
+func (tx *Tx) BackupPage(index int64) error {
+	var page Page
+
+	if _, ok := tx.SavedPages[index]; !ok {
+		if _, err := tx.Tree.ReadPageAt(&page, index); err != nil {
+			return fmt.Errorf("failed to read page: %v", err)
+		}
+
+		nindex, err := tx.Tree.WritePageAt(&page, -1)
+		if err != nil {
+			return fmt.Errorf("failed to write page: %v", err)
+		}
+
+		tx.SavedPages[index] = nindex
+	}
+
+	return nil
 }
 
 func (t *Tree) Get(key []byte) ([]byte, error) {
@@ -246,7 +346,7 @@ func (t *Tree) Has(key []byte) (bool, error) {
 	return false, nil
 }
 
-func (t *Tree) Set(key []byte, value []byte) error {
+func (tx *Tx) Set(key []byte, value []byte) error {
 	defer trace.End(trace.Begin(""))
 
 	var page Page
@@ -255,12 +355,12 @@ func (t *Tree) Set(key []byte, value []byte) error {
 	var ok bool
 	var pos int
 
-	t.SearchPath = t.SearchPath[:0]
+	tx.SearchPath = tx.SearchPath[:0]
 
-	index := t.Meta.Root
+	index := tx.Tree.Meta.Root
 forIndex:
 	for index != 0 {
-		if _, err := t.ReadPageAt(&page, index); err != nil {
+		if _, err := tx.Tree.ReadPageAt(&page, index); err != nil {
 			return fmt.Errorf("failed to read page: %v", err)
 		}
 
@@ -268,7 +368,7 @@ forIndex:
 		case PageTypeNode:
 			node := page.Node()
 			pos = node.Find(key)
-			t.SearchPath = append(t.SearchPath, TreePathItem{page, index, pos})
+			tx.SearchPath = append(tx.SearchPath, TreePathItem{page, index, pos})
 			index = node.GetChildAt(pos)
 		case PageTypeLeaf:
 			leaf := page.Leaf()
@@ -286,7 +386,7 @@ forIndex:
 		overflow := page.Overflow()
 
 		value = overflow.SetValue(value)
-		index, err := t.WritePageAt(&page, -1)
+		index, err := tx.Tree.WritePageAt(&page, -1)
 		if err != nil {
 			return fmt.Errorf("failed to write new overflow: %v", err)
 		}
@@ -294,7 +394,7 @@ forIndex:
 		for (len(value) != 0) && (leaf.OverflowAfterInsertKeyValueInEmpty(len(key), PartialValueLen(value))) {
 			overflow.Next = index
 			value = overflow.SetValue(value)
-			index, err = t.WritePageAt(&page, -1)
+			index, err = tx.Tree.WritePageAt(&page, -1)
 			if err != nil {
 				return fmt.Errorf("failed to write new overflow: %v", err)
 			}
@@ -323,7 +423,10 @@ forIndex:
 			/* Insering new key-value. */
 			leaf.InsertKeyValueAt(key, value, pos+1)
 		}
-		if _, err = t.WritePageAt(&page, index); err != nil {
+		if err := tx.BackupPage(index); err != nil {
+			return fmt.Errorf("failed to back-up page at %d: %v", index, err)
+		}
+		if _, err = tx.Tree.WritePageAt(&page, index); err != nil {
 			return fmt.Errorf("failed to write updated leaf: %v", err)
 		}
 		return nil
@@ -353,20 +456,23 @@ forIndex:
 
 	newLeaf.Next = leaf.Next
 	newKey := duplicate(newBuffer, newLeaf.GetKeyAt(0))
-	newPage, err := t.WritePageAt(newLeaf.Page(), -1)
+	newPage, err := tx.Tree.WritePageAt(newLeaf.Page(), -1)
 	if err != nil {
 		return fmt.Errorf("failed to write new leaf: %v", err)
 	}
 
 	leaf.Next = newPage
-	if _, err = t.WritePageAt(&page, index); err != nil {
+	if err := tx.BackupPage(index); err != nil {
+		return fmt.Errorf("failed to back-up page at %d: %v", index, err)
+	}
+	if _, err = tx.Tree.WritePageAt(&page, index); err != nil {
 		return fmt.Errorf("failed to write updated leaf: %v", err)
 	}
 
 	/* Update posing structure. */
-	for p := len(t.SearchPath) - 1; p >= 0; p-- {
-		page := t.SearchPath[p].Page
-		pos := t.SearchPath[p].Pos
+	for p := len(tx.SearchPath) - 1; p >= 0; p-- {
+		page := tx.SearchPath[p].Page
+		pos := tx.SearchPath[p].Pos
 		node := page.Node()
 
 		node.SetChildAt(index, pos)
@@ -374,7 +480,10 @@ forIndex:
 		overflow = node.OverflowAfterInsertKeyChild(len(key)) || (node.N >= TreeMaxOrder-1)
 		if !overflow {
 			node.InsertKeyChildAt(newKey, newPage, pos+1)
-			if _, err = t.WritePageAt(&page, t.SearchPath[p].Index); err != nil {
+			if err := tx.BackupPage(tx.SearchPath[p].Index); err != nil {
+				return fmt.Errorf("failed to back-up page at %d: %v", index, err)
+			}
+			if _, err = tx.Tree.WritePageAt(&page, tx.SearchPath[p].Index); err != nil {
 				return fmt.Errorf("failed to write updated node: %v", err)
 			}
 			return nil
@@ -408,12 +517,15 @@ forIndex:
 			newNode.Node().InsertKeyChildAt(insertKey, newPage, pos-half)
 		}
 
-		newPage, err = t.WritePageAt(&newNode, -1)
+		newPage, err = tx.Tree.WritePageAt(&newNode, -1)
 		if err != nil {
 			return fmt.Errorf("failed to write new node: %v", err)
 		}
 
-		index, err = t.WritePageAt(&page, t.SearchPath[p].Index)
+		if err := tx.BackupPage(tx.SearchPath[p].Index); err != nil {
+			return fmt.Errorf("failed to back-up page at %d: %v", index, err)
+		}
+		index, err = tx.Tree.WritePageAt(&page, tx.SearchPath[p].Index)
 		if err != nil {
 			return fmt.Errorf("failed to write updated node: %v", err)
 		}
@@ -422,57 +534,12 @@ forIndex:
 	var root Page
 	root.Init(PageTypeNode)
 	node := root.Node()
-	node.Init(newKey, t.Meta.Root, newPage)
+	node.Init(newKey, tx.Tree.Meta.Root, newPage)
 
-	t.Meta.Root, err = t.WritePageAt(&root, -1)
+	tx.Tree.Meta.Root, err = tx.Tree.WritePageAt(&root, -1)
 	if err != nil {
 		return fmt.Errorf("failed to write new root: %v", err)
 	}
 
 	return nil
-}
-
-func (t *Tree) stringImpl(buf *bytes.Buffer, index int64, level int) error {
-	var page Page
-
-	if index != 0 {
-		if _, err := t.ReadPageAt(&page, index); err != nil {
-			return fmt.Errorf("failed to read page: %v", err)
-		}
-
-		for i := 0; i < level; i++ {
-			buf.WriteRune('\t')
-		}
-
-		switch page.Type() {
-		case PageTypeNode:
-			node := page.Node()
-			for i := 0; i < int(node.N); i++ {
-				fmt.Fprintf(buf, "%4d", slice2Int(node.GetKeyAt(i)))
-			}
-			buf.WriteRune('\n')
-
-			for i := -1; i < int(node.N); i++ {
-				t.stringImpl(buf, node.GetChildAt(i), level+1)
-			}
-		case PageTypeLeaf:
-			leaf := page.Leaf()
-			for i := 0; i < int(leaf.N); i++ {
-				fmt.Fprintf(buf, "%4d", slice2Int(leaf.GetKeyAt(i)))
-			}
-			buf.WriteRune('\n')
-		}
-	}
-
-	return nil
-}
-
-func (t *Tree) String() string {
-	var buf bytes.Buffer
-
-	if err := t.stringImpl(&buf, t.Meta.Root, 0); err != nil {
-		return err.Error()
-	}
-
-	return buf.String()
 }

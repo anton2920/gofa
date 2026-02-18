@@ -114,8 +114,8 @@ func GetExtraOffset(n int, count int) int {
 	}
 }
 
-func Page2Slice(p *Page) []Page {
-	return *(*[]Page)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(p)), Len: 1, Cap: 1}))
+func Page2Bytes(p *Page) []byte {
+	return *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(p)), Len: int(unsafe.Sizeof(*p)), Cap: int(unsafe.Sizeof(*p))}))
 }
 
 func Pages2Bytes(ps []Page) []byte {

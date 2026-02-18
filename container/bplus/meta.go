@@ -5,13 +5,15 @@ import "unsafe"
 type Meta struct {
 	PageHeader
 
-	Magic   int64
-	Version int64
+	Magic   uint64
+	Version uint64
 
 	Root        int64
 	EndSentinel int64
 
-	_ [PageSize - PageHeaderSize - 4*unsafe.Sizeof(int64(0))]byte
+	LastSeq uint64
+
+	_ [PageSize - PageHeaderSize - 5*unsafe.Sizeof(int64(0))]byte
 }
 
 func (m *Meta) Page() *Page {
