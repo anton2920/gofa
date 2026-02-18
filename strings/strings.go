@@ -16,5 +16,5 @@ func Data(s string) *byte {
 }
 
 func StartsEndsWith(s string, starts string, ends string) bool {
-	return StartsWith(s, starts) && EndsWith(s, ends)
+	return (len(s) >= (len(starts) + len(ends))) && (StartsWith(s, starts)) && (EndsWith(s, ends))
 }
