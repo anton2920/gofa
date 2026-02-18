@@ -65,8 +65,17 @@ func (s *Serializer) Uint64(n uint64) {
 func (s *Serializer) String(str string) {
 	t := trace.Begin("")
 
-	s.Int32(int32(len(str)))
+	s.Uint32(uint32(len(str)))
 	s.Buffer = append(s.Buffer, str...)
+
+	trace.End(t)
+}
+
+func (s *Serializer) Bytes(bytes []byte) {
+	t := trace.Begin("")
+
+	s.Uint32(uint32(len(bytes)))
+	s.Buffer = append(s.Buffer, bytes...)
 
 	trace.End(t)
 }

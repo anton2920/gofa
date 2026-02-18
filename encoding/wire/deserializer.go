@@ -103,6 +103,17 @@ func (d *Deserializer) String() string {
 	return s
 }
 
+func (d *Deserializer) Bytes() []byte {
+	t := trace.Begin("")
+
+	l := int(d.Int32())
+	bs := d.Buffer[:l]
+	d.Buffer = d.Buffer[l:]
+
+	trace.End(t)
+	return bs
+}
+
 func (d *Deserializer) End() error {
 	t := trace.Begin("")
 
