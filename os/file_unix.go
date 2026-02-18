@@ -18,10 +18,18 @@ func Close(handle Handle) error {
 	return unix.Close(int32(handle))
 }
 
-func Read(handle Handle, buf []byte) (int64, error) {
+func Read(handle Handle, buf []byte) (int, error) {
 	return unix.Read(int32(handle), buf)
 }
 
-func Write(handle Handle, buf []byte) (int64, error) {
+func ReadAt(handle Handle, buf []byte, pos int64) (int, error) {
+	return syscall.Pread(int32(handle), buf, pos)
+}
+
+func Write(handle Handle, buf []byte) (int, error) {
 	return unix.Write(int32(handle), buf)
+}
+
+func Fsync(handle Handle) error {
+	return syscall.Fsync(int32(handle))
 }

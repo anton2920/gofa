@@ -10,10 +10,10 @@ func Close(f int32) error {
 	return syscall.Close(f)
 }
 
-func Read(f int32, buf []byte) (int64, error) {
+func Read(f int32, buf []byte) (int, error) {
 	return syscall.Read(f, buf)
 }
 
-func Write(f int32, buf []byte) (int64, error) {
+func Write(f int32, buf []byte) (int, error) {
 	return syscall.Write(f, buf)
 }
