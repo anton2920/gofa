@@ -8,6 +8,10 @@ import (
 
 type Error string
 
+var (
+	NotImplemented = New("not implemented")
+)
+
 func New(msg string) Error {
 	return Error(msg)
 }
