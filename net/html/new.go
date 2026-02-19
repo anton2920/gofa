@@ -302,6 +302,14 @@ func (h *HTML) Input2(typ string) *HTML {
 	return h.String(` <input type="`).String(typ).String(`">`).Class_(h.Theme.Input.Class)
 }
 
+func (h *HTML) TextareaBegin2() *HTML {
+	return h.String(` <textarea>`)
+}
+
+func (h *HTML) TextareaEnd2() *HTML {
+	return h.String(`</textarea>`)
+}
+
 func (h *HTML) ButtonBegin2() *HTML {
 	return h.String(` <button>`)
 }
@@ -580,6 +588,14 @@ func (h *HTML) Required(required bool) *HTML {
 		h.Backspace().String(" required>")
 	}
 	return h
+}
+
+func (h *HTML) Role(role string) *HTML {
+	return h.Backspace().String(` role="`).String(role).String(`">`)
+}
+
+func (h *HTML) Rows(rows int) *HTML {
+	return h.Backspace().String(` rows="`).Int(rows).String(`">`)
 }
 
 func (h *HTML) Selected(selected bool) *HTML {
