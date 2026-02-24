@@ -539,6 +539,13 @@ func (h *HTML) For(for_ string) *HTML {
 	return h.Backspace().String(` for="`).String(for_).String(`">`)
 }
 
+func (h *HTML) Formnovalidate(formnovalidate bool) *HTML {
+	if formnovalidate {
+		h.Backspace().String(` formnovalidate>`)
+	}
+	return h
+}
+
 func (h *HTML) Id(id string) *HTML {
 	return h.Backspace().String(` id="`).String(id).String(`">`)
 }

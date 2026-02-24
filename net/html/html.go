@@ -302,8 +302,17 @@ func (h *HTML) HR() {
 	h.String(`<hr>`)
 }
 
-func (h *HTML) SP() {
-	h.String(` `)
+func (h *HTML) SP(ns ...int) *HTML {
+	n := 1
+	if len(ns) == 1 {
+		n = ns[0]
+	}
+
+	for i := 0; i < n; i++ {
+		h.String(` `)
+	}
+
+	return h
 }
 
 func (h *HTML) ABegin(href string, attrs ...Attributes) {
