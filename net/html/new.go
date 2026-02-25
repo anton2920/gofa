@@ -511,6 +511,13 @@ func (h *HTML) DataBsToggle(toggle string) *HTML {
 	return h.Backspace().String(` data-bs-toggle="`).String(toggle).String(`">`)
 }
 
+func (h *HTML) Disabled(disabled bool) *HTML {
+	if disabled {
+		h.Backspace().String(" disabled>")
+	}
+	return h
+}
+
 func (h *HTML) DominantBaseline(baseline string) *HTML {
 	return h.Backspace().String(` dominant-baseline="`).String(baseline).String(`">`)
 }
@@ -586,6 +593,13 @@ func (h *HTML) Placeholder(placeholder string) *HTML {
 	return h.Backspace().String(` placeholder="`).LString(placeholder).String(`">`)
 }
 
+func (h *HTML) Readonly(readonly bool) *HTML {
+	if readonly {
+		h.Backspace().String(" readonly>")
+	}
+	return h
+}
+
 func (h *HTML) Rel(rel string) *HTML {
 	return h.Backspace().String(` rel="`).String(rel).String(`">`)
 }
@@ -637,7 +651,7 @@ func (h *HTML) Style(style string) *HTML {
 }
 
 func (h *HTML) Value(value string) *HTML {
-	return h.Backspace().String(` value="`).LString(value).String(`">`)
+	return h.Backspace().String(` value="`).HString(value).String(`">`)
 }
 
 func (h *HTML) Viewbox(viewbox string) *HTML {
