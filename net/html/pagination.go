@@ -2,24 +2,25 @@ package html
 
 import "github.com/anton2920/gofa/bools"
 
+//gpp:generate: fill(values)
+/*gpp:fill: InsertAfter={{if .ItemsPerPage == 0 {
+	.ItemsPerPage = DefaultItemsPerPage
+}}}*/
 type Pagination struct {
 	CurrentPage   int
 	ItemsPerPage  int
-	NumberOfPages int
-	WindowSize    int
+	NumberOfPages int //gpp:fill: nop
+	WindowSize    int //gpp:fill: nop
+	TotalCount    int //gpp:fill: nop
 }
 
-const (
-	PaginationKeyCurrentPage  = "Page"
-	PaginationKeyItemsPerPage = "ItemsPerPage"
+var (
+	DefaultItemsPerPage = 10
+	DefaultWindowSize   = 5
 )
 
 func (pagination *Pagination) GetItemsStartPosition() int {
 	return pagination.ItemsPerPage * (pagination.CurrentPage - bools.ToInt(pagination.CurrentPage > 0))
-}
-
-func (pagination *Pagination) UpdateNumberOfPages(nitems int) {
-	pagination.NumberOfPages = (nitems / pagination.ItemsPerPage) + bools.ToInt(nitems%pagination.ItemsPerPage > 0)
 }
 
 func (h *HTML) PageSelectorButton(text string, page int, active bool) {
@@ -31,9 +32,9 @@ func (h *HTML) PageSelectorButton(text string, page int, active bool) {
 	h.LIBegin(attrs)
 	if text == "" {
 		// h.A("/", h.Itoa(page))
-		h.WithoutTheme().Button(h.Itoa(page), h.Theme.PageSelectorButton, Attributes{Name: PaginationKeyCurrentPage, FormNoValidate: true})
+		h.WithoutTheme().Button(h.Itoa(page), h.Theme.PageSelectorButton, Attributes{Name: "CurrentPage", FormNoValidate: true})
 	} else {
-		h.TagBegin("button", h.Theme.PageSelectorButton, Attributes{Name: PaginationKeyCurrentPage, Value: h.Itoa(page), FormNoValidate: true})
+		h.TagBegin("button", h.Theme.PageSelectorButton, Attributes{Name: "CurrentPage", Value: h.Itoa(page), FormNoValidate: true})
 		h.String(text)
 		h.TagEnd("button")
 	}
@@ -45,6 +46,9 @@ func (h *HTML) PageSelectorEllipsis() {
 }
 
 func (h *HTML) PageSelector(pagination *Pagination, attrs ...Attributes) {
+	pagination.NumberOfPages = (pagination.TotalCount / pagination.ItemsPerPage) + bools.ToInt(pagination.TotalCount%pagination.ItemsPerPage > 0)
+	pagination.WindowSize = DefaultWindowSize
+
 	if pagination.NumberOfPages > 1 {
 		if pagination.CurrentPage == 0 {
 			pagination.CurrentPage = 1
@@ -98,4 +102,9 @@ func (h *HTML) PageSelector(pagination *Pagination, attrs ...Attributes) {
 
 		h.DivEnd()
 	}
+}
+
+func (h *HTML) Pager2(pagination *Pagination) *HTML {
+	h.PageSelector(pagination)
+	return h
 }

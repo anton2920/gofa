@@ -16,9 +16,4 @@ run()
 	"$@" || exit 1
 }
 
-DIRS=`find . -type d | grep -v \.git | grep -v ^\.$ | sed 's/\.\///'`
-for dir in $DIRS; do
-	if `ls $dir/*.go >/dev/null 2>&1`; then
-		run gpp $dir
-	fi
-done
+run gpp -r -l  `grep -rn gpp | cut -d ':' -f 1 | uniq | grep -v gpp`
