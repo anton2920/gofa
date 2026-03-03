@@ -10,6 +10,7 @@ import (
 	"github.com/anton2920/gofa/log"
 	"github.com/anton2920/gofa/net/http"
 	"github.com/anton2920/gofa/session"
+	"github.com/anton2920/gofa/strings"
 )
 
 func (h *HTML) Begin2() *HTML {
@@ -394,6 +395,38 @@ func (h *HTML) Line2(x1 int, y1 int, x2 int, y2 int) *HTML {
 	return h.String(` <line x1="`).Int(x1).String(`" y1="`).Int(y1).String(`" x2="`).Int(x2).String(`" y2="`).Int(y2).String(`"/>`)
 }
 
+func (h *HTML) TableBegin2() *HTML {
+	return h.String(` <table>`)
+}
+
+func (h *HTML) TrBegin2() *HTML {
+	return h.String(` <tr>`)
+}
+
+func (h *HTML) TrEnd2() *HTML {
+	return h.String(`</tr>`)
+}
+
+func (h *HTML) ThBegin2() *HTML {
+	return h.String(` <th>`)
+}
+
+func (h *HTML) ThEnd2() *HTML {
+	return h.String(`</th>`)
+}
+
+func (h *HTML) TdBegin2() *HTML {
+	return h.String(` <td>`)
+}
+
+func (h *HTML) TdEnd2() *HTML {
+	return h.String(`</td>`)
+}
+
+func (h *HTML) TableEnd2() *HTML {
+	return h.String(`</table>`)
+}
+
 var _class = []byte("class")
 
 func (h *HTML) Class_(class string) *HTML {
@@ -440,6 +473,19 @@ func (h *HTML) Class(class string) *HTML {
 				panic("failed to find end quote in class definitions")
 			}
 			quote += classPos
+
+			classes := bytes.AsString(h.Response.Body[classPos:quote])
+			var done bool
+			for !done {
+				cls, rest, ok := strings.Cut(classes, " ")
+				if !ok {
+					done = true
+				}
+				if cls == class {
+					return h
+				}
+				classes = rest
+			}
 
 			backup := h.Response.Arena.Copy(h.Response.Body[quote:])
 			h.Response.Body = h.Response.Body[:quote]
