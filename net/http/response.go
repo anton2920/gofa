@@ -21,6 +21,44 @@ type Response struct {
 	Body []byte
 }
 
+func (w *Response) Concat(ss ...string) string {
+	var n int
+
+	for i := 0; i < len(ss); i++ {
+		n += len(ss[i])
+	}
+
+	buf := w.Arena.NewSlice(n)
+	n = 0
+
+	for i := 0; i < len(ss); i++ {
+		n += copy(buf[n:], ss[i])
+	}
+
+	return bytes.AsString(buf)
+}
+
+func (w *Response) Join(ss ...string) string {
+	var n int
+
+	for i := 0; i < len(ss); i++ {
+		n += len(ss[i])
+	}
+
+	buf := w.Arena.NewSlice(n + len(ss) - 1)
+	n = 0
+
+	for i := 0; i < len(ss); i++ {
+		if i > 0 {
+			buf[n] = ' '
+			n++
+		}
+		n += copy(buf[n:], ss[i])
+	}
+
+	return bytes.AsString(buf)
+}
+
 func (w *Response) DelCookie(name string) {
 	t := trace.Begin("")
 
