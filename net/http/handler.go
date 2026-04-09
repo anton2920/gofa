@@ -82,7 +82,7 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 
 		start := cpu.ReadPerformanceCounter()
 		w.Headers.Set("Content-Type", `text/html; charset="UTF-8"`)
-		level := log.LevelDebug
+		level := log.LevelInfo
 
 		/* TODO(anton2920): store session.Customization on client. */
 		r.Session = session.Get(r.Cookie(cookie))
