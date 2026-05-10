@@ -92,6 +92,15 @@ func (d *Deserializer) Uint64() uint64 {
 	return n
 }
 
+func (d *Deserializer) Int() int {
+	return int(d.Int64())
+}
+
+func (d *Deserializer) Float64() float64 {
+	x := d.Uint64()
+	return *(*float64)(unsafe.Pointer(&x))
+}
+
 func (d *Deserializer) String() string {
 	t := trace.Begin("")
 

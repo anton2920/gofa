@@ -62,6 +62,15 @@ func (s *Serializer) Uint64(n uint64) {
 	trace.End(t)
 }
 
+func (s *Serializer) Int(n int) {
+	/* NOTE(anton2920): for maximum compatibility, assuming that 'int' is 'int64'. */
+	s.Int64(int64(n))
+}
+
+func (s *Serializer) Float64(f float64) {
+	s.Uint64(*(*uint64)(unsafe.Pointer(&f)))
+}
+
 func (s *Serializer) String(str string) {
 	t := trace.Begin("")
 
