@@ -1,6 +1,10 @@
 package wire
 
-import "github.com/anton2920/gofa/trace"
+import (
+	"unsafe"
+
+	"github.com/anton2920/gofa/trace"
+)
 
 type Serializer struct {
 	Buffer []byte
