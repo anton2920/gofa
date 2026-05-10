@@ -4,7 +4,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/anton2920/gofa/util"
+	"github.com/anton2920/gofa/strings"
 )
 
 const (
@@ -145,7 +145,7 @@ func Sigaction(sig int32, act *Sigaction_t, oact *Sigaction_t) error {
 }
 
 func ShmOpen2(path string, flags int32, mode uint16, shmflags int32, name string) (int32, error) {
-	r1, _, errno := RawSyscall(SYS_memfd_create, uintptr(unsafe.Pointer(util.StringData(path))), uintptr(flags), 0)
+	r1, _, errno := RawSyscall(SYS_memfd_create, uintptr(unsafe.Pointer(strings.Data(path))), uintptr(flags), 0)
 	return int32(r1), NewError("shm_open2", errno)
 }
 
