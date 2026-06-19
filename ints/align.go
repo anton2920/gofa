@@ -1,5 +1,8 @@
 package ints
 
-func AlignUp(x int, quantum int) int {
-	return (x + (quantum - 1)) & ^(quantum - 1)
+import "github.com/anton2920/gofa/debug"
+
+func AlignUp(n int, align int) int {
+	debug.Assert((align&(align-1)) == 0, "alignment must be a power of two")
+	return int((n + (align - 1)) & ^(align - 1))
 }
