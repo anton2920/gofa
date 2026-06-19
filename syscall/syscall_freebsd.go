@@ -34,6 +34,7 @@ const (
 	SYS_kqueue           = 362
 	SYS_listen           = 106
 	SYS_lseek            = 478
+	SYS_madvise          = 75
 	SYS_mkdir            = 136
 	SYS_mmap             = 477
 	SYS_munmap           = 73
@@ -48,9 +49,9 @@ const (
 	SYS_read             = 3
 	SYS_rmdir            = 137
 	SYS_setsockopt       = 105
-	SYS_sigaction        = 416
 	SYS_shm_open2        = 571
 	SYS_shutdown         = 134
+	SYS_sigaction        = 416
 	SYS_socket           = 97
 	SYS_stat             = 188
 	SYS_unlink           = 10
@@ -193,6 +194,11 @@ func Lseek(fd int32, offset int64, whence int32) (int64, error) {
 	return int64(r1), NewError("lseek", errno)
 }
 
+func Madvise(addr unsafe.Pointer, len uint, behav int32) error {
+	_, _, errno := RawSyscall(SYS_madvise, uintptr(addr), uintptr(len), uintptr(behav))
+	return NewError("madvise", errno)
+}
+
 func Mkdir(path string, mode int16) error {
 	buffer := make([]byte, PATH_MAX+1)
 	copy(buffer[:PATH_MAX], path)
@@ -201,7 +207,7 @@ func Mkdir(path string, mode int16) error {
 	return NewError("mkdir", errno)
 }
 
-func Mmap(addr unsafe.Pointer, len uint64, prot, flags, fd int32, offset int64) (unsafe.Pointer, error) {
+func Mmap(addr unsafe.Pointer, len uint, prot, flags, fd int32, offset int64) (unsafe.Pointer, error) {
 	r1, _, errno := RawSyscall6(SYS_mmap, uintptr(addr), uintptr(len), uintptr(prot), uintptr(flags), uintptr(fd), uintptr(offset))
 	return unsafe.Pointer(r1), NewError("mmap", errno)
 }

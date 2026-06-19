@@ -46,6 +46,21 @@ const (
 	MAP_ALIGNED_SUPER   = 1 << MAP_ALIGNMENT_SHIFT /* align on a superpage */
 
 	/*
+	 * Advice to madvise
+	 */
+	MADV_NORMAL     = 0  /* no further special treatment */
+	MADV_RANDOM     = 1  /* expect random page references */
+	MADV_SEQUENTIAL = 2  /* expect sequential page references */
+	MADV_WILLNEED   = 3  /* will need these pages */
+	MADV_DONTNEED   = 4  /* dont need these pages */
+	MADV_FREE       = 5  /* dont need these pages, and junk contents */
+	MADV_NOSYNC     = 6  /* try to avoid flushes to physical media */
+	MADV_AUTOSYNC   = 7  /* revert to default flushing strategy */
+	MADV_NOCORE     = 8  /* do not include these pages in a core file */
+	MADV_CORE       = 9  /* revert to including pages in a core file */
+	MADV_PROTECT    = 10 /* protect process from pageout kill */
+
+	/*
 	 * shmflags for shm_open2()
 	 */
 	SHM_ALLOW_SEALING = 0x00000001
