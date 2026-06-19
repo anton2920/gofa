@@ -1,11 +1,11 @@
 package slices
 
 import (
-	"crypto/rand"
+	"math/rand"
 	"strconv"
 	"testing"
 
-	"github.com/anton2920/gofa/util"
+	"github.com/anton2920/gofa/bytes"
 )
 
 func TestPutInt(t *testing.T) {
@@ -14,7 +14,7 @@ func TestPutInt(t *testing.T) {
 	for i := 0; i < 100_000; i++ {
 		expected := rand.Int()
 		n := PutInt(buffer, expected)
-		actual, err := strconv.Atoi(util.Slice2String(buffer[:n]))
+		actual, err := strconv.Atoi(bytes.AsString(buffer[:n]))
 		if err != nil {
 			t.Errorf("Failed to decode resulting integer; expected %d, got %s", expected, buffer[:n])
 		}
