@@ -3,5 +3,4 @@
 
 package debug
 
-func Printf(fmt string, args ...interface{}) {
-}
+func Printf(_ string, _ ...interface{}) {}
