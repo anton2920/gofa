@@ -95,7 +95,7 @@ func (as Anchors) Swap(i, j int) { as[i], as[j] = as[j], as[i] }
 /* GetCallerPC returns a value of %IP register that is going to be used by RET instruction. arg0 is the address of the first agrument function of interest accepts. */
 //go:nosplit
 func GetCallerPC(arg0 unsafe.Pointer) uintptr {
-	return *(*uintptr)(pointers.Add(arg0, -int(unsafe.Sizeof(arg0))))
+	return *(*uintptr)(pointers.Sub(arg0, unsafe.Sizeof(arg0)))
 }
 
 //go:nosplit

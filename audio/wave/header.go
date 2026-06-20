@@ -34,7 +34,7 @@ func ReadHeaderFromFile(f os.Handle, header *Header) error {
 	if err != nil {
 		return fmt.Errorf("failed to read WAVE header from file: %v", err)
 	}
-	if n != int64(unsafe.Sizeof(*header)) {
+	if n != int(unsafe.Sizeof(*header)) {
 		return fmt.Errorf("read incorrect number of bytes (%d != %d)", n, unsafe.Sizeof(*header))
 	}
 	return nil

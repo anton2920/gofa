@@ -55,6 +55,6 @@ func (d *Device) Close() error {
 	return os.Close(d.Handle)
 }
 
-func (d *Device) Write(buf []byte) (int64, error) {
+func (d *Device) Write(buf []byte) (int, error) {
 	return os.Write(d.Handle, buf)
 }
