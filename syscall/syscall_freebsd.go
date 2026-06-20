@@ -38,6 +38,7 @@ const (
 	SYS_mkdir            = 136
 	SYS_mmap             = 477
 	SYS_munmap           = 73
+	SYS_mprotect         = 74
 	SYS_nanosleep        = 240
 	SYS_nmount           = 378
 	SYS_open             = 5
@@ -207,14 +208,19 @@ func Mkdir(path string, mode int16) error {
 	return NewError("mkdir", errno)
 }
 
-func Mmap(addr unsafe.Pointer, len uint, prot, flags, fd int32, offset int64) (unsafe.Pointer, error) {
+func Mmap(addr unsafe.Pointer, len uint, prot int32, flags int32, fd int32, offset int64) (unsafe.Pointer, error) {
 	r1, _, errno := RawSyscall6(SYS_mmap, uintptr(addr), uintptr(len), uintptr(prot), uintptr(flags), uintptr(fd), uintptr(offset))
 	return unsafe.Pointer(r1), NewError("mmap", errno)
 }
 
-func Munmap(addr unsafe.Pointer, len uint64) error {
+func Munmap(addr unsafe.Pointer, len uint) error {
 	_, _, errno := RawSyscall(SYS_munmap, uintptr(addr), uintptr(len), 0)
 	return NewError("munmap", errno)
+}
+
+func Mprotect(addr unsafe.Pointer, len uint, prot int32) error {
+	_, _, errno := RawSyscall(SYS_mprotect, uintptr(addr), uintptr(len), uintptr(prot))
+	return NewError("mprotect", errno)
 }
 
 func Nanosleep(rqtp, rmtp *Timespec) error {
