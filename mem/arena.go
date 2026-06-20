@@ -11,99 +11,104 @@ import (
 )
 
 type Arena struct {
-	Buffer   []byte
-	PrevOfft int
-	CurrOfft int
+	Base unsafe.Pointer
+	Size uint
+
+	PrevOfft uint
+	CurrOfft uint
 }
 
 type ArenaSavePoint struct {
 	Arena    *Arena
-	PrevOfft int
-	CurrOfft int
+	PrevOfft uint
+	CurrOfft uint
 }
 
 const arenaDefaultAlignment = unsafe.Alignof(uintptr(0))
 
 func ArenaFromByteSlice(buf []byte) Arena {
-	return Arena{Buffer: bytes.SliceFromBytePointer(&buf[0], len(buf))}
+	return ArenaFromBytePointer(&buf[0], uint(len(buf)))
 }
 
-func ArenaFromBytePointer(ptr *byte, n int) Arena {
-	return ArenaFromByteSlice(bytes.SliceFromBytePointer(ptr, n))
+func ArenaFromBytePointer(ptr *byte, n uint) Arena {
+	return ArenaFromUnsafePointer(unsafe.Pointer(ptr), n)
 }
 
-func ArenaFromUnsafePointer(ptr unsafe.Pointer, n int) Arena {
-	return ArenaFromByteSlice(bytes.SliceFromUnsafePointer(ptr, n))
+func ArenaFromUnsafePointer(ptr unsafe.Pointer, n uint) Arena {
+	return Arena{Base: ptr, Size: n}
 }
 
 func (a *Arena) InitWithByteSlice(buf []byte) {
-	a.Buffer = bytes.SliceFromBytePointer(&buf[0], len(buf))
+	a.InitWithBytePointer(&buf[0], uint(len(buf)))
+}
+
+func (a *Arena) InitWithBytePointer(ptr *byte, n uint) {
+	a.InitWithUnsafePointer(unsafe.Pointer(ptr), n)
+}
+
+func (a *Arena) InitWithUnsafePointer(ptr unsafe.Pointer, n uint) {
+	a.Base = pointers.UnsafeNoescape(ptr)
+	a.Size = n
+
 	a.PrevOfft = 0
 	a.CurrOfft = 0
 }
 
-func (a *Arena) InitWithBytePointer(ptr *byte, n int) {
-	a.Buffer = bytes.SliceFromBytePointer(ptr, n)
-	a.PrevOfft = 0
-	a.CurrOfft = 0
-}
-
-func (a *Arena) InitWithUnsafePointer(ptr unsafe.Pointer, n int) {
-	a.Buffer = bytes.SliceFromUnsafePointer(ptr, n)
-	a.PrevOfft = 0
-	a.CurrOfft = 0
-}
-
-func (a *Arena) PushSize(n int) unsafe.Pointer {
+func (a *Arena) PushSize(n uint) unsafe.Pointer {
 	return a.PushSizeWithAlignment(n, arenaDefaultAlignment)
 }
 
-func (a *Arena) PushSizeWithAlignment(n int, align uintptr) unsafe.Pointer {
+func (a *Arena) PushSizeWithAlignment(n uint, align uintptr) unsafe.Pointer {
 	t := trace.Begin("")
 
-	a.CurrOfft += pointers.Delta(pointers.AlignUp(unsafe.Pointer(&a.Buffer[a.CurrOfft]), align), unsafe.Pointer(&a.Buffer[a.CurrOfft]))
-	if a.CurrOfft+n <= len(a.Buffer) {
-		debug.AssertZero(int(uintptr(unsafe.Pointer(&a.Buffer[a.CurrOfft]))&(align-1)), "(*Arena).PushSizeWithAlignment tried to return unaligned pointer")
+	curr := pointers.Add(a.Base, uintptr(a.CurrOfft))
+	a.CurrOfft += uint(pointers.Delta(pointers.AlignUpPow2(curr, align), curr))
+	if a.CurrOfft+n <= a.Size {
+		curr := pointers.Add(a.Base, uintptr(a.CurrOfft))
+		debug.AssertZero(int(uintptr(curr)&(align-1)), "(*Arena).PushSizeWithAlignment tried to return unaligned pointer")
 		a.PrevOfft = a.CurrOfft
 		a.CurrOfft += n
-		buf := a.Buffer[a.PrevOfft:a.CurrOfft]
 
+		buf := bytes.SliceFromUnsafePointer(curr, int(a.CurrOfft-a.PrevOfft))
 		for i := 0; i < len(buf); i++ {
 			buf[i] = 0
 		}
 
 		trace.End(t)
-		return pointers.UnsafeNoescape(unsafe.Pointer(&buf[0]))
+		return curr
 	}
 
-	debug.Printf("no more space in arena %p: requested %d, got only %d left", &a.Buffer[0], n, len(a.Buffer)-a.CurrOfft)
+	debug.Printf("no more space in arena %p: requested %d, got only %d left", a.Base, n, a.Size-a.CurrOfft)
 	trace.End(t)
 	return nil
 }
 
-func (a *Arena) RepushSize(optr unsafe.Pointer, on int, nn int) unsafe.Pointer {
+func (a *Arena) RepushSize(optr unsafe.Pointer, on uint, nn uint) unsafe.Pointer {
 	return a.RepushSizeWithAlignment(optr, on, nn, arenaDefaultAlignment)
 }
 
-func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on int, nn int, align uintptr) unsafe.Pointer {
+func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on uint, nn uint, align uintptr) unsafe.Pointer {
 	t := trace.Begin("")
 
 	if on == 0 {
 		nptr := a.PushSizeWithAlignment(nn, align)
 		trace.End(t)
 		return nptr
-	} else if (uintptr(optr) >= uintptr(unsafe.Pointer(&a.Buffer[0]))) && ((uintptr(optr) + uintptr(on)) <= uintptr(unsafe.Pointer(&a.Buffer[a.CurrOfft-1]))) {
-		if optr == unsafe.Pointer(&a.Buffer[a.PrevOfft]) {
+	} else if (uintptr(optr) >= uintptr(a.Base)) && ((uintptr(optr) + uintptr(on)) <= (uintptr(a.Base) + uintptr(a.CurrOfft-1))) {
+		if optr == pointers.Add(a.Base, uintptr(a.PrevOfft)) {
 			if nn > on {
+				buf := bytes.SliceFromUnsafePointer(a.Base, int(a.Size))
 				for i := on; i < nn; i++ {
-					a.Buffer[a.PrevOfft+i] = 0
+					buf[a.PrevOfft+i] = 0
 				}
 			}
 			a.CurrOfft = a.PrevOfft + nn
+			trace.End(t)
 			return optr
 		} else {
 			nptr := a.PushSizeWithAlignment(nn, align)
-			copy(bytes.SliceFromUnsafePointer(nptr, nn), bytes.SliceFromUnsafePointer(optr, on))
+			copy(bytes.SliceFromUnsafePointer(nptr, int(nn)), bytes.SliceFromUnsafePointer(optr, int(on)))
+			trace.End(t)
 			return nptr
 		}
 	}
@@ -113,19 +118,19 @@ func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on int, nn int, ali
 }
 
 func (a *Arena) PushInt() *int {
-	return (*int)(a.PushSizeWithAlignment(int(unsafe.Sizeof(int(0))), unsafe.Alignof(int(0))))
+	return (*int)(a.PushSizeWithAlignment(uint(unsafe.Sizeof(int(0))), unsafe.Alignof(int(0))))
 }
 
 func (a *Arena) PushFloat32() *float32 {
-	return (*float32)(a.PushSizeWithAlignment(int(unsafe.Sizeof(float32(0))), unsafe.Alignof(float32(0))))
+	return (*float32)(a.PushSizeWithAlignment(uint(unsafe.Sizeof(float32(0))), unsafe.Alignof(float32(0))))
 }
 
-func (a *Arena) PushByteArray(n int) []byte {
-	return bytes.SliceFromUnsafePointer(a.PushSizeWithAlignment(n, unsafe.Alignof(byte(0))), n)
+func (a *Arena) PushByteArray(n uint) []byte {
+	return bytes.SliceFromUnsafePointer(a.PushSizeWithAlignment(n, unsafe.Alignof(byte(0))), int(n))
 }
 
-func (a *Arena) RepushByteArray(old []byte, n int) []byte {
-	return bytes.SliceFromUnsafePointer(a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), len(old), n, unsafe.Alignof(byte(0))), n)
+func (a *Arena) RepushByteArray(old []byte, n uint) []byte {
+	return bytes.SliceFromUnsafePointer(a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), uint(len(old)), n, unsafe.Alignof(byte(0))), int(n))
 }
 
 func (a *Arena) Reset() {
