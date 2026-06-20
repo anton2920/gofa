@@ -1,4 +1,5 @@
-//go:build unix
+//go:build aix || darwin || dragonfly || freebsd || illumos || linux || netbsd || openbsd || solaris || zos
+// +build aix darwin dragonfly freebsd illumos linux netbsd openbsd solaris zos
 
 package gui
 
@@ -14,12 +15,12 @@ package gui
 */
 import "C"
 import (
-	"reflect"
 	"unsafe"
 
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/gui/color"
 	"github.com/anton2920/gofa/ints"
+	"github.com/anton2920/gofa/pointers"
 )
 
 type platformWindow struct {
@@ -27,8 +28,6 @@ type platformWindow struct {
 	window  C.Window
 	visual  *C.Visual
 	gc      C.GC
-
-	title *C.char
 
 	wmDeleteWindow C.Atom
 	wmTransientFor C.Atom
@@ -53,8 +52,6 @@ func platformNewWindow(w *Window, x, y int) error {
 
 	w.window = C.XCreateSimpleWindow(w.display, root, C.int(x), C.int(y), C.uint(w.Width), C.uint(w.Height), 1, 0, 0)
 	C.XSelectInput(w.display, w.window, C.ExposureMask|C.KeyPressMask|C.KeyReleaseMask|C.ButtonPressMask|C.ButtonReleaseMask|C.PointerMotionMask|C.StructureNotifyMask|C.LeaveWindowMask)
-
-	platformWindowSetTitle(w, w.Title)
 
 	/*
 		if (w.Flags & WindowResizable) == 0 {
@@ -83,12 +80,8 @@ func platformNewWindow(w *Window, x, y int) error {
 	return nil
 }
 
-func platformWindowSetTitle(w *Window, title string) {
-	if w.title != nil {
-		C.free(unsafe.Pointer(w.title))
-	}
-	w.title = C.CString(title)
-	C.XStoreName(w.display, w.window, w.title)
+func platformWindowSetTitle(w *Window, title *byte) {
+	C.XStoreName(w.display, w.window, (*C.char)(pointers.UnsafeNoescape(unsafe.Pointer(title))))
 }
 
 func platformWindowHasEvents(w *Window) bool {
@@ -98,17 +91,18 @@ func platformWindowHasEvents(w *Window) bool {
 
 func platformWindowGetEvents(w *Window, events []Event) (int, error) {
 	var platformEvent C.XEvent
+	ppev := pointers.UnsafeNoescape(unsafe.Pointer(&platformEvent))
 
 	n := ints.Min(w.pendingEvents, len(events))
 	var consumed int
 	for i := 0; i < n; i++ {
 		event := &events[consumed]
 
-		C.XNextEvent(w.display, &platformEvent)
+		C.XNextEvent(w.display, (*C.XEvent)(ppev))
 		/* NOTE(anton2920): convoluted way of saying 'platformEvent.type'. */
-		switch *(*C.int)(unsafe.Pointer(&platformEvent)) {
+		switch *(*C.int)(ppev) {
 		case C.ClientMessage:
-			clientEvent := *(*C.XClientMessageEvent)(unsafe.Pointer(&platformEvent))
+			clientEvent := *(*C.XClientMessageEvent)(ppev)
 			data := *(*C.int)(unsafe.Pointer(&clientEvent.data[0]))
 
 			if C.Atom(data) == w.wmDeleteWindow {
@@ -119,7 +113,7 @@ func platformWindowGetEvents(w *Window, events []Event) (int, error) {
 			event.Type = PaintEvent
 			consumed++
 		case C.ConfigureNotify:
-			configureEvent := *(*C.XConfigureEvent)(unsafe.Pointer(&platformEvent))
+			configureEvent := *(*C.XConfigureEvent)(ppev)
 			eventWidth := int(configureEvent.width)
 			eventHeight := int(configureEvent.height)
 
@@ -133,7 +127,7 @@ func platformWindowGetEvents(w *Window, events []Event) (int, error) {
 				consumed++
 			}
 		case C.ButtonPress:
-			buttonEvent := *(*C.XButtonEvent)(unsafe.Pointer(&platformEvent))
+			buttonEvent := *(*C.XButtonEvent)(ppev)
 			eventX := int(buttonEvent.x)
 			eventY := int(buttonEvent.y)
 
@@ -143,7 +137,7 @@ func platformWindowGetEvents(w *Window, events []Event) (int, error) {
 			event.Y = eventY
 			consumed++
 		case C.ButtonRelease:
-			buttonEvent := *(*C.XButtonEvent)(unsafe.Pointer(&platformEvent))
+			buttonEvent := *(*C.XButtonEvent)(ppev)
 			eventX := int(buttonEvent.x)
 			eventY := int(buttonEvent.y)
 
@@ -153,7 +147,7 @@ func platformWindowGetEvents(w *Window, events []Event) (int, error) {
 			event.Y = eventY
 			consumed++
 		case C.MotionNotify:
-			motionEvent := *(*C.XMotionEvent)(unsafe.Pointer(&platformEvent))
+			motionEvent := *(*C.XMotionEvent)(ppev)
 			eventX := int(motionEvent.x)
 			eventY := int(motionEvent.y)
 
@@ -180,8 +174,8 @@ func platformWindowInvalidate(w *Window) {
 func platformWindowDisplayPixels(w *Window, pixels []color.Color, width int, height int) {
 	var image C.XImage
 
-	data := C.malloc(C.size_t(len(pixels) * int(unsafe.Sizeof(pixels[0]))))
-	copy(*(*[]color.Color)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(data), Len: len(pixels), Cap: len(pixels)})), pixels)
+	pimg := pointers.UnsafeNoescape(unsafe.Pointer(&image))
+	data := pointers.UnsafeNoescape(unsafe.Pointer(&pixels[0]))
 
 	image.width = C.int(width)
 	image.height = C.int(height)
@@ -196,9 +190,8 @@ func platformWindowDisplayPixels(w *Window, pixels []color.Color, width int, hei
 	image.green_mask = w.visual.green_mask
 	image.blue_mask = w.visual.blue_mask
 
-	C.XInitImage(&image)
-	C.XPutImage(w.display, *(*C.Drawable)(unsafe.Pointer(&w.window)), w.gc, &image, 0, 0, 0, 0, C.uint(width), C.uint(height))
-	C.free(data)
+	C.XInitImage((*C.XImage)(pimg))
+	C.XPutImage(w.display, *(*C.Drawable)(unsafe.Pointer(&w.window)), w.gc, (*C.XImage)(pimg), 0, 0, 0, 0, C.uint(width), C.uint(height))
 }
 
 func platformWindowEnableCursor(w *Window) {

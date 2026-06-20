@@ -1,6 +1,7 @@
 package gui
 
 import (
+	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/cpu"
 	"github.com/anton2920/gofa/gui/color"
 	"github.com/anton2920/gofa/time"
@@ -20,7 +21,6 @@ type Window struct {
 	platformWindow
 	Parent *Window
 
-	Title  string
 	Width  int
 	Height int
 	Flags  WindowFlags
@@ -30,32 +30,40 @@ type Window struct {
 	FrameTime float32
 	FPS       float32
 
+	title         [256]byte
 	CursorVisible bool
 }
 
 func NewWindow(title string, width int, height int, flags WindowFlags) (*Window, error) {
-	w := Window{Title: title, Width: width, Height: height, Flags: flags, CursorVisible: true}
-
+	w := Window{Width: width, Height: height, Flags: flags, CursorVisible: true}
 	if err := platformNewWindow(&w, 0, 0); err != nil {
 		return nil, err
 	}
-
+	w.SetTitle(title)
 	return &w, nil
 }
 
 func (w *Window) NewTransientWindow(title string, x, y, width, height int) (*Window, error) {
-	tw := Window{Parent: w, Title: title, Width: width, Height: height, Flags: windowTransient, CursorVisible: true}
-
+	tw := Window{Parent: w, Width: width, Height: height, Flags: windowTransient, CursorVisible: true}
 	if err := platformNewWindow(&tw, x, y); err != nil {
 		return nil, err
 	}
-
+	tw.SetTitle(title)
 	return &tw, nil
 }
 
+func (w *Window) Title() string {
+	for i := 0; i < len(w.title); i++ {
+		if w.title[i] == 0 {
+			return bytes.AsString(w.title[:i])
+		}
+	}
+	return ""
+}
+
 func (w *Window) SetTitle(title string) {
-	w.Title = title
-	platformWindowSetTitle(w, title)
+	w.title[copy(w.title[:len(w.title)-1], title)] = 0
+	platformWindowSetTitle(w, &w.title[0])
 }
 
 func (w *Window) HasEvents() bool {

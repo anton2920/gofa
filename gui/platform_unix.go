@@ -1,4 +1,5 @@
-//go:build unix
+//go:build aix || darwin || dragonfly || freebsd || illumos || linux || netbsd || openbsd || solaris || zos
+// +build aix darwin dragonfly freebsd illumos linux netbsd openbsd solaris zos
 
 package gui
 
