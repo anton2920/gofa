@@ -32,12 +32,10 @@ const (
 	TriggerCount
 )
 
-func NewQueue() (*Queue, error) {
-	q := new(Queue)
-	if err := platformNewEventQueue(q); err != nil {
-		return nil, err
-	}
-	return q, nil
+func NewQueue() (Queue, error) {
+	var q Queue
+	err := platformNewEventQueue(&q)
+	return q, err
 }
 
 func (q *Queue) AddSocket(sock int32, request Request, trigger Trigger, userData unsafe.Pointer) error {

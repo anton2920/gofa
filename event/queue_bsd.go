@@ -16,7 +16,7 @@ type platformEventQueue struct {
 	kq int32
 
 	/* Events buffer */
-	events []Event
+	events [64]Event
 	head   int
 	tail   int
 }
@@ -57,10 +57,7 @@ func platformNewEventQueue(q *Queue) error {
 	if err != nil {
 		return fmt.Errorf("failed to open kernel queue: %v", err)
 	}
-
 	q.kq = kq
-	q.events = make([]Event, 64)
-
 	return nil
 }
 
