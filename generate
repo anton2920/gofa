@@ -17,3 +17,4 @@ run()
 }
 
 run gpp -r -l  `grep -rn gpp | cut -d ':' -f 1 | uniq | grep -v gpp`
+run cd mem && go run cmd/generate.go

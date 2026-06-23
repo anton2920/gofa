@@ -3,14 +3,8 @@ package bytes
 import (
 	"unsafe"
 
-	"github.com/anton2920/gofa/pointers"
+	"github.com/anton2920/gofa/go/types"
 )
-
-type slice struct {
-	Data uintptr
-	Len  int
-	Cap  int
-}
 
 //go:nosplit
 func SliceFromBytePointer(ptr *byte, n int) []byte {
@@ -19,5 +13,5 @@ func SliceFromBytePointer(ptr *byte, n int) []byte {
 
 //go:nosplit
 func SliceFromUnsafePointer(ptr unsafe.Pointer, n int) []byte {
-	return *((*[]byte)(unsafe.Pointer(&slice{Data: uintptr(pointers.UnsafeNoescape(ptr)), Len: n, Cap: n})))
+	return *((*[]byte)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n})))
 }
