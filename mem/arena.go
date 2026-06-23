@@ -94,7 +94,7 @@ func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on uint, nn uint, a
 		nptr := a.PushSizeWithAlignment(nn, align)
 		trace.End(t)
 		return nptr
-	} else if (uintptr(optr) >= uintptr(a.Base)) && ((uintptr(optr) + uintptr(on)) <= (uintptr(a.Base) + uintptr(a.CurrOfft-1))) {
+	} else if (uintptr(optr) >= uintptr(a.Base)) && ((uintptr(optr) + uintptr(on)) <= (uintptr(a.Base) + uintptr(a.CurrOfft))) {
 		if optr == pointers.Add(a.Base, uintptr(a.PrevOfft)) {
 			if nn > on {
 				buf := bytes.SliceFromUnsafePointer(a.Base, int(a.Size))
