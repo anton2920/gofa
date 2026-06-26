@@ -506,13 +506,13 @@ func (h *HTML) Classes(classes ...string) *HTML {
 
 		buf := h.Response.Arena.NewSlice(required + len(classes))
 		for i := 0; i < len(classes); i++ {
-			n += copy(buf[n:], classes[i])
-			buf[n] = ' '
-			n++
+			if len(classes[i]) > 0 {
+				buf[n] = ' '
+				n += copy(buf[n+1:], classes[i]) + 1
+			}
 		}
-		n--
 
-		h.Class_(bytes.AsString(buf[:n]))
+		h.Class_(bytes.AsString(buf[1:n]))
 	}
 
 	return h
