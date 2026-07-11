@@ -6,6 +6,16 @@ import (
 	"github.com/anton2920/gofa/go/types"
 )
 
+var zeroSlice = make([]byte, 4096)
+
+//go:nosplit
+func SliceClear(buf []byte) {
+	var n int
+	for n < len(buf) {
+		n += copy(buf[n:], zeroSlice)
+	}
+}
+
 //go:nosplit
 func SliceFromBytePointer(ptr *byte, n int) []byte {
 	return SliceFromUnsafePointer(unsafe.Pointer(ptr), n)
