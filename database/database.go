@@ -57,7 +57,7 @@ var NotFound = errors.New("not found")
 /* Offset2String performs s.Ptr += base-MinValidPointer. */
 //go:nosplit
 func Offset2String(s string, base *byte) string {
-	return *(*string)(unsafe.Pointer(&reflect.StringHeader{Data: uintptr(pointers.Noescape(pointers.Add(unsafe.Pointer(base), int(uintptr(unsafe.Pointer(strings.Data(s)))-MinValidPointer)))), Len: len(s)}))
+	return *(*string)(unsafe.Pointer(&reflect.StringHeader{Data: uintptr(pointers.UnsafeNoescape(pointers.Add(unsafe.Pointer(base), uintptr(unsafe.Pointer(strings.Data(s)))-MinValidPointer))), Len: len(s)}))
 }
 
 /* Offset2Slice performs s.Ptr += base-MinValidPointer. */
@@ -66,7 +66,7 @@ func Offset2Slice(s []byte, base *byte) []byte {
 	if len(s) == 0 {
 		return s
 	}
-	return *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(pointers.Noescape(pointers.Add(unsafe.Pointer(base), int(uintptr(unsafe.Pointer(&s[0]))-MinValidPointer)))), Len: len(s), Cap: cap(s)}))
+	return *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(pointers.UnsafeNoescape(pointers.Add(unsafe.Pointer(base), uintptr(unsafe.Pointer(&s[0]))-MinValidPointer))), Len: len(s), Cap: cap(s)}))
 }
 
 /* String2Offset performs s.Ptr = offset+MinValidPointer. */
@@ -94,7 +94,7 @@ func Slice2DBSlice(ds *[]byte, ss []byte, size int, alignment int, data []byte, 
 		return 0
 	}
 
-	start := ints.AlignUp(n, alignment)
+	start := ints.AlignUpPow2(n, alignment)
 	nbytes := copy(data[start:], *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&ss[0])), Len: len(ss) * size, Cap: len(ss) * size})))
 	*ds = Slice2Offset(ss, start)
 	return nbytes + (start - n)

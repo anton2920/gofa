@@ -3,7 +3,7 @@ package os
 type Handle int32
 
 const (
-	Stdin = Handle(iota)
-	Stdout
-	Stderr
+	StandardInputStream = Handle(iota)
+	StandardOutputStream
+	StandardErrorStream
 )

@@ -140,7 +140,7 @@ func (c *Conn) WriteResponseData() (int, error) {
 }
 
 func (c *Conn) Pointer() unsafe.Pointer {
-	return pointers.Add(unsafe.Pointer(c), int(c.Check))
+	return pointers.Add(unsafe.Pointer(c), uintptr(c.Check))
 }
 
 func ConnFromPointer(ptr unsafe.Pointer) (*Conn, bool) {

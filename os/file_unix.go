@@ -26,7 +26,7 @@ func ReadAt(handle Handle, buf []byte, pos int64) (int, error) {
 	return syscall.Pread(int32(handle), buf, pos)
 }
 
-func Write(handle Handle, buf []byte) (int, error) {
+func WriteToFile(handle Handle, buf []byte) (int, error) {
 	return unix.Write(int32(handle), buf)
 }
 

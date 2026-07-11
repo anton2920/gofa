@@ -19,14 +19,14 @@ type ConnPool struct {
 	Head  *ConnPoolItem
 }
 
-func NewConnPool(n int) *ConnPool {
+func NewConnPool(n int) ConnPool {
 	var p ConnPool
 
 	p.Conns = make([]ConnPoolItem, n)
 	p.Head = nil
 	p.PutAll()
 
-	return &p
+	return p
 }
 
 func (p *ConnPool) Get() (*Conn, error) {

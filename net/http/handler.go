@@ -28,7 +28,7 @@ func RequestHandler(w *Response, r *Request, router Router) (err error) {
 	defer func() {
 		if p := recover(); p != nil {
 			r.Error = errors.NewPanic(p)
-			err = router((*Response)(pointers.Noescape(unsafe.Pointer(w))), (*Request)(pointers.Noescape(unsafe.Pointer(r))))
+			err = router((*Response)(pointers.UnsafeNoescape(unsafe.Pointer(w))), (*Request)(pointers.UnsafeNoescape(unsafe.Pointer(r))))
 			trace.End(t)
 		}
 	}()
@@ -55,7 +55,7 @@ func RequestHandler(w *Response, r *Request, router Router) (err error) {
 		}
 	}
 
-	err = router((*Response)(pointers.Noescape(unsafe.Pointer(w))), (*Request)(pointers.Noescape(unsafe.Pointer(r))))
+	err = router((*Response)(pointers.UnsafeNoescape(unsafe.Pointer(w))), (*Request)(pointers.UnsafeNoescape(unsafe.Pointer(r))))
 	trace.End(t)
 	return
 }

@@ -10,7 +10,7 @@ import (
 )
 
 type Workers struct {
-	Queues  []*event.Queue
+	Queues  []event.Queue
 	Current int
 }
 
@@ -86,13 +86,13 @@ func NewWorkers(router Router, n int) (*Workers, error) {
 	var ws Workers
 	var err error
 
-	ws.Queues = make([]*event.Queue, ints.Max(1, n))
+	ws.Queues = make([]event.Queue, ints.Max(1, n))
 	for i := 0; i < len(ws.Queues); i++ {
 		ws.Queues[i], err = event.NewQueue()
 		if err != nil {
 			return nil, fmt.Errorf("failed to create new event queue #%d: %v", i, err)
 		}
-		go Worker(ws.Queues[i], router)
+		go Worker(&ws.Queues[i], router)
 	}
 
 	return &ws, nil

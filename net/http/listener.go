@@ -13,7 +13,7 @@ import (
 )
 
 type Listener struct {
-	ConnPool *ConnPool
+	ConnPool ConnPool
 
 	Socket os.Handle
 }
@@ -40,7 +40,7 @@ func MergeListenerOptions(opts ...ListenerOptions) ListenerOptions {
 	return result
 }
 
-func Listen(addr string, opts ...ListenerOptions) (*Listener, error) {
+func Listen(addr string, opts ...ListenerOptions) (Listener, error) {
 	var l Listener
 	var err error
 
@@ -48,14 +48,14 @@ func Listen(addr string, opts ...ListenerOptions) (*Listener, error) {
 
 	l.Socket, err = tcp.Listen(addr, ints.Or(opt.Backlog, 128))
 	if err != nil {
-		return nil, fmt.Errorf("failed to listen on addr %q: %v", err)
+		return Listener{}, fmt.Errorf("failed to listen on addr %q: %v", err)
 	}
 	if opt.MaxVersion > 2.0 {
 		panic("HTTP/2+ is not supported")
 	}
 	l.ConnPool = NewConnPool(ints.Or(opt.ConcurrentConnections, 16*1024))
 
-	return &l, nil
+	return l, nil
 }
 
 /* TODO(anton2920): remove syscall references. */
@@ -83,7 +83,7 @@ func (l *Listener) Accept(opts ...ConnOptions) (*Conn, error) {
 		c = new(Conn)
 		c.Error = ServiceUnavailable("too many connections")
 	}
-	c.ConnPool = l.ConnPool
+	c.ConnPool = &l.ConnPool
 
 	c.Socket = os.Handle(sock)
 	c.RequestBuffer = rb
