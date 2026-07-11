@@ -53,9 +53,8 @@ func (f *File) Write(buf []byte) (int, error) {
 		f.Data = append(f.Data, buf...)
 		f.Unlock()
 		return len(buf), nil
-	} else {
-		return -1, errors.NotImplemented
 	}
+	return -1, errors.NotImplemented
 
 }
 

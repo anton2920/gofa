@@ -66,13 +66,10 @@ func (a *Arena) PushSizeWithAlignment(n int, align uintptr) unsafe.Pointer {
 	if a.CurrOfft+n <= a.Size {
 		curr := pointers.Add(a.Base, uintptr(a.CurrOfft))
 		debug.AssertZero(int(uintptr(curr)&(align-1)), "(*Arena).PushSizeWithAlignment tried to return unaligned pointer")
+
 		a.PrevOfft = a.CurrOfft
 		a.CurrOfft += n
-
-		buf := bytes.SliceFromUnsafePointer(curr, int(a.CurrOfft-a.PrevOfft))
-		for i := 0; i < len(buf); i++ {
-			buf[i] = 0
-		}
+		bytes.SliceClear(bytes.SliceFromUnsafePointer(a.Base, a.Size)[a.PrevOfft:a.CurrOfft])
 
 		trace.End(t)
 		return curr
@@ -99,10 +96,7 @@ func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on int, nn int, ali
 	} else if (uintptr(optr) >= uintptr(a.Base)) && ((uintptr(optr) + uintptr(on)) <= (uintptr(a.Base) + uintptr(a.CurrOfft))) {
 		if optr == pointers.Add(a.Base, uintptr(a.PrevOfft)) {
 			if nn > on {
-				buf := bytes.SliceFromUnsafePointer(a.Base, int(a.Size))
-				for i := on; i < nn; i++ {
-					buf[a.PrevOfft+i] = 0
-				}
+				bytes.SliceClear(bytes.SliceFromUnsafePointer(a.Base, a.Size)[a.PrevOfft+on : a.CurrOfft])
 			}
 			a.CurrOfft = a.PrevOfft + nn
 			trace.End(t)
