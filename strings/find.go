@@ -4,7 +4,12 @@ import "strings"
 
 /* TODO(anton2920): rewrite using SIMD. */
 func FindChar(s string, c byte) int {
-	return strings.IndexByte(s, c)
+	for i := 0; i < len(s); i++ {
+		if s[i] == c {
+			return i
+		}
+	}
+	return -1
 }
 
 /* TODO(anton2920): rewrite using SIMD. */
