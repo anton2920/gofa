@@ -1,0 +1,83 @@
+New structure:
+
+- containers
+	- bplus - my implementation of B+tree, stripped of parametric polymorphism.
+	- bheap - bheap implementation from 'You're doing it wrong!'.
+
+- cpu
+	- intel - each function represents the instruction with the same name.
+	- arm
+
+- database
+	- kv (and, most likely, "kvutil") - my implementation of KV-database.
+	- wal (and, most likely, "walutil") - my implementation of concurrent WAL.
+
+- gls? (goroutine local storage)
+
+- mem
+
+- net - only protocol implementations.
+	- tcp
+	- udp
+	- tls
+	- http - only parser and generator.
+	- httputil - convenience functions and "net/http" adapter.
+
+- netutil - convenience functions to listen/connect.
+
+- gpu?
+
+- os - platform layer.
+	- posix - POSIX system calls.
+		- bsd - for kqueue.
+		- linux - for io_uring.
+	- windows - WinAPI calls.
+	- plan9?
+
+General rules:
+
+- Only "os" package is allowed to allocate memory.
+- Only packages names of which end with "util" are allowed to import "os".
+
+- The universal unit of communication is '[]byte'.
+- All functions operate on a fixed chunk of memory.
+- If memory is insufficient, they 'return mem.ErrNotEnough{Required: <amount>}'.
+
+- Functions in "*util" packages can wrap corresponding functions in regular packages and automatically provide more memory on error.
+- Those functions could be automatically generated through 'gpp' (by marking with '//gpp:generate: util(mem)').
+
+- Suffix "util" could be replaces with something more fitting.
+
+
+New:
+
+- debug:
+	- 'debug.Assert' (C-style) and 'debug.Check' (Alef-style).
+
+- fmt:
+	- New type 'fmt.Formatter = { []byte, int }'.
+		- W(int), Prec(int)
+		- S(string), I(int), String() string, Bytes() []byte
+	- s := f.R().W(5).S("N = ").D(n).S(", K = ").I(k).S(", results = ").Is(results).String()
+	- fmt.Begin().(...).End()?
+
+- log:
+	- New type 'Formatter = { fmt.Formatter }'
+
+- mem
+	- All allocators from gingerBill's website.
+
+- std/runtime:
+	- Variable to panic on calls to 'mallocgc'.
+
+- os
+	- OpenFile, OpenEventQueue
+	- Read, Write, Close
+	- ReadAt, WriteAt
+	- ReserveMemory
+	- AllocateMemory
+	- Listen, Connect
+	- ReadEvents
+
+- trace:
+	'RDPMC" capabilities with '-tags gofaptrace' or '-tags gofatracepmc'.
