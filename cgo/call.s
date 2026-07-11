@@ -21,3 +21,92 @@ TEXT ·Call2(SB), NOSPLIT, $-32
 	CALL	AX
 	MOVQ	AX, ret+24(FP)
 	RET
+
+TEXT ·Call3(SB), NOSPLIT, $-40
+	MOVQ	fn+0(FP), AX
+	MOVQ	a0+8(FP), DI
+	MOVQ	a1+16(FP), SI
+	MOVQ	a2+24(FP), DX
+	CALL	AX
+	MOVQ	AX, ret+32(FP)
+	RET
+
+TEXT ·Call4(SB), NOSPLIT, $-48
+	MOVQ	fn+0(FP), AX
+	MOVQ	a0+8(FP), DI
+	MOVQ	a1+16(FP), SI
+	MOVQ	a2+24(FP), DX
+	MOVQ	a3+32(FP), CX
+	CALL	AX
+	MOVQ	AX, ret+40(FP)
+	RET
+
+TEXT ·on_call0(SB), NOSPLIT, $-24
+	MOVQ	SP, BX
+
+	MOVQ	fn+8(FP), AX
+
+	MOVQ	sp+0(FP), SP
+	CALL	AX
+
+	MOVQ	BX, SP
+	MOVQ	AX, ret+16(FP)
+	RET
+
+TEXT ·on_call1(SB), NOSPLIT, $-32
+	MOVQ	SP, BX
+
+	MOVQ	fn+8(FP), AX
+	MOVQ	a0+16(FP), DI
+
+	MOVQ	sp+0(FP), SP
+	CALL	AX
+
+	MOVQ	BX, SP
+	MOVQ	AX, ret+24(FP)
+	RET
+
+TEXT ·on_call2(SB), NOSPLIT, $-40
+	MOVQ	SP, BX
+
+	MOVQ	fn+8(FP), AX
+	MOVQ	a0+16(FP), DI
+	MOVQ	a1+24(FP), SI
+
+	MOVQ	sp+0(FP), SP
+	CALL	AX
+
+	MOVQ	BX, SP
+	MOVQ	AX, ret+32(FP)
+	RET
+
+TEXT ·on_call3(SB), NOSPLIT, $-48
+	MOVQ	SP, BX
+
+	MOVQ	fn+8(FP), AX
+	MOVQ	a0+16(FP), DI
+	MOVQ	a1+24(FP), SI
+	MOVQ	a2+32(FP), DX
+
+	MOVQ	sp+0(FP), SP
+	CALL	AX
+
+	MOVQ	BX, SP
+	MOVQ	AX, ret+40(FP)
+	RET
+
+TEXT ·on_call4(SB), NOSPLIT, $-56
+	MOVQ	SP, BX
+
+	MOVQ	fn+8(FP), AX
+	MOVQ	a0+16(FP), DI
+	MOVQ	a1+24(FP), SI
+	MOVQ	a2+32(FP), DX
+	MOVQ	a4+40(FP), CX
+
+	MOVQ	sp+0(FP), SP
+	CALL	AX
+
+	MOVQ	BX, SP
+	MOVQ	AX, ret+48(FP)
+	RET
