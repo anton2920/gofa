@@ -4,8 +4,8 @@
 package trace
 
 import (
+	"bytes"
 	"fmt"
-	"os"
 	"runtime"
 	"sort"
 	"time"
@@ -179,28 +179,33 @@ func End(b Block) {
 	anchor.ParentIndex = b.ParentIndex
 }
 
-func PrintTimeElapsed(label string, totalElapsed cpu.Cycles, curr *Anchor, parent *Anchor) {
+func PrintTimeElapsed(buf *bytes.Buffer, label string, totalElapsed cpu.Cycles, curr *Anchor, parent *Anchor) {
 	percentTotal := 100 * (float64(curr.ElapsedCyclesExclusive) / float64(totalElapsed))
 	percentParent := 100 * (float64(curr.ElapsedCyclesExclusive) / float64(parent.ElapsedCyclesInclusive))
-	fmt.Fprintf(os.Stderr, "[trace]: \t %s[%d]: flat [%.4fms %.2f%%/%.2f%% %.2fns/op]", label, curr.HitCount, CyclesToMilliseconds(curr.ElapsedCyclesExclusive), percentTotal, percentParent, CyclesToNanoseconds(curr.ElapsedCyclesExclusive)/float64(curr.HitCount))
+	fmt.Fprintf(buf, "[trace]: \t %s[%d]: flat [%.4fms %.2f%%/%.2f%% %.2fns/op]", label, curr.HitCount, CyclesToMilliseconds(curr.ElapsedCyclesExclusive), percentTotal, percentParent, CyclesToNanoseconds(curr.ElapsedCyclesExclusive)/float64(curr.HitCount))
 
 	if curr.ElapsedCyclesInclusive > curr.ElapsedCyclesExclusive {
 		percentWithChildrenTotal := 100 * (float64(curr.ElapsedCyclesInclusive) / float64(totalElapsed))
 		percentWithChildrenParent := 100 * (float64(curr.ElapsedCyclesInclusive) / float64(parent.ElapsedCyclesInclusive))
-		fmt.Fprintf(os.Stderr, ", cum [%.4fms %.2f%%/%.2f%% %.2fns/op]", CyclesToMilliseconds(curr.ElapsedCyclesInclusive), percentWithChildrenTotal, percentWithChildrenParent, CyclesToNanoseconds(curr.ElapsedCyclesInclusive)/float64(curr.HitCount))
+		fmt.Fprintf(buf, ", cum [%.4fms %.2f%%/%.2f%% %.2fns/op]", CyclesToMilliseconds(curr.ElapsedCyclesInclusive), percentWithChildrenTotal, percentWithChildrenParent, CyclesToNanoseconds(curr.ElapsedCyclesInclusive)/float64(curr.HitCount))
 	}
 
-	fmt.Fprintf(os.Stderr, "\n")
+	fmt.Fprintf(buf, "\n")
 }
 
-func EndAndPrintProfile() {
+func EndProfile() {
 	GlobalProfiler.EndCycles = cpu.ReadPerformanceCounter()
+}
+
+func DumpProfile(buffer []byte) int {
+	buf := bytes.NewBuffer(buffer[:0])
+
 	totalElapsed := GlobalProfiler.EndCycles - GlobalProfiler.StartCycles
 
 	var totalCycles cpu.Cycles
 	var totalHits int
 
-	fmt.Fprintf(os.Stderr, "[trace]: Total time: %.4fms\n", CyclesToMilliseconds(totalElapsed))
+	fmt.Fprintf(buf, "[trace]: Total time: %.4fms\n", CyclesToMilliseconds(totalElapsed))
 
 	/* NOTE(anton2920): before accessing anchors, wait for possible background work to stop. */
 	time.Sleep(200 * time.Millisecond)
@@ -220,7 +225,7 @@ func EndAndPrintProfile() {
 			if len(label) == 0 {
 				label = runtime.FuncForPC(anchor.PC).Name()
 			}
-			PrintTimeElapsed(label, totalElapsed, anchor, parent)
+			PrintTimeElapsed(buf, label, totalElapsed, anchor, parent)
 			totalCycles += anchor.ElapsedCyclesExclusive
 			totalHits += anchor.HitCount
 		}
@@ -231,6 +236,8 @@ func EndAndPrintProfile() {
 		curr.ElapsedCyclesExclusive = totalCycles
 		curr.HitCount = totalHits
 
-		PrintTimeElapsed("= Grand total", totalElapsed, &curr, &parent)
+		PrintTimeElapsed(buf, "= Grand total", totalElapsed, &curr, &parent)
 	}
+
+	return buf.Len()
 }

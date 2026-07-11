@@ -3,14 +3,12 @@
 
 package trace
 
-func BeginProfile() {
-}
+func BeginProfile() {}
 
-func Begin(_ string) int {
-	return 0
-}
+func Begin(_ string) int { return 0 }
 
 func End(_ int) {}
 
-func EndAndPrintProfile() {
-}
+func EndProfile() {}
+
+func DumpProfile(_ []byte) int { return 0 }
