@@ -1,4 +1,5 @@
-#include "textflag.h"
+/* From "textflag.h". */
+#define NOSPLIT	4
 
 /* func RawSyscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2, err uintptr) */
 TEXT ·RawSyscall6(SB), NOSPLIT, $0-80
