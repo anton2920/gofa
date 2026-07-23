@@ -441,19 +441,19 @@ func (h *HTML) Class(class string) *HTML {
 		closeTagBegin := -1
 
 		/* TODO(anton2920): persist positions on TagBegin, Class_, TagEnd. */
-		openTagBegin := stdbytes.LastIndexByte(h.Response.Body, '<')
+		openTagBegin := bytes.FindByteReverse(h.Response.Body, '<')
 		if openTagBegin == -1 {
 			panic("failed to find open angle bracket")
 		}
 		if h.Response.Body[openTagBegin+1] == '/' {
 			closeTagBegin = openTagBegin
-			openTagBegin = stdbytes.LastIndexByte(h.Response.Body[:closeTagBegin], '<')
+			openTagBegin = bytes.FindByteReverse(h.Response.Body[:closeTagBegin], '<')
 			if openTagBegin == -1 {
 				panic("failed to find open angle bracket")
 			}
 		}
 
-		openTagEnd := stdbytes.IndexByte(h.Response.Body[openTagBegin:], '>')
+		openTagEnd := bytes.FindByte(h.Response.Body[openTagBegin:], '>')
 		if openTagEnd == -1 {
 			panic("failed to find close angle bracket")
 		}
@@ -468,7 +468,7 @@ func (h *HTML) Class(class string) *HTML {
 			h.String(` class="`).String(class).String(`"`).Bytes(backup)
 		} else {
 			classPos += openTagBegin + len(`class="`)
-			quote := stdbytes.IndexByte(h.Response.Body[classPos:], '"')
+			quote := bytes.FindByte(h.Response.Body[classPos:], '"')
 			if quote == -1 {
 				panic("failed to find end quote in class definitions")
 			}

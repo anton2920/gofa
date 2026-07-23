@@ -7,6 +7,7 @@ import (
 	"github.com/anton2920/gofa/cpu"
 	"github.com/anton2920/gofa/debug"
 	"github.com/anton2920/gofa/errors"
+	"github.com/anton2920/gofa/fmt"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/log"
 	"github.com/anton2920/gofa/mime/multipart"
@@ -118,7 +119,11 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 		end := cpu.ReadPerformanceCounter()
 		elapsed := end - start
 
-		log.Logf(level, "[%21s] %7s %s -> %v (%v), %4dus", strings.Or(r.Headers.Get("X-Forwarded-For"), r.RemoteAddr), r.Method, r.URL.Path, w.Status, err, elapsed.ToMicroseconds())
+		var f fmt.Formatter
+		f.InitWithByteSlice(make([]byte, 1024))
+
+		//log.Logf(level, "[%21s] %7s %s -> %v (%v), %4dus", strings.Or(r.Headers.Get("X-Forwarded-For"), r.RemoteAddr), r.Method, r.URL.Path, w.Status, err, elapsed.ToMicroseconds())
+		log.Logf(level, f.S("[").W(21).S(strings.Or(r.Headers.Get("X-Forwarded-For"), r.RemoteAddr)).S("] ").W(7).S(r.Method).S(" ").S(string(r.URL.Path)).S(" -> ").S(w.Status.String()).S(" (").Err(err).S("), ").W(4).D64(elapsed.ToMicroseconds()).S("us").String())
 	}
 
 	trace.End(t)
