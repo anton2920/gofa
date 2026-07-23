@@ -58,7 +58,7 @@ New:
 	- New type 'fmt.Formatter = { []byte, int }'.
 		- W(int), Prec(int)
 		- S(string), I(int), String() string, Bytes() []byte
-	- s := f.R().W(5).S("N = ").D(n).S(", K = ").I(k).S(", results = ").Is(results).String()
+	- s := f.Reset().W(5).S("N = ").D(n).S(", K = ").I(k).S(", results = ").Is(results).String()
 	- fmt.Begin().(...).End()?
 
 - log:
