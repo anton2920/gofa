@@ -4,6 +4,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/go/types"
+	"github.com/anton2920/gofa/pointers"
 )
 
 var zeroSlice = make([]byte, 4096)
@@ -23,5 +24,5 @@ func SliceFromBytePointer(ptr *byte, n int) []byte {
 
 //go:nosplit
 func SliceFromUnsafePointer(ptr unsafe.Pointer, n int) []byte {
-	return *((*[]byte)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n})))
+	return *((*[]byte)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(pointers.UnsafeNoescape(ptr)), Len: n, Cap: n})))
 }
