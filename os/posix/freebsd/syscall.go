@@ -63,30 +63,11 @@ const (
 	SYS_writev           = 121
 )
 
-//go:linkname SyscallEnter runtime.entersyscall
-func SyscallEnter()
-
-//go:linkname SyscallExit runtime.exitsyscall
-func SyscallExit()
-
 func RawSyscall(trap, a1, a2, a3 uintptr) (r1, r2, errno uintptr)
-
-func Syscall(trap, a1, a2, a3 uintptr) (r1, r2, errno uintptr) /* {
-	SyscallEnter()
-	r1, r2, errno = RawSyscall(trap, a1, a2, a3)
-	SyscallExit()
-	return
-}
-*/
-
 func RawSyscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2, errno uintptr)
 
-func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2, errno uintptr) {
-	SyscallEnter()
-	r1, r2, errno = RawSyscall6(trap, a1, a2, a3, a4, a5, a6)
-	SyscallExit()
-	return
-}
+func Syscall(trap, a1, a2, a3 uintptr) (r1, r2, errno uintptr)
+func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2, errno uintptr)
 
 func Accept(s int32, addr *Sockaddr, addrlen *uint32) (int32, error) {
 	r1, _, errno := Syscall(SYS_accept, uintptr(s), uintptr(unsafe.Pointer(addr)), uintptr(unsafe.Pointer(addrlen)))
