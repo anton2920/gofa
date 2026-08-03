@@ -11,15 +11,18 @@ import (
 /* TODO(anton2920): query that info on 'Init'. */
 const PageSize = 4096
 
-const (
-	CreateUnlessExists = bits.Flags(1 << iota)
-	TruncateToZero
-)
-
+/* File open flags. */
 const (
 	OpenForReading = bits.Flags(1 << iota)
 	OpenForWriting
 	OpenForAppending
+)
+
+/* File creation flags. */
+const (
+	CreateFileIfItDoesNotExist = bits.Flags(1 << iota)
+	FailCreationIfFileExists
+	TruncateSizeToZero
 )
 
 func rw2PlatformFlags(flags bits.Flags) uint {
@@ -44,17 +47,27 @@ func rw2PlatformFlags(flags bits.Flags) uint {
 func creat2PlatformFlags(flags bits.Flags) uint {
 	var f uint
 
+	if flags.Have(CreateFileIfItDoesNotExist) {
+		f |= freebsd.O_CREAT
+	}
+	if flags.Have(FailCreationIfFileExists) {
+		f |= freebsd.O_EXCL
+	}
+	if flags.Have(TruncateSizeToZero) {
+		f |= freebsd.O_TRUNC
+	}
+
 	return f
 }
 
-func OpenFile(path string, rw bits.Flags) (Handle, error) {
-	return CreateOrOpenFile(path, rw, 0, 0)
-}
-
-func CreateOrOpenFile(path string, rw bits.Flags, creat bits.Flags, perms uint) (Handle, error) {
+func OpenOrCreateFile(path string, rw bits.Flags, creat bits.Flags, perms uint) (Handle, error) {
 	pflags := rw2PlatformFlags(rw) | creat2PlatformFlags(creat)
 	f, err := freebsd.Open(path, int32(pflags), uint16(perms))
 	return Handle(f), err
+}
+
+func OpenFile(path string, rw bits.Flags) (Handle, error) {
+	return OpenOrCreateFile(path, rw, 0, 0)
 }
 
 func ReadFromFile(f Handle, buf []byte) (int, error) {
@@ -63,4 +76,8 @@ func ReadFromFile(f Handle, buf []byte) (int, error) {
 
 func WriteToFile(f Handle, buf []byte) (int, error) {
 	return freebsd.Write(int32(f), buf)
+}
+
+func CloseHandle(f Handle) error {
+	return freebsd.Close(int32(f))
 }
