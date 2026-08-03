@@ -126,7 +126,7 @@ const (
 	ELAST = Errno(97) /* Must be equal largest errno */
 )
 
-var errors = [...]string{
+var strerror = [...]string{
 	"",
 	EPERM:   "Operation not permitted",
 	ENOENT:  "No such file or directory",
@@ -248,16 +248,24 @@ var errors = [...]string{
 	EINTEGRITY:      "Integrity check failed",
 }
 
+var errors [ELAST]error
+
+func init() {
+	for i := Errno(1); i < ELAST; i++ {
+		errors[i] = i
+	}
+}
+
 func NewError(errno uintptr) error {
 	if errno == 0 {
 		return nil
 	}
-	return Errno(errno)
+	return errors[errno]
 }
 
 func (errno Errno) Error() string {
 	if (errno >= 0) && (errno <= ELAST) {
-		return errors[errno]
+		return strerror[errno]
 	}
 	return "<UNKNOWN ERROR>"
 }

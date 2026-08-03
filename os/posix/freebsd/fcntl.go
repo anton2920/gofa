@@ -9,6 +9,7 @@ const (
 	O_APPEND   = 0x0008 /* set append mode */
 	O_CREAT    = 0x0200 /* create if nonexistent */
 	O_TRUNC    = 0x0400 /* truncate to zero length */
+	O_EXCL     = 0x0800 /* error if already exists */
 
 	F_GETFL = 3 /* get file status flags */
 	F_SETFL = 4 /* set file status flags */

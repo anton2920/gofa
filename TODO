@@ -81,3 +81,10 @@ New:
 
 - trace:
 	'RDPMC" capabilities with '-tags gofaptrace' or '-tags gofatracepmc'.
+
+Windows to POSIX flags:
+- OpenExisting - 0
+- OpenAlways - O_CREAT
+- TruncateExisting - O_TRUNC
+- CreateNew - O_CREAT | O_EXCL
+- CreateAlways - O_CREAT | O_TRUNC
