@@ -4,69 +4,66 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"unsafe"
 
-	"github.com/anton2920/gofa/os"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
-	"github.com/anton2920/gofa/syscall"
 )
 
 func SwapBytesInWord(x uint16) uint16 {
 	return ((x << 8) & 0xFF00) | (x >> 8)
 }
 
-func ParseAddress(address string) (uint32, uint16, error) {
+func ParseEndpoint(endpoint string) (uint32, uint16, error) {
 	var addr uint32
 
-	colon := strings.FindChar(address, ':')
+	colon := strings.FindChar(endpoint, ':')
 	if colon == -1 {
 		return 0, 0, errors.New("no port specified")
 	}
 
-	part, err := strconv.Atoi(address[colon+1:])
+	part, err := strconv.Atoi(endpoint[colon+1:])
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to parse port value: %w", err)
+		return 0, 0, fmt.Errorf("failed to parse port value: %v", err)
 	}
 	port := SwapBytesInWord(uint16(part))
 
-	address = address[:colon]
-	dot := strings.FindChar(address, '.')
+	endpoint = endpoint[:colon]
+	dot := strings.FindChar(endpoint, '.')
 	if dot == -1 {
-		return syscall.INADDR_ANY, port, nil
+		return 0, port, nil
 	}
-	part, err = strconv.Atoi(address[:dot])
+	part, err = strconv.Atoi(endpoint[:dot])
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to parse first address octet: %w", err)
+		return 0, 0, fmt.Errorf("failed to parse first endpoint octet: %v", err)
 	}
 	addr |= uint32(part)
 
-	address = address[dot+1:]
-	dot = strings.FindChar(address, '.')
+	endpoint = endpoint[dot+1:]
+	dot = strings.FindChar(endpoint, '.')
 	if dot == -1 {
-		return 0, 0, fmt.Errorf("expected second address octet, found nothing")
+		return 0, 0, fmt.Errorf("expected second endpoint octet, found nothing")
 	}
-	part, err = strconv.Atoi(address[:dot])
+	part, err = strconv.Atoi(endpoint[:dot])
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to parse second address octet: %w", err)
+		return 0, 0, fmt.Errorf("failed to parse second endpoint octet: %v", err)
 	}
 	addr |= uint32(part) << 8
 
-	address = address[dot+1:]
-	dot = strings.FindChar(address, '.')
+	endpoint = endpoint[dot+1:]
+	dot = strings.FindChar(endpoint, '.')
 	if dot == -1 {
-		return 0, 0, fmt.Errorf("expected third address octet, found nothing")
+		return 0, 0, fmt.Errorf("expected third endpoint octet, found nothing")
 	}
-	part, err = strconv.Atoi(address[:dot])
+	part, err = strconv.Atoi(endpoint[:dot])
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to parse third address octet: %w", err)
+		return 0, 0, fmt.Errorf("failed to parse third endpoint octet: %v", err)
 	}
 	addr |= uint32(part) << 16
 
-	address = address[dot+1:]
-	part, err = strconv.Atoi(address)
+	endpoint = endpoint[dot+1:]
+	part, err = strconv.Atoi(endpoint)
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to parse fourth address octet: %w", err)
+		return 0, 0, fmt.Errorf("failed to parse fourth endpoint octet: %v", err)
 	}
 	addr |= uint32(part) << 24
 
@@ -98,6 +95,7 @@ func PutAddress(buffer []byte, addr uint32, port uint16) int {
 }
 
 /* Listen creates TCP/IPv4 socket and starts listening on a specified address. */
+/*
 func Listen(address string, backlog int) (os.Handle, error) {
 	addr, port, err := ParseAddress(address)
 	if err != nil {
@@ -129,3 +127,4 @@ func Listen(address string, backlog int) (os.Handle, error) {
 
 	return os.Handle(l), nil
 }
+*/
