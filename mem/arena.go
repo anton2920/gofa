@@ -26,18 +26,6 @@ type ArenaSavePoint struct {
 
 const arenaDefaultAlignment = unsafe.Alignof(uintptr(0))
 
-func ArenaFromByteSlice(buf []byte) Arena {
-	return ArenaFromBytePointer(&buf[0], len(buf))
-}
-
-func ArenaFromBytePointer(ptr *byte, n int) Arena {
-	return ArenaFromUnsafePointer(unsafe.Pointer(ptr), n)
-}
-
-func ArenaFromUnsafePointer(ptr unsafe.Pointer, n int) Arena {
-	return Arena{Base: ptr, Size: n}
-}
-
 func (a *Arena) InitWithByteSlice(buf []byte) {
 	a.InitWithBytePointer(&buf[0], len(buf))
 }
