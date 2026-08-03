@@ -1,15 +1,18 @@
 package freebsd
 
-/* From <time.h>. */
+/* From <sys/_timespec.h>. */
 type Timespec struct {
-	Sec, Nsec int64
+	Sec  int
+	Nsec int
 }
 
+/* From <sys/_timeval.h>. */
 type Timeval struct {
-	Sec, Usec int64
+	Sec  int
+	Usec int
 }
 
 const (
-	/* See <sys/_clock_id.h>. */
+	/* From <sys/_clock_id.h>. */
 	CLOCK_REALTIME = 0
 )
