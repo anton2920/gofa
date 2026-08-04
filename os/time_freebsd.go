@@ -14,6 +14,10 @@ type SecondsWithNanoseconds struct {
 	Nanoseconds int
 }
 
+func BlockForSpecifiedAmount(t SecondsWithNanoseconds) error {
+	return freebsd.Nanosleep((*freebsd.Timespec)(unsafe.Pointer(&t)), nil)
+}
+
 func GetCurrentTime() (SecondsWithNanoseconds, error) {
 	var t SecondsWithNanoseconds
 	err := freebsd.ClockGettime(freebsd.CLOCK_REALTIME, (*freebsd.Timespec)(unsafe.Pointer(&t)))
