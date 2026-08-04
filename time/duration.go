@@ -1,7 +1,7 @@
 package time
 
 const (
-	Nanosecond  = int64(1)
+	Nanosecond  = 1
 	Microsecond = 1000 * Nanosecond
 	Millisecond = 1000 * Microsecond
 	Second      = 1000 * Millisecond
