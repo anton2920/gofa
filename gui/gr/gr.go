@@ -9,7 +9,7 @@ var blacktext [256]color.Color
 
 func init() {
 	for i := 0; i < len(blacktext); i++ {
-		blacktext[i] = color.Color(0x00010101*(255-i) + 0xff000000)
+		blacktext[i] = 0x00010101*(255-color.Color(i)) + 0xff000000
 	}
 }
 

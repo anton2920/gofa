@@ -5,6 +5,7 @@ import (
 	"github.com/anton2920/gofa/cpu"
 	"github.com/anton2920/gofa/gui/color"
 	"github.com/anton2920/gofa/time"
+	"github.com/anton2920/gofa/time_"
 	"github.com/anton2920/gofa/trace"
 )
 
@@ -126,7 +127,7 @@ func (w *Window) SyncFPS(fps int) {
 	t := trace.Begin("")
 
 	now := cpu.ReadPerformanceCounter()
-	durationBetweenPauses := (now - w.LastSyncCycles).ToNanoseconds()
+	durationBetweenPauses := (now - w.LastSyncCycles).ToNanosecondsTruncated()
 
 	var targetRate int64
 	if fps > 0 {
@@ -137,7 +138,7 @@ func (w *Window) SyncFPS(fps int) {
 	duration := targetRate - durationBetweenPauses
 	if duration > 0 {
 		dt += duration
-		platformSleep(duration)
+		time_.Sleep(duration)
 		now = cpu.ReadPerformanceCounter()
 	}
 
