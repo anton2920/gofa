@@ -3,16 +3,10 @@
 
 package cpu
 
-import (
-	"github.com/anton2920/gofa/cpu/intel"
-	"github.com/anton2920/gofa/debug_"
-)
+import "github.com/anton2920/gofa/cpu/intel"
 
 var CPUHz Cycles
 
 func init() {
 	CPUHz = Cycles(intel.CPUHz)
-	if CPUHz != 0 {
-		debug_.Printf("[cpu]: CPU Frequency %dHz", CPUHz)
-	}
 }
