@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
 )
 
-func SwapBytesInWord(x uint16) uint16 {
-	return ((x << 8) & 0xFF00) | (x >> 8)
-}
-
+/* TODO(anton2920): remove memory allocation on error. */
 func ParseEndpoint(endpoint string) (uint32, uint16, error) {
 	var addr uint32
 
@@ -25,7 +23,7 @@ func ParseEndpoint(endpoint string) (uint32, uint16, error) {
 	if err != nil {
 		return 0, 0, fmt.Errorf("failed to parse port value: %v", err)
 	}
-	port := SwapBytesInWord(uint16(part))
+	port := ints.SwapBytesInWord(uint16(part))
 
 	endpoint = endpoint[:colon]
 	dot := strings.FindChar(endpoint, '.')
@@ -70,7 +68,7 @@ func ParseEndpoint(endpoint string) (uint32, uint16, error) {
 	return addr, port, nil
 }
 
-func PutAddress(buffer []byte, addr uint32, port uint16) int {
+func PutEndpoint(buffer []byte, addr uint32, port uint16) int {
 	var n int
 
 	n += slices.PutInt(buffer[n:], int((addr&0x000000FF)>>0))
@@ -89,42 +87,7 @@ func PutAddress(buffer []byte, addr uint32, port uint16) int {
 	buffer[n] = '.'
 	n++
 
-	n += slices.PutInt(buffer[n:], int(SwapBytesInWord(port)))
+	n += slices.PutInt(buffer[n:], int(ints.SwapBytesInWord(port)))
 
 	return n
 }
-
-/* Listen creates TCP/IPv4 socket and starts listening on a specified address. */
-/*
-func Listen(address string, backlog int) (os.Handle, error) {
-	addr, port, err := ParseAddress(address)
-	if err != nil {
-		return -1, fmt.Errorf("failed to parse address string: %w", err)
-	}
-
-	l, err := syscall.Socket(syscall.PF_INET, syscall.SOCK_STREAM, 0)
-	if err != nil {
-		return -1, fmt.Errorf("failed to create new socket: %w", err)
-	}
-
-	var enable int32 = 1
-	if err := syscall.Setsockopt(l, syscall.SOL_SOCKET, syscall.SO_REUSEPORT_LB, unsafe.Pointer(&enable), uint32(unsafe.Sizeof(enable))); err != nil {
-		return -1, fmt.Errorf("failed to apply options to socket: %w", err)
-	}
-
-	if err := syscall.Setsockopt(l, syscall.IPPROTO_TCP, syscall.TCP_NODELAY, unsafe.Pointer(&enable), uint32(unsafe.Sizeof(enable))); err != nil {
-		return -1, fmt.Errorf("failed to apply options to socket: %w", err)
-	}
-
-	sin := syscall.SockAddrIn{Family: syscall.AF_INET, Addr: addr, Port: port}
-	if err := syscall.Bind(l, (*syscall.Sockaddr)(unsafe.Pointer(&sin)), uint32(unsafe.Sizeof(sin))); err != nil {
-		return -1, fmt.Errorf("failed to bind socket to address: %w", err)
-	}
-
-	if err := syscall.Listen(l, int32(backlog)); err != nil {
-		return -1, fmt.Errorf("failed to listen for incoming connections: %w", err)
-	}
-
-	return os.Handle(l), nil
-}
-*/
