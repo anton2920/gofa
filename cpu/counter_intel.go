@@ -1,5 +1,5 @@
-//go:build i386 || amd64
-// +build i386 amd64
+//go:build 386 || amd64
+// +build 386 amd64
 
 package cpu
 

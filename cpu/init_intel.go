@@ -1,11 +1,11 @@
-//go:build i386 || amd64
-// +build i386 amd64
+//go:build 386 || amd64
+// +build 386 amd64
 
 package cpu
 
 import (
 	"github.com/anton2920/gofa/cpu/intel"
-	"github.com/anton2920/gofa/debug"
+	"github.com/anton2920/gofa/debug_"
 )
 
 var CPUHz Cycles
@@ -13,6 +13,6 @@ var CPUHz Cycles
 func init() {
 	CPUHz = Cycles(intel.CPUHz)
 	if CPUHz != 0 {
-		debug.Printf("[cpu]: CPU Frequency %dHz", CPUHz)
+		debug_.Printf("[cpu]: CPU Frequency %dHz", CPUHz)
 	}
 }

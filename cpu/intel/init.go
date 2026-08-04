@@ -1,10 +1,10 @@
 package intel
 
 import (
-	"reflect"
 	"unsafe"
 
-	"github.com/anton2920/gofa/debug"
+	"github.com/anton2920/gofa/bytes"
+	"github.com/anton2920/gofa/debug_"
 )
 
 var (
@@ -33,7 +33,7 @@ func init() {
 		vendor[0] = b
 		vendor[1] = d
 		vendor[2] = c
-		buffer := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&vendor[0])), Len: len(vendor) * int(unsafe.Sizeof(vendor[0])), Cap: len(vendor) * int(unsafe.Sizeof(vendor[0]))}))
+		buffer := bytes.SliceFromUnsafePointer(unsafe.Pointer(&vendor[0]), len(vendor)*int(unsafe.Sizeof(vendor[0])))
 		VendorString = string(buffer)
 	}
 
@@ -49,7 +49,7 @@ func init() {
 			Model += (int((info>>16)&0xF) << 4)
 		}
 		ProcessorType = int((info >> 12) & 0x3)
-		debug.Printf("[cpu/intel]: %s Family %X Model %X Stepping %X Type %.2b", VendorString, Family, Model, Stepping, ProcessorType)
+		debug_.Printf("[cpu/intel]: %s Family %X Model %X Stepping %X Type %.2b", VendorString, Family, Model, Stepping, ProcessorType)
 
 		BrandIndex = int(index & 0xFF)
 	}
@@ -67,15 +67,16 @@ func init() {
 				brand[4*i+3] = d
 				base++
 			}
-			buffer := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&brand[0])), Len: len(brand) * int(unsafe.Sizeof(brand[0])), Cap: len(brand) * int(unsafe.Sizeof(brand[0]))}))
+			buffer := bytes.SliceFromUnsafePointer(unsafe.Pointer(&brand[0]), len(brand)*int(unsafe.Sizeof(brand[0])))
 			BrandString = string(buffer)
 
-			/* Eliding '\x00' byte at the end. */
+			/* Trimming '\x00' byte at the end. */
 			for BrandString[len(BrandString)-1] == '\x00' {
 				BrandString = BrandString[:len(BrandString)-1]
 			}
+
+			debug_.Printf("[cpu/intel]: %s", BrandString)
 		}
-		debug.Printf("[cpu/intel]: %s", BrandString)
 	}
 
 	{
