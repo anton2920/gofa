@@ -26,6 +26,6 @@ func init() {
 		cpuElapsed := int64(cpuEnd - cpuStart)
 		cpu.CPUHz = cpu.Cycles(cpuElapsed * osHz / osElapsed)
 
-		debug_.Printf("[time]: CPU Frequency %dHz", cpu.CPUHz)
+		debug_.Printf("[time_]: CPU Frequency %dHz", cpu.CPUHz)
 	}
 }
