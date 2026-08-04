@@ -141,7 +141,7 @@ func begin(pc uintptr, label string) Block {
 
 //go:nosplit
 func Begin(label string) Block {
-	cpu.LoadFence()
+	cpu.WaitForLoadOperationsToComplete()
 	return begin(GetCallerPC(unsafe.Pointer(&label)), label)
 }
 
