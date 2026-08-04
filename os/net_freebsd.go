@@ -20,17 +20,13 @@ func (ia *InternetAddress) AsNetworkAddress() *NetworkAddress {
 	return (*NetworkAddress)(unsafe.Pointer(ia))
 }
 
-func (ia *InternetAddress) Length() uint32 {
-	return uint32(unsafe.Sizeof(*ia))
-}
-
 func ListenForIncomingConnections(proto string, endpoint string) (Handle, error) {
 	var buffer [freebsd.SOCK_MAXADDRLEN]byte
 	var pf, semantics int32
 	var addrLen uint32
 
 	switch proto {
-	case "tcp/ip":
+	case "tcp", "tcp/ip", "tcp/ip4", "tcp/ipv4":
 		pf = freebsd.PF_INET
 		semantics = freebsd.SOCK_STREAM
 
@@ -44,7 +40,7 @@ func ListenForIncomingConnections(proto string, endpoint string) (Handle, error)
 		iaddr.Address = addr
 		iaddr.Port = port
 
-		addrLen = iaddr.Length()
+		addrLen = uint32(unsafe.Sizeof(*iaddr))
 	default:
 		return -1, errors.ErrNotImplemented
 	}
@@ -55,10 +51,27 @@ func ListenForIncomingConnections(proto string, endpoint string) (Handle, error)
 	}
 
 	if err := freebsd.Bind(s, (*freebsd.Sockaddr)(unsafe.Pointer(&buffer)), addrLen); err != nil {
+		freebsd.Close(s)
 		return -1, err
 	}
 
-	/* TODO(anton2920): set socket options. */
+	if (pf == freebsd.PF_INET) && (semantics == freebsd.SOCK_STREAM) {
+		var enable int32 = 1
+		if err := freebsd.Setsockopt(s, freebsd.SOL_SOCKET, freebsd.SO_REUSEPORT_LB, unsafe.Pointer(&enable), uint32(unsafe.Sizeof(enable))); err != nil {
+			freebsd.Close(s)
+			return -1, err
+		}
+
+		if err := freebsd.Setsockopt(s, freebsd.IPPROTO_TCP, freebsd.TCP_NODELAY, unsafe.Pointer(&enable), uint32(unsafe.Sizeof(enable))); err != nil {
+			freebsd.Close(s)
+			return -1, err
+		}
+	}
+
+	if err := freebsd.Listen(s, 128); err != nil {
+		freebsd.Close(s)
+		return -1, err
+	}
 
 	return Handle(s), nil
 }
@@ -68,5 +81,6 @@ func ConnectToAddress() (Handle, error) {
 }
 
 func AcceptIncomingConnection(s Handle, addr *NetworkAddress, addrLen *uint32) (Handle, error) {
-	return -1, errors.ErrNotImplemented
+	c, err := freebsd.Accept(int32(s), (*freebsd.Sockaddr)(unsafe.Pointer(addr)), addrLen)
+	return Handle(c), err
 }
