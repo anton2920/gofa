@@ -1,11 +1,8 @@
 package freebsd
 
-import (
-	"fmt"
-	"unsafe"
-)
+import "unsafe"
 
-type Signal int
+type Signal int32
 
 /* From <sys/_sigset.h>. */
 const _SIG_WORDS = 4
@@ -92,7 +89,10 @@ const (
 )
 
 /* From <sys/signal.h>. */
-const SIG_IGN = uintptr(1)
+const (
+	SIG_DFL = uintptr(0)
+	SIG_IGN = uintptr(1)
+)
 
 var signals = [...]string{
 	SIGHUP:    "terminal line hangup",
@@ -130,20 +130,9 @@ var signals = [...]string{
 	SIGLIBRT:  "reserved by real-time library",
 }
 
-func (s Signal) Signal() {}
-
 func (s Signal) String() string {
 	if (s >= 0) && (int(s) <= len(signals)) {
 		return signals[s]
 	}
 	return "<UNKNOWN SIGNAL>"
-}
-
-func IgnoreSignals(signals ...Signal) error {
-	for i := 0; i < len(signals); i++ {
-		if err := Sigaction(int32(signals[i]), &Sigaction_t{Handler: SIG_IGN, Flags: SA_ONSTACK | SA_RESTART | SA_SIGINFO}, nil); err != nil {
-			return fmt.Errorf("failed to set ignore handler to signal: %w", err)
-		}
-	}
-	return nil
 }

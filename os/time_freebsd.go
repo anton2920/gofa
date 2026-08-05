@@ -14,7 +14,7 @@ type SecondsWithNanoseconds struct {
 	Nanoseconds int
 }
 
-func BlockForSpecifiedAmount(t SecondsWithNanoseconds) error {
+func BlockForSpecifiedAmountOfTime(t SecondsWithNanoseconds) error {
 	return freebsd.Nanosleep((*freebsd.Timespec)(unsafe.Pointer(&t)), nil)
 }
 

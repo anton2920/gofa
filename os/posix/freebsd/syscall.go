@@ -156,7 +156,7 @@ func JailSet(iovs []Iovec, flags int32) (int32, error) {
 	return int32(jid), NewError(errno)
 }
 
-func Kevent(kq int32, changelist []Kevent_t, eventlist []Kevent_t, timeout *Timespec) (int, error) {
+func Kevent(kq int32, changelist []Kevent_t, eventlist []Kevent_t, timeout *Timespec) (int32, error) {
 	var chptr, evptr unsafe.Pointer
 	if len(changelist) > 0 {
 		chptr = unsafe.Pointer(&changelist[0])
@@ -166,7 +166,7 @@ func Kevent(kq int32, changelist []Kevent_t, eventlist []Kevent_t, timeout *Time
 	}
 
 	r1, _, errno := Syscall6(SYS_kevent, uintptr(kq), uintptr(chptr), uintptr(len(changelist)), uintptr(evptr), uintptr(len(eventlist)), uintptr(unsafe.Pointer(timeout)))
-	return int(r1), NewError(errno)
+	return int32(r1), NewError(errno)
 }
 
 func Kill(pid int32, sig Signal) error {
