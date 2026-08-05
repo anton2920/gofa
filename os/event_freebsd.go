@@ -35,6 +35,9 @@ const (
 )
 
 const (
+	EventNoteSeconds      = bits.Flags32(freebsd.NOTE_SECONDS)
+	EventNoteMilliseconds = bits.Flags32(freebsd.NOTE_MSECONDS)
+	EventNoteMicroseconds = bits.Flags32(freebsd.NOTE_USECONDS)
 	EventNoteNanoseconds  = bits.Flags32(freebsd.NOTE_NSECONDS)
 	EventNoteAbsoluteTime = bits.Flags32(freebsd.NOTE_ABSTIME)
 )

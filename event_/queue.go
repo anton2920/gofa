@@ -19,6 +19,13 @@ type Queue struct {
 	tail   int
 }
 
+var units2notes = map[int64]bits.Flags32{
+	time.Second:      os.EventNoteSeconds,
+	time.Millisecond: os.EventNoteMilliseconds,
+	time.Microsecond: os.EventNoteMicroseconds,
+	time.Nanosecond:  os.EventNoteNanoseconds,
+}
+
 func (q *Queue) Init() error {
 	kq, err := os.CreateNewEventQueue()
 	if err != nil {
@@ -80,15 +87,19 @@ func (q *Queue) AddAndIgnoreSignals(sigs ...os.Signal) error {
 	return nil
 }
 
-func (q *Queue) AddPeriodicTimer(id uintptr, duration int64, userData unsafe.Pointer) error {
+func (q *Queue) AddAndIgnoreTerminateSignals() error {
+	return q.AddAndIgnoreSignals(os.SignalHangup, os.SignalInterrupt, os.SignalTerminate)
+}
+
+func (q *Queue) AddPeriodicTimer(id uintptr, quantity int, units int64, userData unsafe.Pointer) error {
 	events := make([]os.Event, 1)
-	events[0] = os.Event{Identifier: id, EventData: duration, EventType: os.EventTypeTimer, EventNotes: os.EventNoteNanoseconds, UserData: userData}
+	events[0] = os.Event{Identifier: id, EventData: int64(quantity), EventType: os.EventTypeTimer, EventNotes: units2notes[units], UserData: userData}
 	return os.RegisterEventsWithQueue(q.KernelQueue, events)
 }
 
-func (q *Queue) AddTimerAt(id uintptr, at int64, userData unsafe.Pointer) error {
+func (q *Queue) AddTimerAt(id uintptr, at int, units int64, userData unsafe.Pointer) error {
 	events := make([]os.Event, 1)
-	events[0] = os.Event{Identifier: id, EventData: at, EventType: os.EventTypeTimer, ActionFlags: os.EventFlagTriggerEdge, EventNotes: os.EventNoteNanoseconds | os.EventNoteAbsoluteTime, UserData: userData}
+	events[0] = os.Event{Identifier: id, EventData: int64(at), EventType: os.EventTypeTimer, ActionFlags: os.EventFlagTriggerEdge, EventNotes: units2notes[units] | os.EventNoteAbsoluteTime, UserData: userData}
 	return os.RegisterEventsWithQueue(q.KernelQueue, events)
 }
 
