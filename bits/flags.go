@@ -22,6 +22,7 @@ func (f *Flags8) Set(g Flags8) {
 func (f *Flags8) Toggle(g Flags8) {
 	*f = (*f) ^ g
 }
+
 type Flags16 uint16
 
 func (f *Flags16) Del(g Flags16) {
@@ -43,6 +44,7 @@ func (f *Flags16) Set(g Flags16) {
 func (f *Flags16) Toggle(g Flags16) {
 	*f = (*f) ^ g
 }
+
 type Flags32 uint32
 
 func (f *Flags32) Del(g Flags32) {
@@ -64,6 +66,7 @@ func (f *Flags32) Set(g Flags32) {
 func (f *Flags32) Toggle(g Flags32) {
 	*f = (*f) ^ g
 }
+
 type Flags64 uint64
 
 func (f *Flags64) Del(g Flags64) {
@@ -85,6 +88,7 @@ func (f *Flags64) Set(g Flags64) {
 func (f *Flags64) Toggle(g Flags64) {
 	*f = (*f) ^ g
 }
+
 type Flags uint
 
 func (f *Flags) Del(g Flags) {
