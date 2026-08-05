@@ -9,5 +9,5 @@ func Sleep(t int64) error {
 	var sn os.SecondsWithNanoseconds
 	sn.Seconds = int(t / time.Second)
 	sn.Nanoseconds = int(t % time.Second)
-	return os.BlockForSpecifiedAmount(sn)
+	return os.BlockForSpecifiedAmountOfTime(sn)
 }
