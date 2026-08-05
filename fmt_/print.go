@@ -5,18 +5,26 @@ import (
 	"github.com/anton2920/gofa/os"
 )
 
-func Print(f *fmt.Formatter) (int, error) {
-	return os.WriteToFile(os.StandardOutputStream, f.Bytes())
+func Fprint(h os.Handle, f *fmt.Formatter) (int, error) {
+	return os.WriteToFile(h, f.Bytes())
 }
 
-func Println(f *fmt.Formatter) (int, error) {
-	return os.WriteToFile(os.StandardOutputStream, f.Ln().Bytes())
+func Fprintln(h os.Handle, f *fmt.Formatter) (int, error) {
+	return os.WriteToFile(h, f.Ln().Bytes())
 }
 
 func Eprint(f *fmt.Formatter) (int, error) {
-	return os.WriteToFile(os.StandardErrorStream, f.Bytes())
+	return Fprint(os.StandardOutputStream, f)
 }
 
 func Eprintln(f *fmt.Formatter) (int, error) {
-	return os.WriteToFile(os.StandardErrorStream, f.Ln().Bytes())
+	return Fprintln(os.StandardOutputStream, f)
+}
+
+func Print(f *fmt.Formatter) (int, error) {
+	return Fprint(os.StandardErrorStream, f)
+}
+
+func Println(f *fmt.Formatter) (int, error) {
+	return Fprintln(os.StandardErrorStream, f)
 }
