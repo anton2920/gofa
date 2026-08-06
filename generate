@@ -1,7 +1,5 @@
 #!/bin/sh
 
-set -e
-
 VERBOSITY=0
 VERBOSITYFLAGS=""
 while test "$1" = "-v"; do
@@ -16,5 +14,11 @@ run()
 	"$@" || exit 1
 }
 
-run gpp -r -l  `grep -rn gpp | cut -d ':' -f 1 | uniq | grep -v gpp`
-run cd mem && go run cmd/generate.go
+GPPTARGET=`grep -n gpp *.go? 2>/dev/null | cut -d ':' -f 1 | uniq | grep -v gpp`
+test "$GPPTARGET" != "" && run gpp -r
+
+DIRS="bits log mem"
+BASE=`pwd`
+for dir in `echo $DIRS`; do
+	run cd $dir && run go run cmd/generate.go && cd $BASE
+done
