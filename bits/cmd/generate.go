@@ -18,7 +18,7 @@ func main() {
 	const path = "flags.go"
 	f, err := os.Create(path)
 	if err != nil {
-		log.Fatalf("Failed to create %s: %v", path, err)
+		log.Fatalf("Failed to create %q: %v", path, err)
 	}
 	b := bufio.NewWriter(f)
 
