@@ -63,17 +63,25 @@ const (
 	SYS_writev           = 121
 )
 
+//go:nosplit
 func RawSyscall(trap, a1, a2, a3 uintptr) (r1, r2, errno uintptr)
+
+//go:nosplit
+func Syscall(trap, a1, a2, a3 uintptr) (r1, r2, errno uintptr)
+
+//go:nosplit
 func RawSyscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2, errno uintptr)
 
-func Syscall(trap, a1, a2, a3 uintptr) (r1, r2, errno uintptr)
+//go:nosplit
 func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2, errno uintptr)
 
+//go:nosplit
 func Accept(s int32, addr *Sockaddr, addrlen *uint32) (int32, error) {
 	r1, _, errno := Syscall(SYS_accept, uintptr(s), uintptr(unsafe.Pointer(addr)), uintptr(unsafe.Pointer(addrlen)))
 	return int32(r1), NewError(errno)
 }
 
+//go:nosplit
 func Access(path string, mode int32) error {
 	buffer := make([]byte, PATH_MAX+1)
 	copy(buffer[:PATH_MAX], path)
@@ -82,80 +90,96 @@ func Access(path string, mode int32) error {
 	return NewError(errno)
 }
 
+//go:nosplit
 func AioRead(aiocb *Aiocb) error {
 	_, _, errno := RawSyscall(SYS_aio_read, uintptr(unsafe.Pointer(aiocb)), 0, 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func AioReturn(aiocb *Aiocb) (int, error) {
 	r1, _, errno := RawSyscall(SYS_aio_return, uintptr(unsafe.Pointer(aiocb)), 0, 0)
 	return int(r1), NewError(errno)
 }
 
+//go:nosplit
 func AioWrite(aiocb *Aiocb) error {
 	_, _, errno := RawSyscall(SYS_aio_write, uintptr(unsafe.Pointer(aiocb)), 0, 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func Bind(s int32, addr *Sockaddr, addrlen uint32) error {
 	_, _, errno := RawSyscall(SYS_bind, uintptr(s), uintptr(unsafe.Pointer(addr)), uintptr(addrlen))
 	return NewError(errno)
 }
 
+//go:nosplit
 func ClockGettime(clockID int32, tp *Timespec) error {
 	_, _, errno := RawSyscall(SYS_clock_gettime, uintptr(clockID), uintptr(unsafe.Pointer(tp)), 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func Close(fd int32) error {
 	_, _, errno := Syscall(SYS_close, uintptr(fd), 0, 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func Exit(status int32) {
 	RawSyscall(SYS_exit, uintptr(status), 0, 0)
 }
 
+//go:nosplit
 func Fcntl(fd, cmd int32, arg int32) (int32, error) {
 	r1, _, errno := Syscall(SYS_fcntl, uintptr(fd), uintptr(cmd), uintptr(arg))
 	return int32(r1), NewError(errno)
 }
 
+//go:nosplit
 func Fstat(fd int32, sb *Stat_t) error {
 	_, _, errno := RawSyscall(SYS_fstat, uintptr(fd), uintptr(unsafe.Pointer(sb)), 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func Fsync(fd int32) error {
 	_, _, errno := RawSyscall(SYS_fsync, uintptr(fd), 0, 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func Ftruncate(fd int32, length int64) error {
 	_, _, errno := RawSyscall(SYS_ftruncate, uintptr(fd), uintptr(length), 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func Ioctl(fd int32, request uint, argp unsafe.Pointer) error {
 	_, _, errno := RawSyscall(SYS_ioctl, uintptr(fd), uintptr(request), uintptr(argp))
 	return NewError(errno)
 }
 
+//go:nosplit
 func Getrandom(buf []byte, flags uint32) (int64, error) {
 	r1, _, errno := Syscall(SYS_getrandom, uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)), uintptr(flags))
 	return int64(r1), NewError(errno)
 }
 
+//go:nosplit
 func JailRemove(jid int32) error {
 	_, _, errno := RawSyscall(SYS_jail_remove, uintptr(jid), 0, 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func JailSet(iovs []Iovec, flags int32) (int32, error) {
 	jid, _, errno := RawSyscall(SYS_jail_set, uintptr(unsafe.Pointer(&iovs[0])), uintptr(len(iovs)), uintptr(flags))
 	return int32(jid), NewError(errno)
 }
 
+//go:nosplit
 func Kevent(kq int32, changelist []Kevent_t, eventlist []Kevent_t, timeout *Timespec) (int32, error) {
 	var chptr, evptr unsafe.Pointer
 	if len(changelist) > 0 {
@@ -169,31 +193,37 @@ func Kevent(kq int32, changelist []Kevent_t, eventlist []Kevent_t, timeout *Time
 	return int32(r1), NewError(errno)
 }
 
+//go:nosplit
 func Kill(pid int32, sig Signal) error {
 	_, _, errno := RawSyscall(SYS_kill, uintptr(pid), uintptr(sig), 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func Kqueue() (int32, error) {
 	r1, _, errno := RawSyscall(SYS_kqueue, 0, 0, 0)
 	return int32(r1), NewError(errno)
 }
 
+//go:nosplit
 func Listen(s int32, backlog int32) error {
 	_, _, errno := RawSyscall(SYS_listen, uintptr(s), uintptr(backlog), 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func Lseek(fd int32, offset int64, whence int32) (int64, error) {
 	r1, _, errno := RawSyscall(SYS_lseek, uintptr(fd), uintptr(offset), uintptr(whence))
 	return int64(r1), NewError(errno)
 }
 
+//go:nosplit
 func Madvise(addr unsafe.Pointer, len uint, behav int32) error {
 	_, _, errno := RawSyscall(SYS_madvise, uintptr(addr), uintptr(len), uintptr(behav))
 	return NewError(errno)
 }
 
+//go:nosplit
 func Mkdir(path string, mode int16) error {
 	buffer := make([]byte, PATH_MAX+1)
 	copy(buffer[:PATH_MAX], path)
@@ -202,26 +232,31 @@ func Mkdir(path string, mode int16) error {
 	return NewError(errno)
 }
 
+//go:nosplit
 func Mmap(addr unsafe.Pointer, len uint, prot int32, flags int32, fd int32, offset int64) (unsafe.Pointer, error) {
 	r1, _, errno := RawSyscall6(SYS_mmap, uintptr(addr), uintptr(len), uintptr(prot), uintptr(flags), uintptr(fd), uintptr(offset))
 	return unsafe.Pointer(r1), NewError(errno)
 }
 
+//go:nosplit
 func Munmap(addr unsafe.Pointer, len uint) error {
 	_, _, errno := RawSyscall(SYS_munmap, uintptr(addr), uintptr(len), 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func Mprotect(addr unsafe.Pointer, len uint, prot int32) error {
 	_, _, errno := RawSyscall(SYS_mprotect, uintptr(addr), uintptr(len), uintptr(prot))
 	return NewError(errno)
 }
 
+//go:nosplit
 func Nanosleep(rqtp, rmtp *Timespec) error {
 	_, _, errno := Syscall(SYS_nanosleep, uintptr(unsafe.Pointer(rqtp)), uintptr(unsafe.Pointer(rmtp)), 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func Nmount(iovs []Iovec, flags int32) error {
 	_, _, errno := RawSyscall(SYS_nmount, uintptr(unsafe.Pointer(&iovs[0])), uintptr(len(iovs)), uintptr(flags))
 	return NewError(errno)
@@ -243,31 +278,37 @@ func OpenAt(fd int32, path string, flags int32, mode uint16) (int32, error) {
 	return int32(r1), NewError(errno)
 }
 
+//go:nosplit
 func Pread(fd int32, buf []byte, offset int64) (int, error) {
 	r1, _, errno := Syscall6(SYS_pread, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)), uintptr(offset), 0, 0)
 	return int(r1), NewError(errno)
 }
 
+//go:nosplit
 func Pwrite(fd int32, buf []byte, offset int64) (int, error) {
 	r1, _, errno := Syscall6(SYS_pwrite, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)), uintptr(offset), 0, 0)
 	return int(r1), NewError(errno)
 }
 
+//go:nosplit
 func RctlAddRule(rule []byte) error {
 	_, _, errno := RawSyscall6(SYS_rctl_add_rule, uintptr(unsafe.Pointer(&rule[0])), uintptr(len(rule)), 0, 0, 0, 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func RctlRemoveRule(filter []byte) error {
 	_, _, errno := RawSyscall6(SYS_rctl_remove_rule, uintptr(unsafe.Pointer(&filter[0])), uintptr(len(filter)), 0, 0, 0, 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func Read(fd int32, buf []byte) (int, error) {
 	r1, _, errno := Syscall(SYS_read, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
 	return int(r1), NewError(errno)
 }
 
+//go:nosplit
 func Rmdir(path string) error {
 	buffer := make([]byte, PATH_MAX+1)
 	copy(buffer[:PATH_MAX], path)
@@ -276,31 +317,37 @@ func Rmdir(path string) error {
 	return NewError(errno)
 }
 
+//go:nosplit
 func Setsockopt(s, level, optname int32, optval unsafe.Pointer, optlen uint32) error {
 	_, _, errno := RawSyscall6(SYS_setsockopt, uintptr(s), uintptr(level), uintptr(optname), uintptr(optval), uintptr(optlen), 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func Sigaction(sig int32, act *Sigaction_t, oact *Sigaction_t) error {
 	_, _, errno := RawSyscall(SYS_sigaction, uintptr(sig), uintptr(unsafe.Pointer(act)), uintptr(unsafe.Pointer(oact)))
 	return NewError(errno)
 }
 
+//go:nosplit
 func ShmOpen2(path string, flags int32, mode uint16, shmflags int32, name string) (int32, error) {
 	r1, _, errno := RawSyscall6(SYS_shm_open2, uintptr(unsafe.Pointer(strings.Data(path))), uintptr(flags), uintptr(mode), uintptr(shmflags), uintptr(unsafe.Pointer(strings.Data(name))), 0)
 	return int32(r1), NewError(errno)
 }
 
+//go:nosplit
 func Shutdown(s int32, how int32) error {
 	_, _, errno := RawSyscall(SYS_shutdown, uintptr(s), uintptr(how), 0)
 	return NewError(errno)
 }
 
+//go:nosplit
 func Socket(domain, typ, protocol int32) (int32, error) {
 	r1, _, errno := RawSyscall(SYS_socket, uintptr(domain), uintptr(typ), uintptr(protocol))
 	return int32(r1), NewError(errno)
 }
 
+//go:nosplit
 func Stat(path string, sb *Stat_t) error {
 	buffer := make([]byte, PATH_MAX+1)
 	copy(buffer[:PATH_MAX], path)
@@ -309,6 +356,7 @@ func Stat(path string, sb *Stat_t) error {
 	return NewError(errno)
 }
 
+//go:nosplit
 func Unlink(path string) error {
 	buffer := make([]byte, PATH_MAX+1)
 	copy(buffer[:PATH_MAX], path)
@@ -317,6 +365,7 @@ func Unlink(path string) error {
 	return NewError(errno)
 }
 
+//go:nosplit
 func Unmount(path string, flags int32) error {
 	buffer := make([]byte, PATH_MAX+1)
 	copy(buffer[:PATH_MAX], path)
@@ -325,11 +374,13 @@ func Unmount(path string, flags int32) error {
 	return NewError(errno)
 }
 
+//go:nosplit
 func Write(fd int32, buf []byte) (int, error) {
 	r1, _, errno := Syscall(SYS_write, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
 	return int(r1), NewError(errno)
 }
 
+//go:nosplit
 func Writev(fd int32, iov []Iovec) (int, error) {
 	r1, _, errno := Syscall(SYS_writev, uintptr(fd), uintptr(unsafe.Pointer(&iov[0])), uintptr(len(iov)))
 	return int(r1), NewError(errno)
