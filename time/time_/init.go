@@ -2,7 +2,7 @@ package time_
 
 import (
 	"github.com/anton2920/gofa/cpu"
-	"github.com/anton2920/gofa/debug_"
+	"github.com/anton2920/gofa/debug/debug_"
 	"github.com/anton2920/gofa/time"
 )
 
