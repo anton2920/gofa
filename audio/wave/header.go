@@ -30,7 +30,7 @@ type Header struct {
 }
 
 func ReadHeaderFromFile(f os.Handle, header *Header) error {
-	n, err := os.Read(f, *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(header)), Len: int(unsafe.Sizeof(*header)), Cap: int(unsafe.Sizeof(*header))})))
+	n, err := os.ReadFromFile(f, *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(header)), Len: int(unsafe.Sizeof(*header)), Cap: int(unsafe.Sizeof(*header))})))
 	if err != nil {
 		return fmt.Errorf("failed to read WAVE header from file: %v", err)
 	}
