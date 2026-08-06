@@ -4,13 +4,12 @@ import (
 	"fmt"
 
 	"github.com/anton2920/gofa/os"
-	"github.com/anton2920/gofa/syscall"
+	"github.com/anton2920/gofa/os/posix/freebsd"
 )
 
 type Device struct {
-	os.Handle
-
-	DeviceParameters
+	Handle os.Handle
+	Params DeviceParameters
 }
 
 type Mode int32
@@ -21,12 +20,12 @@ const (
 	ModeInputOutput
 )
 
-func Open(path string, mode Mode, params ...DeviceParameters) (*Device, error) {
+func Open(path string, mode Mode, params ...DeviceParameters) (Device, error) {
 	var d Device
 
-	fd, err := syscall.Open(path, int32(mode), 0)
+	fd, err := freebsd.Open(path, int32(mode), 0)
 	if err != nil {
-		return nil, fmt.Errorf("failed ot open audio device: %v", err)
+		return d, fmt.Errorf("failed ot open audio device: %v", err)
 	}
 
 	result := MergeDeviceParameters(params...)
@@ -41,20 +40,20 @@ func Open(path string, mode Mode, params ...DeviceParameters) (*Device, error) {
 	}
 
 	if err := SetDeviceParameters(fd, result); err != nil {
-		syscall.Close(fd)
-		return nil, fmt.Errorf("failed to set device parameters: %v", err)
+		freebsd.Close(fd)
+		return d, fmt.Errorf("failed to set device parameters: %v", err)
 	}
 
 	d.Handle = os.Handle(fd)
-	d.DeviceParameters = result
+	d.Params = result
 
-	return &d, nil
+	return d, nil
 }
 
 func (d *Device) Close() error {
-	return os.Close(d.Handle)
+	return os.CloseHandle(d.Handle)
 }
 
 func (d *Device) Write(buf []byte) (int, error) {
-	return os.Write(d.Handle, buf)
+	return os.WriteToFile(d.Handle, buf)
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/anton2920/gofa/syscall"
+	"github.com/anton2920/gofa/os/posix/freebsd"
 )
 
 type AudioBufInfo struct {
@@ -15,13 +15,13 @@ type AudioBufInfo struct {
 }
 
 var (
-	SNDCTL_DSP_GETOSPACE = syscall.IOR('P', 12, uint(unsafe.Sizeof(AudioBufInfo{})))
-	SNDCTL_DSP_GETISPACE = syscall.IOR('P', 13, uint(unsafe.Sizeof(AudioBufInfo{})))
+	SNDCTL_DSP_GETOSPACE = freebsd.IOR('P', 12, uint(unsafe.Sizeof(AudioBufInfo{})))
+	SNDCTL_DSP_GETISPACE = freebsd.IOR('P', 13, uint(unsafe.Sizeof(AudioBufInfo{})))
 )
 
 func (d *Device) OutputBufferAvailableSpace() (int, error) {
 	var ab AudioBufInfo
-	if err := syscall.Ioctl(int32(d.Handle), SNDCTL_DSP_GETOSPACE, unsafe.Pointer(&ab)); err != nil {
+	if err := freebsd.Ioctl(int32(d.Handle), SNDCTL_DSP_GETOSPACE, unsafe.Pointer(&ab)); err != nil {
 		return -1, fmt.Errorf("failed to get output audio buf info: %v", err)
 	}
 	return int(ab.Bytes), nil

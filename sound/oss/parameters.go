@@ -6,7 +6,7 @@ import (
 
 	"github.com/anton2920/gofa/audio/wave"
 	"github.com/anton2920/gofa/ints"
-	"github.com/anton2920/gofa/syscall"
+	"github.com/anton2920/gofa/os/posix/freebsd"
 )
 
 type DeviceParameters struct {
@@ -46,9 +46,9 @@ const (
 )
 
 var (
-	SNDCTL_DSP_SETFMT   = syscall.IOWR('P', 5, uint(unsafe.Sizeof(int32(0))))
-	SNDCTL_DSP_CHANNELS = syscall.IOWR('P', 6, uint(unsafe.Sizeof(int32(0))))
-	SNDCTL_DSP_SPEED    = syscall.IOWR('P', 2, uint(unsafe.Sizeof(int32(0))))
+	SNDCTL_DSP_SETFMT   = freebsd.IOWR('P', 5, uint(unsafe.Sizeof(int32(0))))
+	SNDCTL_DSP_CHANNELS = freebsd.IOWR('P', 6, uint(unsafe.Sizeof(int32(0))))
+	SNDCTL_DSP_SPEED    = freebsd.IOWR('P', 2, uint(unsafe.Sizeof(int32(0))))
 )
 
 func MergeDeviceParameters(params ...DeviceParameters) DeviceParameters {
@@ -70,13 +70,13 @@ func SetDeviceParameters(fd int32, params DeviceParameters) error {
 	channels := int32(params.Channels)
 	speed := int32(params.SamplingRate)
 
-	if err := syscall.Ioctl(fd, SNDCTL_DSP_SETFMT, unsafe.Pointer(&format)); err != nil {
+	if err := freebsd.Ioctl(fd, SNDCTL_DSP_SETFMT, unsafe.Pointer(&format)); err != nil {
 		return fmt.Errorf("failed to set sample format: %v", err)
 	}
-	if err := syscall.Ioctl(fd, SNDCTL_DSP_CHANNELS, unsafe.Pointer(&channels)); err != nil {
+	if err := freebsd.Ioctl(fd, SNDCTL_DSP_CHANNELS, unsafe.Pointer(&channels)); err != nil {
 		return fmt.Errorf("failed to set number of channels: %v", err)
 	}
-	if err := syscall.Ioctl(fd, SNDCTL_DSP_SPEED, unsafe.Pointer(&speed)); err != nil {
+	if err := freebsd.Ioctl(fd, SNDCTL_DSP_SPEED, unsafe.Pointer(&speed)); err != nil {
 		return fmt.Errorf("failed to set sampling rate: %v", err)
 	}
 
