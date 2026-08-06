@@ -63,7 +63,6 @@ func (a *Arena) PushSizeWithAlignment(n int, align uintptr) unsafe.Pointer {
 		return curr
 	}
 
-	debug.Printf("no more space in arena %p: requested %d, got only %d left", a.Base, n, a.Size-a.CurrOfft)
 	trace.End(t)
 
 	/* TODO(anton2920): handle shortage of memory better. */
