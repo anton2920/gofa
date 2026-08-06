@@ -158,10 +158,12 @@ func PutTmRFC822(buf []byte, tm Tm) int {
 
 /* PutTmDate puts time in 'tm' in '2006-01-02' format. */
 func PutTmDate(buf []byte, tm Tm) int {
+	const sep = '/'
+
 	var n int
 
 	n += slices.PutInt(buf[n:], tm.Year+1900)
-	buf[n] = '-'
+	buf[n] = sep
 	n++
 
 	if tm.Mon+1 < 10 {
@@ -169,7 +171,7 @@ func PutTmDate(buf []byte, tm Tm) int {
 		n++
 	}
 	n += slices.PutInt(buf[n:], tm.Mon+1)
-	buf[n] = '-'
+	buf[n] = sep
 	n++
 
 	if tm.Mday < 10 {
