@@ -1,8 +1,6 @@
 package gui
 
-import (
-	"github.com/anton2920/gofa/gui/color"
-)
+import "github.com/anton2920/gofa/gui/color"
 
 type Layout struct {
 	Foreground     color.Color

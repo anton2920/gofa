@@ -6,10 +6,10 @@
 package gui
 
 import (
-	"fmt"
 	"unsafe"
 
 	"github.com/anton2920/gofa/bools"
+	"github.com/anton2920/gofa/fmt"
 	"github.com/anton2920/gofa/gui/color"
 	"github.com/anton2920/gofa/gui/fonts"
 	"github.com/anton2920/gofa/gui/gr"
@@ -64,14 +64,16 @@ type UI struct {
 	dragX, dragY int
 }
 
-func NewUI(renderer Renderer) *UI {
-	var ui UI
+var DecompressedFont21 gr.Font
 
-	ui.Renderer = renderer
+func init() {
+	DecompressedFont21 = gr.DecompressFont(fonts.Font21)
+}
+
+func (ui *UI) InitWithRenderer(r Renderer) {
+	ui.Renderer = r
 	ui.Layout = DefaultLayout()
-	ui.Font = gr.DecompressFont(fonts.Font21)
-
-	return &ui
+	ui.Font = DecompressedFont21
 }
 
 func (ui *UI) active(id ID) bool {
@@ -408,7 +410,9 @@ func (ui *UI) SliderDisplay(label string, valueMin, valueMax float32, value *flo
 	t := trace.Begin("")
 
 	if display {
-		label = fmt.Sprintf("%s = %g", label, *value)
+		var f fmt.Formatter
+		f.InitWithByteSlice(make([]byte, 4096))
+		label = f.S(label).S(" = ").G32(*value).String()
 	}
 	result := ui.Slider(label, valueMin, valueMax, value)
 
@@ -437,7 +441,9 @@ func (ui *UI) SliderIntDisplay(label string, valueMin, valueMax int, value *int,
 	t := trace.Begin("")
 
 	if display {
-		label = fmt.Sprintf("%s = %d", label, *value)
+		var f fmt.Formatter
+		f.InitWithByteSlice(make([]byte, 4096))
+		label = f.S(label).S(" = ").D(*value).String()
 	}
 	result := ui.SliderInt(label, valueMin, valueMax, value)
 

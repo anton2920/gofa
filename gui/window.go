@@ -5,7 +5,7 @@ import (
 	"github.com/anton2920/gofa/cpu"
 	"github.com/anton2920/gofa/gui/color"
 	"github.com/anton2920/gofa/time"
-	"github.com/anton2920/gofa/time_"
+	"github.com/anton2920/gofa/time/time_"
 	"github.com/anton2920/gofa/trace"
 )
 
@@ -35,22 +35,18 @@ type Window struct {
 	CursorVisible bool
 }
 
-func NewWindow(title string, width int, height int, flags WindowFlags) (*Window, error) {
-	w := Window{Width: width, Height: height, Flags: flags, CursorVisible: true}
-	if err := platformNewWindow(&w, 0, 0); err != nil {
-		return nil, err
+func (w *Window) Init(title string, width int, height int, flags WindowFlags) error {
+	w.Width = width
+	w.Height = height
+	w.Flags = flags
+	w.CursorVisible = true
+
+	if err := platformNewWindow(w, 0, 0); err != nil {
+		return err
 	}
 	w.SetTitle(title)
-	return &w, nil
-}
 
-func (w *Window) NewTransientWindow(title string, x, y, width, height int) (*Window, error) {
-	tw := Window{Parent: w, Width: width, Height: height, Flags: windowTransient, CursorVisible: true}
-	if err := platformNewWindow(&tw, x, y); err != nil {
-		return nil, err
-	}
-	tw.SetTitle(title)
-	return &tw, nil
+	return nil
 }
 
 func (w *Window) Title() string {
