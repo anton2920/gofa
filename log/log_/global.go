@@ -5,7 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/log"
-	"github.com/anton2920/gofa/time_"
+	"github.com/anton2920/gofa/time/time_"
 )
 
 var fs [16]log.Formatter
