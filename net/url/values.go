@@ -5,7 +5,6 @@ import (
 
 	"github.com/anton2920/gofa/alloc"
 	"github.com/anton2920/gofa/bytes"
-	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/slices"
@@ -156,23 +155,6 @@ func (vs Values) GetInt64(key string) (int64, error) {
 	return n, err
 }
 
-func (vs Values) GetID(key string) (database.ID, error) {
-	t := trace.Begin("")
-
-	id, err := vs.GetInt(key)
-	if err != nil {
-		trace.End(t)
-		return 0, err
-	}
-	if (id < database.MinValidID) || (id > database.MaxValidID) {
-		trace.End(t)
-		return 0, errors.New("ID out of range")
-	}
-
-	trace.End(t)
-	return database.ID(id), nil
-}
-
 func (vs *Values) GetMany(key string) []string {
 	t := trace.Begin("")
 
@@ -199,17 +181,6 @@ func (vs *Values) Has(key string) bool {
 
 	trace.End(t)
 	return false
-}
-
-func (vs *Values) HasID(id database.ID) bool {
-	t := trace.Begin("")
-
-	buffer := make([]byte, ints.Bufsize)
-	n := slices.PutInt(buffer, int(id))
-	has := vs.Has(bytes.AsString(buffer[:n]))
-
-	trace.End(t)
-	return has
 }
 
 func (vs *Values) HasInt(value int) bool {
@@ -265,8 +236,4 @@ func (vs *Values) SetInt(key string, value int) {
 	vs.Set(key, string(buffer[:n]))
 
 	trace.End(t)
-}
-
-func (vs *Values) SetID(key string, id database.ID) {
-	vs.SetInt(key, int(id))
 }
