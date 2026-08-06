@@ -58,22 +58,27 @@ func OpenFile(path string, rw bits.Flags) (Handle, error) {
 	return OpenOrCreateFile(path, rw, 0, 0)
 }
 
+//go:nosplit
 func CloseHandle(f Handle) error {
 	return freebsd.Close(int32(f))
 }
 
+//go:nosplit
 func ReadFromFile(f Handle, buf []byte) (int, error) {
 	return freebsd.Read(int32(f), buf)
 }
 
+//go:nosplit
 func ReadFromFileAt(f Handle, buf []byte, offt int64) (int, error) {
 	return freebsd.Pread(int32(f), buf, offt)
 }
 
+//go:nosplit
 func WriteToFile(f Handle, buf []byte) (int, error) {
 	return freebsd.Write(int32(f), buf)
 }
 
+//go:nosplit
 func WriteToFileAt(f Handle, buf []byte, offt int64) (int, error) {
 	return freebsd.Pwrite(int32(f), buf, offt)
 }

@@ -3,15 +3,11 @@
 
 package os
 
-import (
-	"unsafe"
-
-	"github.com/anton2920/gofa/os/posix/freebsd"
-)
+import "github.com/anton2920/gofa/os/posix/freebsd"
 
 type (
 	Signal        freebsd.Signal
-	SignalHandler unsafe.Pointer
+	SignalHandler uintptr
 )
 
 const (
@@ -34,7 +30,11 @@ func Exit(code int) {
 	freebsd.Exit(int32(code))
 }
 
+/* NOTE(anton2920): this is f**cking unsafe as hell! You may manage to get it working, but you better have 'os.Exit' at the end of your handler or pray that your program is not inside a 'Syscall[69]'. Also, may gods have mercy on your soul... */
+//go:nosplit
+func AsSignalHandler(fn func(Signal)) SignalHandler
+
 func InstallSignalHandler(s Signal, handler SignalHandler) error {
-	act := freebsd.Sigaction_t{Handler: uintptr(handler), Flags: freebsd.SA_ONSTACK | freebsd.SA_RESTART}
+	act := freebsd.Sigaction_t{Handler: uintptr(handler)}
 	return freebsd.Sigaction(int32(s), &act, nil)
 }
