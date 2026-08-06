@@ -36,18 +36,15 @@ New structure:
 
 General rules:
 
-- Only "os" package is allowed to allocate memory.
-- Only packages names of which end with "util" are allowed to import "os".
+- Only "os" package and its subpackages are allowed to allocate memory and interface with operating system.
+- Only abnormal packages (i.e. names of which end with '_') are allowed to import "os" and other abnormal packages.
 
 - The universal unit of communication is '[]byte'.
 - All functions operate on a fixed chunk of memory.
 - If memory is insufficient, they 'return mem.ErrNotEnough{Required: <amount>}'.
 
-- Functions in "*util" packages can wrap corresponding functions in regular packages and automatically provide more memory on error.
-- Those functions could be automatically generated through 'gpp' (by marking with '//gpp:generate: util(mem)').
-
-- Suffix "util" could be replaces with something more fitting.
-
+- Functions in abnormal packages can wrap corresponding functions in regular packages and automatically provide more memory on error.
+- Those functions could be automatically generated through 'gpp' (by marking with '//gpp:generate: util(mem)')?
 
 New:
 
