@@ -8,6 +8,7 @@ import (
 	"github.com/anton2920/gofa/debug"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/slices"
+	"github.com/anton2920/gofa/time"
 )
 
 type Formatter struct {
@@ -65,6 +66,18 @@ func (f *Formatter) D32(d int32) *Formatter {
 func (f *Formatter) D64(d int64) *Formatter {
 	buf := make([]byte, 0, ints.Bufsize)
 	buf = strconv.AppendInt(buf, d, 10)
+	return f.S(bytes.AsString(buf))
+}
+
+func (f *Formatter) Date(t int64) *Formatter {
+	buf := make([]byte, 10)
+	time.PutTmDate(buf, time.ToTm(t))
+	return f.S(bytes.AsString(buf))
+}
+
+func (f *Formatter) DateTime(t int64) *Formatter {
+	buf := make([]byte, 19)
+	time.PutTmDateTime(buf, time.ToTm(t))
 	return f.S(bytes.AsString(buf))
 }
 
