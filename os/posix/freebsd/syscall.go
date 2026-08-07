@@ -22,6 +22,7 @@ const (
 	SYS_bind             = 104
 	SYS_clock_gettime    = 232
 	SYS_close            = 6
+	SYS_connect          = 98
 	SYS_exit             = 1
 	SYS_fcntl            = 92
 	SYS_fstat            = 551
@@ -123,6 +124,12 @@ func ClockGettime(clockID int32, tp *Timespec) error {
 //go:nosplit
 func Close(fd int32) error {
 	_, _, errno := Syscall(SYS_close, uintptr(fd), 0, 0)
+	return NewError(errno)
+}
+
+//go:nosplit
+func Connect(s int32, name *Sockaddr, namelen uint32) error {
+	_, _, errno := Syscall(SYS_connect, uintptr(s), uintptr(unsafe.Pointer(name)), uintptr(namelen))
 	return NewError(errno)
 }
 
@@ -342,7 +349,7 @@ func Shutdown(s int32, how int32) error {
 }
 
 //go:nosplit
-func Socket(domain, typ, protocol int32) (int32, error) {
+func Socket(domain int32, typ int32, protocol int32) (int32, error) {
 	r1, _, errno := RawSyscall(SYS_socket, uintptr(domain), uintptr(typ), uintptr(protocol))
 	return int32(r1), NewError(errno)
 }

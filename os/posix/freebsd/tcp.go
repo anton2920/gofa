@@ -1,10 +1,4 @@
 package freebsd
 
-const (
-	/* From <netinet/in.h>. */
-	INADDR_ANY  = 0
-	IPPROTO_TCP = 6
-
-	/* From <netinet/tcp.h>. */
-	TCP_NODELAY = 1
-)
+/* From <netinet/tcp.h>. */
+const TCP_NODELAY = 1
