@@ -19,7 +19,7 @@ type Queue struct {
 	tail   int
 }
 
-var units2notes = map[int64]bits.Flags32{
+var units2flags = map[int]bits.Flags32{
 	time.Second:      os.EventNoteSeconds,
 	time.Millisecond: os.EventNoteMilliseconds,
 	time.Microsecond: os.EventNoteMicroseconds,
@@ -39,7 +39,7 @@ func (q *Queue) Init() error {
 func (q *Queue) AddFile(f os.Handle, request bits.Flags, trigger int, userData unsafe.Pointer) error {
 	var flags bits.Flags16
 	if trigger == event.TriggerEdge {
-		flags |= os.EventFlagTriggerEdge
+		flags |= os.EventQueueActionResetStateAfterRetrieval
 	}
 
 	events := make([]os.Event, 0, 2)
@@ -91,15 +91,15 @@ func (q *Queue) AddAndIgnoreTerminateSignals() error {
 	return q.AddAndIgnoreSignals(os.SignalHangup, os.SignalInterrupt, os.SignalTerminate)
 }
 
-func (q *Queue) AddPeriodicTimer(id uintptr, quantity int, units int64, userData unsafe.Pointer) error {
+func (q *Queue) AddPeriodicTimer(id uintptr, quantity int, units int, userData unsafe.Pointer) error {
 	events := make([]os.Event, 1)
-	events[0] = os.Event{Identifier: id, EventData: int64(quantity), EventType: os.EventTypeTimer, EventNotes: units2notes[units], UserData: userData}
+	events[0] = os.Event{Identifier: id, EventData: int64(quantity), EventType: os.EventTypeTimer, EventFlags: units2flags[units], UserData: userData}
 	return os.RegisterEventsWithQueue(q.KernelQueue, events)
 }
 
-func (q *Queue) AddTimerAt(id uintptr, at int, units int64, userData unsafe.Pointer) error {
+func (q *Queue) AddTimerAt(id uintptr, at int, units int, userData unsafe.Pointer) error {
 	events := make([]os.Event, 1)
-	events[0] = os.Event{Identifier: id, EventData: int64(at), EventType: os.EventTypeTimer, ActionFlags: os.EventFlagTriggerEdge, EventNotes: units2notes[units] | os.EventNoteAbsoluteTime, UserData: userData}
+	events[0] = os.Event{Identifier: id, EventData: int64(at), EventType: os.EventTypeTimer, ActionFlags: os.EventQueueActionResetStateAfterRetrieval, EventFlags: units2flags[units] | os.EventNoteAbsoluteTime, UserData: userData}
 	return os.RegisterEventsWithQueue(q.KernelQueue, events)
 }
 
