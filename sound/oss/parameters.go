@@ -95,13 +95,13 @@ func SamplingRate(hz int) DeviceParameters {
 	return DeviceParameters{SamplingRate: hz}
 }
 
-func ParametersFromWAVE(header wave.Header) DeviceParameters {
+func ParametersFromWAVE(header wave.SimpleHeader) DeviceParameters {
 	var result DeviceParameters
 
-	result.Channels = int(header.NumChannels)
-	result.SamplingRate = int(header.SampleRate)
+	result.Channels = int(header.Format.NumChannels)
+	result.SamplingRate = int(header.Format.SampleRate)
 
-	switch header.BitsPerSample {
+	switch header.Format.BitsPerSample {
 	case 8:
 		result.Format = FormatS8
 	case 16:
