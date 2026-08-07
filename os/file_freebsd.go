@@ -54,10 +54,6 @@ func OpenOrCreateFile(path string, rw bits.Flags, creat bits.Flags, perms uint) 
 	return Handle(f), err
 }
 
-func OpenFile(path string, rw bits.Flags) (Handle, error) {
-	return OpenOrCreateFile(path, rw, 0, 0)
-}
-
 //go:nosplit
 func CloseHandle(f Handle) error {
 	return freebsd.Close(int32(f))

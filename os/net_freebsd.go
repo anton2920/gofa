@@ -6,81 +6,94 @@ package os
 import (
 	"unsafe"
 
-	"github.com/anton2920/gofa/errors"
-	"github.com/anton2920/gofa/net/tcp"
 	"github.com/anton2920/gofa/os/posix/freebsd"
 )
 
-type (
-	NetworkAddress  freebsd.Sockaddr
-	InternetAddress freebsd.SockaddrIn
+type AddressFamily uint8
+
+const (
+	AddressFamilyInternet = AddressFamily(freebsd.AF_INET)
 )
+
+type NetworkAddress struct {
+	Len    uint8
+	Family AddressFamily
+	Data   [14]byte
+}
+
+type InternetAddress struct {
+	Len     uint8
+	Family  AddressFamily
+	Port    uint16
+	Address uint32
+	_       [8]byte
+}
+
+type ProtocolFamily int32
+
+const (
+	ProtocolFamilyInternet = ProtocolFamily(freebsd.PF_INET)
+)
+
+type SocketType int32
+
+const (
+	SocketTypeStream = SocketType(freebsd.SOCK_STREAM)
+)
+
+type Protocol int32
+
+type SocketOptionLevel int32
+
+const (
+	SocketOptionLevelSocket = SocketOptionLevel(freebsd.SOL_SOCKET)
+	SocketOptionLevelTCP    = SocketOptionLevel(freebsd.IPPROTO_TCP)
+)
+
+type SocketOptionName int32
+
+const (
+	SocketOptionReuseLocalAddress                         = SocketOptionName(freebsd.SO_REUSEADDR)
+	SocketOptionReuseLocalAddressAndPort                  = SocketOptionName(freebsd.SO_REUSEPORT)
+	SocketOptionReuseLocalAddressAndPortWithLoadBalancing = SocketOptionName(freebsd.SO_REUSEPORT_LB)
+
+	SocketOptionTCPNoDelay = SocketOptionName(freebsd.TCP_NODELAY)
+)
+
+var SocketOptionName2SocketOptionLevel = map[SocketOptionName]SocketOptionLevel{
+	SocketOptionReuseLocalAddress:                         SocketOptionLevelSocket,
+	SocketOptionReuseLocalAddressAndPort:                  SocketOptionLevelSocket,
+	SocketOptionReuseLocalAddressAndPortWithLoadBalancing: SocketOptionLevelSocket,
+
+	SocketOptionTCPNoDelay: SocketOptionLevelTCP,
+}
 
 func (ia *InternetAddress) AsNetworkAddress() *NetworkAddress {
 	return (*NetworkAddress)(unsafe.Pointer(ia))
 }
 
-func ListenForIncomingConnections(proto string, endpoint string) (Handle, error) {
-	var buffer [freebsd.SOCK_MAXADDRLEN]byte
-	var pf, semantics int32
-	var addrLen uint32
-
-	switch proto {
-	case "tcp", "tcp/ip", "tcp/ip4", "tcp/ipv4":
-		pf = freebsd.PF_INET
-		semantics = freebsd.SOCK_STREAM
-
-		addr, port, err := tcp.ParseEndpoint(endpoint)
-		if err != nil {
-			return -1, err
-		}
-
-		iaddr := (*InternetAddress)(unsafe.Pointer(&buffer))
-		iaddr.Family = freebsd.AF_INET
-		iaddr.Address = addr
-		iaddr.Port = port
-
-		addrLen = uint32(unsafe.Sizeof(*iaddr))
-	default:
-		return -1, errors.ErrNotImplemented
-	}
-
-	s, err := freebsd.Socket(pf, semantics, 0)
-	if err != nil {
-		return -1, err
-	}
-
-	if err := freebsd.Bind(s, (*freebsd.Sockaddr)(unsafe.Pointer(&buffer)), addrLen); err != nil {
-		freebsd.Close(s)
-		return -1, err
-	}
-
-	if (pf == freebsd.PF_INET) && (semantics == freebsd.SOCK_STREAM) {
-		var enable int32 = 1
-		if err := freebsd.Setsockopt(s, freebsd.SOL_SOCKET, freebsd.SO_REUSEPORT_LB, unsafe.Pointer(&enable), uint32(unsafe.Sizeof(enable))); err != nil {
-			freebsd.Close(s)
-			return -1, err
-		}
-
-		if err := freebsd.Setsockopt(s, freebsd.IPPROTO_TCP, freebsd.TCP_NODELAY, unsafe.Pointer(&enable), uint32(unsafe.Sizeof(enable))); err != nil {
-			freebsd.Close(s)
-			return -1, err
-		}
-	}
-
-	if err := freebsd.Listen(s, 128); err != nil {
-		freebsd.Close(s)
-		return -1, err
-	}
-
-	return Handle(s), nil
+func CreateNetworkSocket(pf ProtocolFamily, typ SocketType, proto Protocol) (Handle, error) {
+	s, err := freebsd.Socket(int32(pf), int32(typ), int32(proto))
+	return Handle(s), err
 }
 
-func ConnectToAddress() (Handle, error) {
-	return -1, errors.ErrNotImplemented
+func BindSocketToAddress(s Handle, addr *NetworkAddress, addrLen uint32) error {
+	return freebsd.Bind(int32(s), (*freebsd.Sockaddr)(unsafe.Pointer(addr)), addrLen)
+}
+
+func ListenForIncomingConnections(s Handle, backlog int) error {
+	return freebsd.Listen(int32(s), int32(backlog))
 }
 
 func AcceptIncomingConnection(s Handle, addr *NetworkAddress, addrLen *uint32) (Handle, error) {
 	c, err := freebsd.Accept(int32(s), (*freebsd.Sockaddr)(unsafe.Pointer(addr)), addrLen)
 	return Handle(c), err
+}
+
+func ConnectToAddress(s Handle, addr *NetworkAddress, addrLen uint32) error {
+	return freebsd.Connect(int32(s), (*freebsd.Sockaddr)(unsafe.Pointer(addr)), addrLen)
+}
+
+func SetSocketOption(s Handle, level SocketOptionLevel, name SocketOptionName, val unsafe.Pointer, valLen uint32) error {
+	return freebsd.Setsockopt(int32(s), int32(level), int32(name), val, valLen)
 }
