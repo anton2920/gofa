@@ -48,7 +48,7 @@ func New(userID database.ID) Session {
 }
 
 func Get(token string) Session {
-	defer trace.End(trace.Begin(""))
+	defer trace_.End(trace_.Begin(""))
 
 	SessionsLock.RLock()
 	session, ok := Sessions[token]
@@ -90,7 +90,7 @@ func (session Session) Update() {
 }
 
 func GenerateToken() string {
-	defer trace.End(trace.Begin(""))
+	defer trace_.End(trace_.Begin(""))
 
 	const n = 64
 	buffer := make([]byte, n)

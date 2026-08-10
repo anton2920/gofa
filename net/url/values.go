@@ -9,7 +9,7 @@ import (
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Values struct {
@@ -18,7 +18,7 @@ type Values struct {
 }
 
 func ParseQuery(arena *alloc.Arena, vs *Values, query string) error {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	var err error
 
@@ -57,7 +57,7 @@ func ParseQuery(arena *alloc.Arena, vs *Values, query string) error {
 		vs.Add(key, value)
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return err
 }
 
@@ -82,13 +82,13 @@ func RemoveValuesAtIndex(vs [][]string, i int) [][]string {
 }
 
 func (vs *Values) Add(key string, value string) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	for i := 0; i < len(vs.Keys); i++ {
 		if key == vs.Keys[i] {
 			vs.Values[i] = append(vs.Values[i], value)
 
-			trace.End(t)
+			trace_.End(t)
 			return
 		}
 	}
@@ -97,7 +97,7 @@ func (vs *Values) Add(key string, value string) {
 	if len(vs.Values) == cap(vs.Values) {
 		vs.Values = append(vs.Values, []string{value})
 
-		trace.End(t)
+		trace_.End(t)
 		return
 	}
 	n := len(vs.Values)
@@ -105,11 +105,11 @@ func (vs *Values) Add(key string, value string) {
 	vs.Values[n] = vs.Values[n][:0]
 	vs.Values[n] = append(vs.Values[n], value)
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (vs *Values) Del(key string) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	for i := 0; i < len(vs.Keys); i++ {
 		if key == vs.Keys[i] {
@@ -119,20 +119,20 @@ func (vs *Values) Del(key string) {
 		}
 	}
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (vs *Values) Get(key string) string {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	for i := 0; i < len(vs.Keys); i++ {
 		if key == vs.Keys[i] {
-			trace.End(t)
+			trace_.End(t)
 			return vs.Values[i][0]
 		}
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return ""
 }
 
@@ -147,50 +147,50 @@ func (vs Values) GetInt32(key string) (int32, error) {
 }
 
 func (vs Values) GetInt64(key string) (int64, error) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	n, err := strconv.ParseInt(vs.Get(key), 10, 64)
 
-	trace.End(t)
+	trace_.End(t)
 	return n, err
 }
 
 func (vs *Values) GetMany(key string) []string {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	for i := 0; i < len(vs.Keys); i++ {
 		if key == vs.Keys[i] {
-			trace.End(t)
+			trace_.End(t)
 			return vs.Values[i]
 		}
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return nil
 }
 
 func (vs *Values) Has(key string) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	for i := 0; i < len(vs.Keys); i++ {
 		if key == vs.Keys[i] {
-			trace.End(t)
+			trace_.End(t)
 			return true
 		}
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 
 func (vs *Values) HasInt(value int) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	buffer := make([]byte, ints.Bufsize)
 	n := slices.PutInt(buffer, value)
 	has := vs.Has(bytes.AsString(buffer[:n]))
 
-	trace.End(t)
+	trace_.End(t)
 	return has
 }
 
@@ -200,14 +200,14 @@ func (vs *Values) Reset() {
 }
 
 func (vs *Values) Set(key string, value string) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	for i := 0; i < len(vs.Keys); i++ {
 		if key == vs.Keys[i] {
 			vs.Values[i] = vs.Values[i][:0]
 			vs.Values[i] = append(vs.Values[i], value)
 
-			trace.End(t)
+			trace_.End(t)
 			return
 		}
 	}
@@ -216,7 +216,7 @@ func (vs *Values) Set(key string, value string) {
 	if len(vs.Values) == cap(vs.Values) {
 		vs.Values = append(vs.Values, []string{value})
 
-		trace.End(t)
+		trace_.End(t)
 		return
 	}
 	n := len(vs.Values)
@@ -224,16 +224,16 @@ func (vs *Values) Set(key string, value string) {
 	vs.Values[n] = vs.Values[n][:0]
 	vs.Values[n] = append(vs.Values[n], value)
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 /* TODO(anton2920): remove this function altogether. */
 func (vs *Values) SetInt(key string, value int) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	buffer := make([]byte, ints.Bufsize)
 	n := slices.PutInt(buffer, value)
 	vs.Set(key, string(buffer[:n]))
 
-	trace.End(t)
+	trace_.End(t)
 }

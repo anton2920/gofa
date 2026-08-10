@@ -8,7 +8,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/debug"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Node struct {
@@ -58,7 +58,7 @@ func (n *Node) Init(key []byte, child0 int64, child1 int64) {
 }
 
 func (n *Node) Find(key []byte) int {
-	defer trace.End(trace.Begin(""))
+	defer trace_.End(trace_.Begin(""))
 
 	if res := bytes.Compare(key, n.GetKeyAt(int(n.N)-1)); res >= 0 {
 		return int(n.N) - 1

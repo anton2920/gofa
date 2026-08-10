@@ -19,9 +19,9 @@ func Worker(q *event.Queue, router Router) {
 	ws := make([]Response, Pipeline)
 
 	//getEvents := func(q *event.Queue, events []event.Event) (int, error) {
-	//	t := trace.Begin("github.com/anton2920/gofa/event.(*Queue).GetEvents")
+	//	t := trace_.Begin("github.com/anton2920/gofa/event.(*Queue).GetEvents")
 	//	n, err := q.GetEvents(events)
-	//	trace.End(t)
+	//	trace_.End(t)
 	//	return n, err
 	//}
 

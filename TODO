@@ -37,7 +37,7 @@ New structure:
 General rules:
 
 - Only "os" package and its subpackages are allowed to allocate memory and interface with operating system.
-- Only abnormal packages (i.e. names of which end with '_') are allowed to import "os" and other abnormal packages.
+- Only abnormal packages (i.e. names of which end with '_') are allowed to import "os" and other abnormal packages. The only exceptions to that rule are 'debug_' and 'trace_' packages (because they are doing something only when certain '-tags' are enabled).
 
 - The universal unit of communication is '[]byte'.
 - All functions operate on a fixed chunk of memory.

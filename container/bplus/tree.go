@@ -6,7 +6,7 @@ import (
 
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/io/fs"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 /* Tree is an implementation of a B+tree. */
@@ -57,7 +57,7 @@ func duplicate(buffer []byte, x []byte) []byte {
 }
 
 func OpenTreeAt(f fs.VFile, index int64) (*Tree, error) {
-	defer trace.End(trace.Begin(""))
+	defer trace_.End(trace_.Begin(""))
 
 	var t Tree
 	t.File = f
@@ -266,7 +266,7 @@ func (tx *Tx) BackupPage(index int64) error {
 }
 
 func (t *Tree) Get(key []byte) ([]byte, error) {
-	defer trace.End(trace.Begin(""))
+	defer trace_.End(trace_.Begin(""))
 
 	var buffer []byte
 	var page Page
@@ -321,7 +321,7 @@ func (t *Tree) Del(key []byte) error {
 }
 
 func (t *Tree) Has(key []byte) (bool, error) {
-	defer trace.End(trace.Begin(""))
+	defer trace_.End(trace_.Begin(""))
 
 	var page Page
 
@@ -347,7 +347,7 @@ func (t *Tree) Has(key []byte) (bool, error) {
 }
 
 func (tx *Tx) Set(key []byte, value []byte) error {
-	defer trace.End(trace.Begin(""))
+	defer trace_.End(trace_.Begin(""))
 
 	var page Page
 

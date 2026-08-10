@@ -9,7 +9,7 @@ import (
 
 	"github.com/anton2920/gofa/bools"
 	"github.com/anton2920/gofa/debug"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Leaf struct {
@@ -45,7 +45,7 @@ func init() {
 }
 
 func (l *Leaf) Find(key []byte) (int, bool) {
-	defer trace.End(trace.Begin(""))
+	defer trace_.End(trace_.Begin(""))
 
 	if l.N == 0 {
 		return -1, false

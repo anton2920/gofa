@@ -6,7 +6,7 @@ import (
 	"github.com/anton2920/gofa/gui/color"
 	"github.com/anton2920/gofa/time"
 	"github.com/anton2920/gofa/time/time_"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type WindowFlags uint
@@ -64,63 +64,63 @@ func (w *Window) SetTitle(title string) {
 }
 
 func (w *Window) HasEvents() bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	has := platformWindowHasEvents(w)
 
-	trace.End(t)
+	trace_.End(t)
 	return has
 }
 
 func (w *Window) GetEvents(events []Event) (int, error) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	n, err := platformWindowGetEvents(w, events)
 
-	trace.End(t)
+	trace_.End(t)
 	return n, err
 }
 
 func (w *Window) Invalidate() {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	platformWindowInvalidate(w)
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (w *Window) DisplayPixels(pixels []color.Color, width, height int) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	platformWindowDisplayPixels(w, pixels, width, height)
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (w *Window) ShowCursor() {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	if !w.CursorVisible {
 		platformWindowEnableCursor(w)
 		w.CursorVisible = true
 	}
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (w *Window) HideCursor() {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	if w.CursorVisible {
 		platformWindowDisableCursor(w)
 		w.CursorVisible = false
 	}
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (w *Window) SyncFPS(fps int) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	now := cpu.ReadPerformanceCounter()
 	durationBetweenPauses := (now - w.LastSyncCycles).ToNanosecondsTruncated()
@@ -148,7 +148,7 @@ func (w *Window) SyncFPS(fps int) {
 
 	// fmt.Printf("[gui]: Between: %d, Pause: %d, FrameTime: %g, FPS: %g\n", durationBetweenPauses, duration, w.FrameTime, w.FPS)
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (w *Window) Close() {

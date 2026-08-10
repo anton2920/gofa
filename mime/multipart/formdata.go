@@ -8,20 +8,20 @@ import (
 	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/net/url"
 	"github.com/anton2920/gofa/strings"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte) error {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	if !strings.StartsWith(contentType, "multipart/form-data") {
-		trace.End(t)
+		trace_.End(t)
 		return fmt.Errorf("expected 'multipart/form-data' Content-Type, got %q", contentType)
 	}
 
 	key, boundary, ok := strings.Cut(contentType, "=")
 	if (!ok) || (len(key)-len("boundary") <= 0) || (key[len(key)-len("boundary"):] != "boundary") {
-		trace.End(t)
+		trace_.End(t)
 		return fmt.Errorf("expected boundary in Content-Type, got '%s:%s'", key[len(key)-len("boundary"):], boundary)
 	}
 
@@ -34,11 +34,11 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 			break
 		}
 		if lineEnd == -1 {
-			trace.End(t)
+			trace_.End(t)
 			return errors.New("expected new line after boundary")
 		}
 		if stdstrings.Trim(form[pos:pos+lineEnd], "-") != stdstrings.Trim(boundary, "-") {
-			trace.End(t)
+			trace_.End(t)
 			return fmt.Errorf("expected boundary got %q", form[pos:pos+lineEnd])
 		}
 		if form[pos+lineEnd-2:pos+lineEnd] == "--" {
@@ -53,7 +53,7 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 		for {
 			lineEnd := strings.FindChar(form[pos:], '\r')
 			if lineEnd == -1 {
-				trace.End(t)
+				trace_.End(t)
 				return errors.New("expected new line after header")
 			} else if lineEnd == 0 {
 				pos += len("\r\n")
@@ -64,7 +64,7 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 
 			key, value, ok := strings.Cut(header, ":")
 			if !ok {
-				trace.End(t)
+				trace_.End(t)
 				return errors.New("invalid header")
 			}
 			value = strings.TrimSpace(value)
@@ -72,7 +72,7 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 			switch key {
 			case "Content-Disposition":
 				if !strings.StartsWith(value, "form-data;") {
-					trace.End(t)
+					trace_.End(t)
 					return fmt.Errorf("expected 'form-data', got %q", value)
 				}
 
@@ -82,13 +82,13 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 
 					pair, leftover, _ = strings.Cut(leftover, ";")
 					if len(pair) == 0 {
-						trace.End(t)
+						trace_.End(t)
 						return errors.New("expected header value, got nothing")
 					}
 
 					key, value, ok := strings.Cut(pair, "=")
 					if !ok {
-						trace.End(t)
+						trace_.End(t)
 						return fmt.Errorf("expected key=value, got %q", pair)
 					}
 					value = stdstrings.Trim(value, `"`)
@@ -111,12 +111,12 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 		/* Parsing value. */
 		nextBoundary := strings.FindSubstring(form[pos:], boundary)
 		if nextBoundary == -1 {
-			trace.End(t)
+			trace_.End(t)
 			return errors.New("expected boundary after value")
 		}
 		lineEnd = strings.FindCharReverse(form[pos:pos+nextBoundary], '\r')
 		if lineEnd == -1 {
-			trace.End(t)
+			trace_.End(t)
 			return errors.New("expected new line after value")
 		}
 		value := form[pos : pos+lineEnd]
@@ -130,6 +130,6 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 		pos += lineEnd + len("\r\n")
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return nil
 }

@@ -16,7 +16,7 @@ import (
 	"github.com/anton2920/gofa/session"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Router func(*Response, *Request) error
@@ -24,13 +24,13 @@ type Router func(*Response, *Request) error
 const Pipeline = 16
 
 func RequestHandler(w *Response, r *Request, router Router) (err error) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	defer func() {
 		if p := recover(); p != nil {
 			r.Error = errors.NewPanic(p)
 			err = router((*Response)(pointers.UnsafeNoescape(unsafe.Pointer(w))), (*Request)(pointers.UnsafeNoescape(unsafe.Pointer(r))))
-			trace.End(t)
+			trace_.End(t)
 		}
 	}()
 
@@ -57,12 +57,12 @@ func RequestHandler(w *Response, r *Request, router Router) (err error) {
 	}
 
 	err = router((*Response)(pointers.UnsafeNoescape(unsafe.Pointer(w))), (*Request)(pointers.UnsafeNoescape(unsafe.Pointer(r))))
-	trace.End(t)
+	trace_.End(t)
 	return
 }
 
 func RequestsHandler(ws []Response, rs []Request, router Router) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	const cookie = "Token"
 
@@ -126,7 +126,7 @@ func RequestsHandler(ws []Response, rs []Request, router Router) {
 		log.Logf(level, f.S("[").W(21).S(strings.Or(r.Headers.Get("X-Forwarded-For"), r.RemoteAddr)).S("] ").W(7).S(r.Method).S(" ").S(string(r.URL.Path)).S(" -> ").S(w.Status.String()).S(" (").Err(err).S("), ").W(4).D64(elapsed.ToMicroseconds()).S("us").String())
 	}
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func Serve(c *Conn, router Router) {

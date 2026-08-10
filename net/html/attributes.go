@@ -6,7 +6,7 @@ import (
 	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/strings"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Attributes struct {
@@ -92,15 +92,15 @@ func MergeString(arena *alloc.Arena, r *string, s string) {
 }
 
 func (h *HTML) MergeAttributes(attrs ...Attributes) Attributes {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	var result Attributes
 
 	if len(attrs) == 0 {
-		trace.End(t)
+		trace_.End(t)
 		return result
 	} else if len(attrs) == 1 {
-		trace.End(t)
+		trace_.End(t)
 		return attrs[0]
 	}
 
@@ -142,7 +142,7 @@ func (h *HTML) MergeAttributes(attrs ...Attributes) Attributes {
 		bools.Replace(&result.Selected, attr.Selected)
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return result
 }
 

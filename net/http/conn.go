@@ -10,7 +10,7 @@ import (
 	"github.com/anton2920/gofa/os"
 	"github.com/anton2920/gofa/pointers"
 	"github.com/anton2920/gofa/syscall"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Version int32
@@ -92,28 +92,28 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) ReadRequestData() (int, error) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	buf := c.RequestBuffer.RemainingSlice()
 	if len(buf) == 0 {
 		c.Error = RequestEntityTooLarge("no space left in buffer")
-		trace.End(t)
+		trace_.End(t)
 		return 0, nil
 	}
 
 	n, err := syscall.Read(int32(c.Socket), buf)
 	if err != nil {
-		trace.End(t)
+		trace_.End(t)
 		return -1, err
 	}
 	c.RequestBuffer.Produce(int(n))
 
-	trace.End(t)
+	trace_.End(t)
 	return n, nil
 }
 
 func (c *Conn) WriteResponseData() (int, error) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	var err error
 	var n int
@@ -121,7 +121,7 @@ func (c *Conn) WriteResponseData() (int, error) {
 	if len(c.ResponseBuffer[c.ResponsePos:]) > 0 {
 		n, err = syscall.Write(int32(c.Socket), c.ResponseBuffer[c.ResponsePos:])
 		if err != nil {
-			trace.End(t)
+			trace_.End(t)
 			return -1, err
 		}
 		c.ResponsePos += n
@@ -135,7 +135,7 @@ func (c *Conn) WriteResponseData() (int, error) {
 		}
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return n, err
 }
 

@@ -32,10 +32,10 @@ var Language2HTMLLang = [...]string{
 var localizations = make(Localizations)
 
 func (l Language) L(s string) string {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	if l == LanguageEnglish {
-		trace.End(t)
+		trace_.End(t)
 		return s
 	}
 
@@ -48,11 +48,11 @@ func (l Language) L(s string) string {
 			case "↑", "↓", "^|", "|v", "-", "Command":
 			}
 		*/
-		trace.End(t)
+		trace_.End(t)
 		return s
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return ls[l]
 }
 

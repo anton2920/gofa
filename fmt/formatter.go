@@ -5,7 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/bytes"
-	"github.com/anton2920/gofa/debug"
+	"github.com/anton2920/gofa/debug/debug_"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/time"
@@ -22,7 +22,7 @@ type Formatter struct {
 func (f *Formatter) applyWidth(n int, after bool) {
 	var leftAlign bool
 
-	debug.Assert(n > 0, "field length must be >0")
+	debug_.Assert(n > 0, "field length must be >0")
 
 	width := f.Width
 	if width < 0 {

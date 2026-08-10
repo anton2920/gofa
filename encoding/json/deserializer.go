@@ -4,7 +4,7 @@ import (
 	"bytes"
 
 	"github.com/anton2920/gofa/strings"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Deserializer struct {
@@ -12,7 +12,7 @@ type Deserializer struct {
 }
 
 func UnescapeJSONString(s string) string {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	var buf bytes.Buffer
 
@@ -33,7 +33,7 @@ func UnescapeJSONString(s string) string {
 	}
 	buf.WriteString(s)
 
-	trace.End(t)
+	trace_.End(t)
 	return buf.String()
 }
 
@@ -46,78 +46,78 @@ func (d *Deserializer) End() bool {
 }
 
 func (d *Deserializer) ObjectBegin() bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 
 func (d *Deserializer) Key(key *string) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 
 func (d *Deserializer) ObjectEnd() bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 
 func (d *Deserializer) ArrayBegin() bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 
 func (d *Deserializer) Next() bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 
 func (d *Deserializer) ArrayEnd() bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 
 func (d *Deserializer) Bool(b *bool) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 
 func (d *Deserializer) Int32(i *int32) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 
 func (d *Deserializer) Uint32(i *uint32) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 
 func (d *Deserializer) Int64(i *int64) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 
 func (d *Deserializer) String(s *string) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }

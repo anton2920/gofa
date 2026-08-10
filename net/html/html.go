@@ -15,7 +15,7 @@ import (
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/time"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type HTML struct {
@@ -168,7 +168,7 @@ func (h *HTML) IndexedName(name string, indicies ...int) string {
 }
 
 func (h *HTML) TagBegin(tag string, attrs ...Attributes) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	attr := h.MergeAttributes(attrs...)
 
@@ -211,17 +211,17 @@ func (h *HTML) TagBegin(tag string, attrs ...Attributes) {
 	}
 	h.String(`>`)
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (h *HTML) TagEnd(tag string) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	h.String(`</`)
 	h.String(tag)
 	h.String(`>`)
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (h *HTML) Begin() {

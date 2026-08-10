@@ -7,7 +7,7 @@ import (
 	"github.com/anton2920/gofa/net/url"
 	"github.com/anton2920/gofa/session"
 	"github.com/anton2920/gofa/strings"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Request struct {
@@ -33,7 +33,7 @@ type Request struct {
 }
 
 func (r *Request) Cookie(name string) string {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	cookies := r.Headers.GetMany("Cookie")
 	for i := 0; i < len(cookies); i++ {
@@ -41,15 +41,15 @@ func (r *Request) Cookie(name string) string {
 		if strings.StartsWith(cookie, name) {
 			cookie = cookie[len(name):]
 			if !strings.StartsWith(cookie, "=") {
-				trace.End(t)
+				trace_.End(t)
 				return ""
 			}
-			trace.End(t)
+			trace_.End(t)
 			return cookie[1:]
 		}
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return ""
 }
 
@@ -200,14 +200,14 @@ forRequests:
 }
 
 func ParseRequests(c *Conn, rs []Request) int {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	var n int
 
 	if (c.Error != nil) && (len(rs) > 0) {
 		c.RequestBuffer.Reset()
 		rs[0].Error = c.Error
-		trace.End(t)
+		trace_.End(t)
 		return 1
 	}
 
@@ -216,10 +216,10 @@ func ParseRequests(c *Conn, rs []Request) int {
 	//case VersionNone, Version09, Version10, Version11:
 	n = ParseRequestsV1(c, rs)
 	//default:
-	//	trace.End(t)
+	//	trace_.End(t)
 	//	panic("unsupported version")
 	//}
 
-	trace.End(t)
+	trace_.End(t)
 	return n
 }

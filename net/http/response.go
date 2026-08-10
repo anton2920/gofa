@@ -9,7 +9,7 @@ import (
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/time"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Response struct {
@@ -60,7 +60,7 @@ func (w *Response) Join(ss ...string) string {
 }
 
 func (w *Response) DelCookie(name string) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	const finisher = "=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict"
 
@@ -72,11 +72,11 @@ func (w *Response) DelCookie(name string) {
 
 	w.Headers.Set("Set-Cookie", bytes.AsString(cookie[:n]))
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (w *Response) SetCookie(name, value string, expiry int64) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	const secure = "; HttpOnly; Secure; SameSite=Strict"
 	const expires = "; Expires="
@@ -96,12 +96,12 @@ func (w *Response) SetCookie(name, value string, expiry int64) {
 
 	w.Headers.Set("Set-Cookie", bytes.AsString(cookie[:n]))
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 /* SetCookieUnsafe is useful for debugging purposes. It's also more compatible with older browsers. */
 func (w *Response) SetCookieUnsafe(name, value string, expiry int64) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	const expires = "; Expires="
 	const path = "; Path=/"
@@ -119,11 +119,11 @@ func (w *Response) SetCookieUnsafe(name, value string, expiry int64) {
 
 	w.Headers.Set("Set-Cookie", bytes.AsString(cookie[:n]))
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (w *Response) Redirect(path string, code Status) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	pathBuf := w.Arena.NewSlice(len(path))
 	copy(pathBuf, path)
@@ -132,7 +132,7 @@ func (w *Response) Redirect(path string, code Status) {
 	w.Body = w.Body[:0]
 	w.Status = code
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (w *Response) PathID(path string, id database.ID) string {
@@ -243,7 +243,7 @@ func (w *Response) Reset() {
 var dateBuf = []byte("Mon, 24 Nov 2025 17:49:23 GMT")
 
 func FillResponses(c *Conn, ws []Response) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	for i := 0; i < len(ws); i++ {
 		w := &ws[i]
@@ -301,5 +301,5 @@ func FillResponses(c *Conn, ws []Response) {
 		//}
 	}
 
-	trace.End(t)
+	trace_.End(t)
 }

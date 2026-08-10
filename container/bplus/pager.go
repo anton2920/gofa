@@ -3,7 +3,7 @@ package bplus
 import (
 	"fmt"
 
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Pager interface {
@@ -18,7 +18,7 @@ type MemoryPager struct {
 var _ Pager = new(MemoryPager)
 
 func (p *MemoryPager) ReadPagesAt(pages []Page, index int64) (int64, error) {
-	defer trace.End(trace.Begin(""))
+	defer trace_.End(trace_.Begin(""))
 
 	if index < 0 {
 		index = int64(len(p.Pages))
@@ -33,7 +33,7 @@ func (p *MemoryPager) ReadPagesAt(pages []Page, index int64) (int64, error) {
 }
 
 func (p *MemoryPager) WritePagesAt(pages []Page, index int64) (int64, error) {
-	defer trace.End(trace.Begin(""))
+	defer trace_.End(trace_.Begin(""))
 
 	if index < 0 {
 		index = int64(len(p.Pages))
@@ -76,7 +76,7 @@ func (p *FilePager) Close() {
 }
 
 func (p *FilePager) ReadPagesAt(pages []Page, offset int64) error {
-	defer trace.End(trace.Begin(""))
+	defer trace_.End(trace_.Begin(""))
 
 	if _, err := p.File.ReadAt(Pages2Bytes(pages), offset); (err != nil) && (err != io.EOF) {
 		return fmt.Errorf("failed to read %d pages at %d: %v", len(pages), offset, err)
@@ -85,13 +85,13 @@ func (p *FilePager) ReadPagesAt(pages []Page, offset int64) error {
 }
 
 func (p *FilePager) WritePagesAt(pages []Page, offset int64) error {
-	defer trace.End(trace.Begin(""))
+	defer trace_.End(trace_.Begin(""))
 
 	if _, err := p.File.WriteAt(Pages2Bytes(pages), offset); err != nil {
 		return fmt.Errorf("failed to write %d pages at %d: %v", len(pages), offset, err)
 	}
 	if false {
-		defer trace.End(trace.Begin("main.WritePagesAt.Sync"))
+		defer trace_.End(trace_.Begin("main.WritePagesAt.Sync"))
 
 		if err := p.File.Sync(); err != nil {
 			return fmt.Errorf("failed to sync writes to disk: %v", err)

@@ -14,7 +14,7 @@ import (
 	"github.com/anton2920/gofa/gui/fonts"
 	"github.com/anton2920/gofa/gui/gr"
 	"github.com/anton2920/gofa/ints"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Point struct {
@@ -99,7 +99,7 @@ func (ui *UI) Begin() {
 }
 
 func (ui *UI) ButtonLogic(id ID, over bool) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	var result bool
 
@@ -130,12 +130,12 @@ func (ui *UI) ButtonLogic(id ID, over bool) bool {
 		ui.IsHot = true
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return result
 }
 
 func (ui *UI) ButtonLogicDown(id ID, over bool) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	var result bool
 
@@ -164,30 +164,30 @@ func (ui *UI) ButtonLogicDown(id ID, over bool) bool {
 		ui.IsHot = true
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return result
 }
 
 func (ui *UI) ButtonLogicRect(id ID, x, y, width, height int) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	result := ui.ButtonLogic(id, ui.inRect(x, y, width, height))
 
-	trace.End(t)
+	trace_.End(t)
 	return result
 }
 
 func (ui *UI) Button(id ID, label string) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	result := ui.ButtonW(id, label, ui.Font.TextWidth(label)+ui.Layout.ButtonPaddingWidth*2)
 
-	trace.End(t)
+	trace_.End(t)
 	return result
 }
 
 func (ui *UI) ButtonToggle(labelUnchecked, labelChecked string, checked *bool) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	widthUnchecked := ui.Font.TextWidth(labelUnchecked)
 	widthChecked := ui.Font.TextWidth(labelChecked)
@@ -204,12 +204,12 @@ func (ui *UI) ButtonToggle(labelUnchecked, labelChecked string, checked *bool) b
 		*checked = !*checked
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return result
 }
 
 func (ui *UI) ButtonW(id ID, label string, width int) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	height := ui.Font.CharHeight('g') + ui.Layout.ButtonPaddingHeight*2
 	p := ui.Layout.Put(&width, &height)
@@ -223,7 +223,7 @@ func (ui *UI) ButtonW(id ID, label string, width int) bool {
 
 	result := ui.ButtonLogic(id, ui.inRect(p.X, p.Y, width, height))
 
-	trace.End(t)
+	trace_.End(t)
 	return result
 }
 
@@ -258,7 +258,7 @@ func (ui *UI) color(id ID) color.Color {
 }
 
 func (ui *UI) DragX(id ID, x *int, width int, y0, y1 int) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	if y1 < y0 {
 		y0, y1 = y1, y0
@@ -270,17 +270,17 @@ func (ui *UI) DragX(id ID, x *int, width int, y0, y1 int) bool {
 		if ui.MouseX != *x {
 			*x = ui.MouseX
 
-			trace.End(t)
+			trace_.End(t)
 			return true
 		}
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 
 func (ui *UI) DragY(id ID, y *int, height int, x0, x1 int) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	if x1 < x0 {
 		x0, x1 = x1, x0
@@ -292,18 +292,18 @@ func (ui *UI) DragY(id ID, y *int, height int, x0, x1 int) bool {
 		if ui.MouseY != *y {
 			*y = ui.MouseY
 
-			trace.End(t)
+			trace_.End(t)
 			return true
 		}
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 
 /* DragXY is a generic draggable rectangle... If you want its position clamped, do so yourself. */
 func (ui *UI) DragXY(id ID, x *int, width int, y *int, height int) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	if ui.ButtonLogicDown(id, ui.inRect(*x-width/2, *y-height/2, width, height)) {
 		ui.dragX = *x - ui.MouseX
@@ -315,12 +315,12 @@ func (ui *UI) DragXY(id ID, x *int, width int, y *int, height int) bool {
 			*x = ui.MouseX + ui.dragX
 			*y = ui.MouseY + ui.dragY
 
-			trace.End(t)
+			trace_.End(t)
 			return true
 		}
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 
@@ -398,16 +398,16 @@ func (ui *UI) setHot(id ID) {
 }
 
 func (ui *UI) Slider(label string, valueMin, valueMax float32, value *float32) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	result := ui.SliderRaw(ID(value), label, valueMin, valueMax, value, false)
 
-	trace.End(t)
+	trace_.End(t)
 	return result
 }
 
 func (ui *UI) SliderDisplay(label string, valueMin, valueMax float32, value *float32, display bool) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	if display {
 		var f fmt.Formatter
@@ -416,12 +416,12 @@ func (ui *UI) SliderDisplay(label string, valueMin, valueMax float32, value *flo
 	}
 	result := ui.Slider(label, valueMin, valueMax, value)
 
-	trace.End(t)
+	trace_.End(t)
 	return result
 }
 
 func (ui *UI) SliderInt(label string, valueMin, valueMax int, value *int) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	oldValue := *value
 	z := float32(*value)
@@ -429,16 +429,16 @@ func (ui *UI) SliderInt(label string, valueMin, valueMax int, value *int) bool {
 	if ui.SliderRaw(ID(value), label, float32(valueMin), float32(valueMax), &z, true) {
 		*value = int(z) + bools.ToInt((z-float32(int(z))) >= 0.5)
 
-		trace.End(t)
+		trace_.End(t)
 		return oldValue != *value
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 
 func (ui *UI) SliderIntDisplay(label string, valueMin, valueMax int, value *int, display bool) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	if display {
 		var f fmt.Formatter
@@ -447,12 +447,12 @@ func (ui *UI) SliderIntDisplay(label string, valueMin, valueMax int, value *int,
 	}
 	result := ui.SliderInt(label, valueMin, valueMax, value)
 
-	trace.End(t)
+	trace_.End(t)
 	return result
 }
 
 func (ui *UI) SliderRaw(id ID, label string, valueMin, valueMax float32, value *float32, drawDots bool) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	var labelWidth int
 	var p Point
@@ -519,11 +519,11 @@ func (ui *UI) SliderRaw(id ID, label string, valueMin, valueMax float32, value *
 
 		ui.setHot(id) /* sliders are always hot while active. */
 
-		trace.End(t)
+		trace_.End(t)
 		return *value != oldValue
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	return false
 }
 

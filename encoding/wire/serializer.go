@@ -11,11 +11,11 @@ type Serializer struct {
 }
 
 func (s *Serializer) Begin(version int) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	s.Int32(int32(version))
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (s *Serializer) Int8(n int8) {
@@ -23,11 +23,11 @@ func (s *Serializer) Int8(n int8) {
 }
 
 func (s *Serializer) Uint8(n uint8) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	s.Buffer = append(s.Buffer, byte((n>>0)&0xFF))
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (s *Serializer) Int16(n int16) {
@@ -35,11 +35,11 @@ func (s *Serializer) Int16(n int16) {
 }
 
 func (s *Serializer) Uint16(n uint16) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	s.Buffer = append(s.Buffer, byte((n>>0)&0xFF), byte((n>>8)&0xFF))
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (s *Serializer) Int32(n int32) {
@@ -47,11 +47,11 @@ func (s *Serializer) Int32(n int32) {
 }
 
 func (s *Serializer) Uint32(n uint32) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	s.Buffer = append(s.Buffer, byte((n>>0)&0xFF), byte((n>>8)&0xFF), byte((n>>16)&0xFF), byte((n>>24)&0xFF))
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (s *Serializer) Int64(n int64) {
@@ -59,11 +59,11 @@ func (s *Serializer) Int64(n int64) {
 }
 
 func (s *Serializer) Uint64(n uint64) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	s.Buffer = append(s.Buffer, byte((n>>0)&0xFF), byte((n>>8)&0xFF), byte((n>>16)&0xFF), byte((n>>24)&0xFF), byte((n>>32)&0xFF), byte((n>>40)&0xFF), byte((n>>48)&0xFF), byte((n>>56)&0xFF))
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (s *Serializer) Int(n int) {
@@ -76,21 +76,21 @@ func (s *Serializer) Float64(f float64) {
 }
 
 func (s *Serializer) String(str string) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	s.Uint32(uint32(len(str)))
 	s.Buffer = append(s.Buffer, str...)
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (s *Serializer) Bytes(bytes []byte) {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	s.Uint32(uint32(len(bytes)))
 	s.Buffer = append(s.Buffer, bytes...)
 
-	trace.End(t)
+	trace_.End(t)
 }
 
 func (s *Serializer) End() {

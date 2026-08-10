@@ -2,7 +2,7 @@ package url
 
 import (
 	"github.com/anton2920/gofa/alloc"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type URL struct {
@@ -13,15 +13,15 @@ type URL struct {
 }
 
 func (u *URL) ParseQuery(arena *alloc.Arena) error {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	if len(u.Query.Keys) > 0 {
-		trace.End(t)
+		trace_.End(t)
 		return nil
 	}
 
 	err := ParseQuery(arena, &u.Query, u.RawQuery)
 
-	trace.End(t)
+	trace_.End(t)
 	return err
 }

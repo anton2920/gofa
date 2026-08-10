@@ -4,14 +4,14 @@ import (
 	"fmt"
 
 	"github.com/anton2920/gofa/strings"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Path string
 
 /* Match returns `true` if `p` matches format described in `format`. Additionally it slices `p` with the length of the matched string. */
 func (p *Path) Match(format string, args ...interface{}) bool {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	const ellipsis = "..."
 
@@ -34,13 +34,13 @@ func (p *Path) Match(format string, args ...interface{}) bool {
 				*p = Path(path[len(format):])
 			}
 
-			trace.End(t)
+			trace_.End(t)
 			return ok
 		}
 
 		match := format[:percent]
 		if !strings.StartsWith(path, match) {
-			trace.End(t)
+			trace_.End(t)
 			return false
 		}
 		path = path[len(match):]
@@ -65,7 +65,7 @@ func (p *Path) Match(format string, args ...interface{}) bool {
 		/* TODO(anton2920): moved to heap: fmt.str. */
 		n, err := fmt.Sscanf(path[:nextP], format[:nextF], args[narg:]...)
 		if (n == 0) && (err != nil) {
-			trace.End(t)
+			trace_.End(t)
 			return false
 		}
 		narg += n
