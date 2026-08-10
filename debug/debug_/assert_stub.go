@@ -1,7 +1,7 @@
 //go:build !gofadebug
 // +build !gofadebug
 
-package debug
+package debug_
 
 //go:nosplit
 func Assert(_ bool, _ string) {}

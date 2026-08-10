@@ -5,8 +5,7 @@ package debug_
 
 import (
 	"fmt"
-
-	"github.com/anton2920/gofa/bytes"
+	"unsafe"
 )
 
 func Printf(format string, args ...interface{}) (int, error) {
@@ -15,5 +14,5 @@ func Printf(format string, args ...interface{}) (int, error) {
 	if buf[n-1] != '\n' {
 		buf[n] = '\n'
 	}
-	return fmt.Printf(bytes.AsString(buf), args...)
+	return fmt.Printf(*(*string)(unsafe.Pointer(&buf)), args...)
 }
