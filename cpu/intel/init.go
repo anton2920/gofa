@@ -4,6 +4,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/bytes"
+	"github.com/anton2920/gofa/debug/debug_"
 )
 
 var (
@@ -48,7 +49,7 @@ func init() {
 			Model += (int((info>>16)&0xF) << 4)
 		}
 		ProcessorType = int((info >> 12) & 0x3)
-		// debug_.Printf("[cpu/intel]: %s Family %X Model %X Stepping %X Type %.2b", VendorString, Family, Model, Stepping, ProcessorType)
+		debug_.Printf("[cpu/intel]: %s Family %X Model %X Stepping %X Type %.2b", VendorString, Family, Model, Stepping, ProcessorType)
 
 		BrandIndex = int(index & 0xFF)
 	}
@@ -74,7 +75,7 @@ func init() {
 				BrandString = BrandString[:len(BrandString)-1]
 			}
 
-			// debug_.Printf("[cpu/intel]: %s", BrandString)
+			debug_.Printf("[cpu/intel]: %s", BrandString)
 		}
 	}
 
