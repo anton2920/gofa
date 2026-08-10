@@ -15,6 +15,7 @@ var prof trace.Profiler
 func init() {
 	/* NOTE(anton2920): len must be a power of two for fast modulus calculation. */
 	prof.Anchors = make([]trace.Anchor, 8192)
+	prof.Prefix = "[trace_]: "
 }
 
 func BeginProfile() {

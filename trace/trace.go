@@ -11,6 +11,7 @@ import (
 	"github.com/anton2920/gofa/cpu"
 	"github.com/anton2920/gofa/fmt"
 	"github.com/anton2920/gofa/funcs"
+	"github.com/anton2920/gofa/strings"
 )
 
 type Anchor struct {
@@ -39,6 +40,8 @@ type Block struct {
 }
 
 type Profiler struct {
+	Prefix string
+
 	Anchors       []Anchor
 	CurrentParent int32
 
@@ -46,7 +49,7 @@ type Profiler struct {
 	EndCycles   cpu.Cycles
 }
 
-const prefix = "[trace]: "
+const defaultPrefix = "[trace]: "
 
 func AnchorLess(a *Anchor, b *Anchor) bool {
 	if (a.ElapsedCyclesInclusive > 0) && (b.ElapsedCyclesInclusive > 0) {
@@ -174,7 +177,7 @@ func (b *Block) End() {
 func (p *Profiler) dumpTimeElapsed(f *fmt.Formatter, label string, totalElapsed cpu.Cycles, curr *Anchor, parent *Anchor) {
 	percentTotal := 100 * (float64(curr.ElapsedCyclesExclusive) / float64(totalElapsed))
 	percentParent := 100 * (float64(curr.ElapsedCyclesExclusive) / float64(parent.ElapsedCyclesInclusive))
-	f.S(prefix).S("\t ").S(label).S("[").D(curr.HitCount).S("]: flat [").Prec(4).F(curr.ElapsedCyclesExclusive.ToMilliseconds()).S("ms ").Prec(2).F(percentTotal).S("%/").Prec(2).F(percentParent).S("% ").Prec(2).F(curr.ElapsedCyclesExclusive.ToNanoseconds() / float64(curr.HitCount)).S("ns/op")
+	f.S(strings.Or(p.Prefix, defaultPrefix)).S("\t ").S(label).S("[").D(curr.HitCount).S("]: flat [").Prec(4).F(curr.ElapsedCyclesExclusive.ToMilliseconds()).S("ms ").Prec(2).F(percentTotal).S("%/").Prec(2).F(percentParent).S("% ").Prec(2).F(curr.ElapsedCyclesExclusive.ToNanoseconds() / float64(curr.HitCount)).S("ns/op")
 
 	if curr.ElapsedCyclesInclusive > curr.ElapsedCyclesExclusive {
 		percentWithChildrenTotal := 100 * (float64(curr.ElapsedCyclesInclusive) / float64(totalElapsed))
@@ -198,7 +201,7 @@ func (p *Profiler) DumpProfile(buffer []byte) int {
 	var totalCycles cpu.Cycles
 	var totalHits int
 
-	f.S(prefix).S("Total time: ").Prec(4).F(totalElapsed.ToMilliseconds()).S("ms").Ln()
+	f.S(strings.Or(p.Prefix, defaultPrefix)).S("Total time: ").Prec(4).F(totalElapsed.ToMilliseconds()).S("ms").Ln()
 
 	/* NOTE(anton2920): Anchor.ParentIndex uses original order, so we need to preserve it after Sort. Copy filled half to the latter half to create a backup. */
 	half := len(p.Anchors) / 2
