@@ -4,17 +4,13 @@
 package trace
 
 import (
-	"bytes"
-	"fmt"
-	"runtime"
-	"sort"
-	"time"
+	"runtime" /* TODO(anton2920): replace with my own soring routine. */
 	"unsafe"
 
 	"github.com/anton2920/gofa/bools"
 	"github.com/anton2920/gofa/cpu"
-	"github.com/anton2920/gofa/pointers"
-	_ "github.com/anton2920/gofa/time"
+	"github.com/anton2920/gofa/fmt"
+	"github.com/anton2920/gofa/funcs"
 )
 
 type Anchor struct {
@@ -30,6 +26,8 @@ type Anchor struct {
 }
 
 type Block struct {
+	Profiler *Profiler
+
 	PC    uintptr /* for lazy function name resolution. */
 	Label string  /* for names of non-function blocks. */
 
@@ -40,29 +38,17 @@ type Block struct {
 	OldElapsedCyclesInclusive cpu.Cycles
 }
 
-type Anchors []Anchor
-
 type Profiler struct {
-	Anchors       Anchors
+	Anchors       []Anchor
 	CurrentParent int32
 
 	StartCycles cpu.Cycles
 	EndCycles   cpu.Cycles
 }
 
-var GlobalProfiler Profiler
+const prefix = "[trace]: "
 
-func init() {
-	/* NOTE(anton2920): len must be a power of two for fast modulus calculation. */
-	GlobalProfiler.Anchors = make(Anchors, 8192)
-}
-
-func (as Anchors) Len() int { return len(as) }
-
-func (as Anchors) Less(i, j int) bool {
-	a := &as[i]
-	b := &as[j]
-
+func AnchorLess(a *Anchor, b *Anchor) bool {
 	if (a.ElapsedCyclesInclusive > 0) && (b.ElapsedCyclesInclusive > 0) {
 		if a.ElapsedCyclesInclusive < b.ElapsedCyclesInclusive {
 			return false
@@ -90,49 +76,55 @@ func (as Anchors) Less(i, j int) bool {
 	}
 }
 
-func (as Anchors) Swap(i, j int) { as[i], as[j] = as[j], as[i] }
+func InsertionSortAnchors(as []Anchor) {
+	for i := 1; i < len(as); i++ {
+		for j := i; (j > 0) && (AnchorLess(&as[j], &as[j-1])); j-- {
+			as[j], as[j-1] = as[j-1], as[j]
+		}
+	}
+}
 
-/* GetCallerPC returns a value of %IP register that is going to be used by RET instruction. arg0 is the address of the first agrument function of interest accepts. */
-//go:nosplit
-func GetCallerPC(arg0 unsafe.Pointer) uintptr {
-	return *(*uintptr)(pointers.Sub(arg0, unsafe.Sizeof(arg0)))
+func SortAnchors(as []Anchor) {
+	InsertionSortAnchors(as)
 }
 
 //go:nosplit
-func anchorIndexForPC(pc uintptr) int32 {
-	anchors := GlobalProfiler.Anchors
+func (p *Profiler) anchorIndexForPC(pc uintptr) int32 {
+	mask := len(p.Anchors)/2 - 1
 
-	start := int(pc) & (len(GlobalProfiler.Anchors) - 1)
+	start := int(pc & uintptr(mask))
 	start += bools.ToInt(start == 0)
-	if (pc == anchors[start].PC) || (anchors[start].PC == 0) {
+	if (pc == p.Anchors[start].PC) || (p.Anchors[start].PC == 0) {
 		return int32(start)
 	}
 
 	var idx int
-	for idx = start + 1; (pc != anchors[idx].PC) && (anchors[idx].PC != 0) && (idx != start); {
-		idx = (idx + 1) & (len(GlobalProfiler.Anchors) - 1)
+	for idx = start + 1; (pc != p.Anchors[idx].PC) && (p.Anchors[idx].PC != 0) && (idx != start); {
+		idx = (idx + 1) & mask
 		idx += bools.ToInt(idx == 0)
 	}
 	if idx == start {
-		panic("not enough space for new anchor")
+		panic("not enough space for a new anchor")
 	}
 
 	return int32(idx)
 }
 
 //go:nosplit
-func begin(pc uintptr, label string) Block {
+func (p *Profiler) begin(pc uintptr, label string) Block {
 	var b Block
 
-	index := anchorIndexForPC(pc)
-	b.ParentIndex = GlobalProfiler.CurrentParent
-	GlobalProfiler.CurrentParent = index
+	b.Profiler = p
+
+	index := p.anchorIndexForPC(pc)
+	b.ParentIndex = p.CurrentParent
+	p.CurrentParent = index
 
 	b.AnchorIndex = index
 	b.Label = label
 	b.PC = pc
 
-	anchor := &GlobalProfiler.Anchors[b.AnchorIndex]
+	anchor := &p.Anchors[b.AnchorIndex]
 	b.OldElapsedCyclesInclusive = anchor.ElapsedCyclesInclusive
 
 	b.StartCycles = cpu.ReadPerformanceCounter()
@@ -140,17 +132,17 @@ func begin(pc uintptr, label string) Block {
 }
 
 //go:nosplit
-func Begin(label string) Block {
+func (p *Profiler) Begin(label string) Block {
 	cpu.WaitForLoadOperationsToComplete()
-	return begin(GetCallerPC(unsafe.Pointer(&label)), label)
+	return p.begin(funcs.GetCallerPC(unsafe.Pointer(&label)), label)
 }
 
-func BeginProfile() {
-	for i := 0; i < len(GlobalProfiler.Anchors); i++ {
-		GlobalProfiler.Anchors[i] = Anchor{}
+func (p *Profiler) BeginProfile() {
+	for i := 0; i < len(p.Anchors)/2; i++ {
+		p.Anchors[i] = Anchor{}
 	}
-	GlobalProfiler.CurrentParent = 0
-	GlobalProfiler.StartCycles = cpu.ReadPerformanceCounter()
+	p.CurrentParent = 0
+	p.StartCycles = cpu.ReadPerformanceCounter()
 }
 
 func CyclesToNanoseconds(c cpu.Cycles) float64 {
@@ -162,11 +154,11 @@ func CyclesToMilliseconds(c cpu.Cycles) float64 {
 }
 
 //go:nosplit
-func End(b Block) {
+func (b *Block) End() {
 	elapsed := cpu.ReadPerformanceCounter() - b.StartCycles
-	anchor := &GlobalProfiler.Anchors[b.AnchorIndex]
-	parent := &GlobalProfiler.Anchors[b.ParentIndex]
-	GlobalProfiler.CurrentParent = b.ParentIndex
+	anchor := &b.Profiler.Anchors[b.AnchorIndex]
+	parent := &b.Profiler.Anchors[b.ParentIndex]
+	b.Profiler.CurrentParent = b.ParentIndex
 
 	parent.ElapsedCyclesExclusive -= elapsed
 
@@ -179,53 +171,49 @@ func End(b Block) {
 	anchor.ParentIndex = b.ParentIndex
 }
 
-func PrintTimeElapsed(buf *bytes.Buffer, label string, totalElapsed cpu.Cycles, curr *Anchor, parent *Anchor) {
+func (p *Profiler) dumpTimeElapsed(f *fmt.Formatter, label string, totalElapsed cpu.Cycles, curr *Anchor, parent *Anchor) {
 	percentTotal := 100 * (float64(curr.ElapsedCyclesExclusive) / float64(totalElapsed))
 	percentParent := 100 * (float64(curr.ElapsedCyclesExclusive) / float64(parent.ElapsedCyclesInclusive))
-	fmt.Fprintf(buf, "[trace]: \t %s[%d]: flat [%.4fms %.2f%%/%.2f%% %.2fns/op]", label, curr.HitCount, CyclesToMilliseconds(curr.ElapsedCyclesExclusive), percentTotal, percentParent, CyclesToNanoseconds(curr.ElapsedCyclesExclusive)/float64(curr.HitCount))
+	f.S(prefix).S("\t ").S(label).S("[").D(curr.HitCount).S("]: flat [").Prec(4).F(curr.ElapsedCyclesExclusive.ToMilliseconds()).S("ms ").Prec(2).F(percentTotal).S("%/").Prec(2).F(percentParent).S("% ").Prec(2).F(curr.ElapsedCyclesExclusive.ToNanoseconds() / float64(curr.HitCount)).S("ns/op")
 
 	if curr.ElapsedCyclesInclusive > curr.ElapsedCyclesExclusive {
 		percentWithChildrenTotal := 100 * (float64(curr.ElapsedCyclesInclusive) / float64(totalElapsed))
 		percentWithChildrenParent := 100 * (float64(curr.ElapsedCyclesInclusive) / float64(parent.ElapsedCyclesInclusive))
-		fmt.Fprintf(buf, ", cum [%.4fms %.2f%%/%.2f%% %.2fns/op]", CyclesToMilliseconds(curr.ElapsedCyclesInclusive), percentWithChildrenTotal, percentWithChildrenParent, CyclesToNanoseconds(curr.ElapsedCyclesInclusive)/float64(curr.HitCount))
+		f.S(", cum [").Prec(4).F(curr.ElapsedCyclesInclusive.ToMilliseconds()).S("ms ").Prec(2).F(percentWithChildrenTotal).S("%/").Prec(2).F(percentWithChildrenParent).S("% ").Prec(2).F(curr.ElapsedCyclesInclusive.ToNanoseconds() / float64(curr.HitCount)).S("ns/op")
 	}
 
-	fmt.Fprintf(buf, "\n")
+	f.Ln()
 }
 
-func EndProfile() {
-	GlobalProfiler.EndCycles = cpu.ReadPerformanceCounter()
+func (p *Profiler) EndProfile() {
+	p.EndCycles = cpu.ReadPerformanceCounter()
 }
 
-func DumpProfile(buffer []byte) int {
-	buf := bytes.NewBuffer(buffer[:0])
+func (p *Profiler) DumpProfile(buffer []byte) int {
+	var f fmt.Formatter
+	f.InitWithByteSlice(buffer)
 
-	totalElapsed := GlobalProfiler.EndCycles - GlobalProfiler.StartCycles
+	totalElapsed := p.EndCycles - p.StartCycles
 
 	var totalCycles cpu.Cycles
 	var totalHits int
 
-	fmt.Fprintf(buf, "[trace]: Total time: %.4fms\n", CyclesToMilliseconds(totalElapsed))
+	f.S(prefix).S("Total time: ").Prec(4).F(totalElapsed.ToMilliseconds()).S("ms").Ln()
 
-	/* NOTE(anton2920): before accessing anchors, wait for possible background work to stop. */
-	time.Sleep(200 * time.Millisecond)
+	/* NOTE(anton2920): Anchor.ParentIndex uses original order, so we need to preserve it after Sort. Copy filled half to the latter half to create a backup. */
+	half := len(p.Anchors) / 2
+	copy(p.Anchors[half:], p.Anchors[:half])
 
-	/* NOTE(anton2920): Anchor.ParentIndex uses original order, so we need to preserve it after Sort. */
-	backup := make(Anchors, len(GlobalProfiler.Anchors))
-	copy(backup, GlobalProfiler.Anchors)
-
-	sort.Sort(GlobalProfiler.Anchors)
-
-	for i := 0; i < len(GlobalProfiler.Anchors); i++ {
-		anchor := &GlobalProfiler.Anchors[i]
-		parent := &backup[anchor.ParentIndex]
+	for i := 0; i < half; i++ {
+		anchor := &p.Anchors[i]
+		parent := &p.Anchors[half+int(anchor.ParentIndex)]
 
 		if anchor.HitCount > 0 {
 			label := anchor.Label
 			if len(label) == 0 {
 				label = runtime.FuncForPC(anchor.PC).Name()
 			}
-			PrintTimeElapsed(buf, label, totalElapsed, anchor, parent)
+			p.dumpTimeElapsed(&f, label, totalElapsed, anchor, parent)
 			totalCycles += anchor.ElapsedCyclesExclusive
 			totalHits += anchor.HitCount
 		}
@@ -236,8 +224,8 @@ func DumpProfile(buffer []byte) int {
 		curr.ElapsedCyclesExclusive = totalCycles
 		curr.HitCount = totalHits
 
-		PrintTimeElapsed(buf, "= Grand total", totalElapsed, &curr, &parent)
+		p.dumpTimeElapsed(&f, "= Grand total", totalElapsed, &curr, &parent)
 	}
 
-	return buf.Len()
+	return len(f.String())
 }
