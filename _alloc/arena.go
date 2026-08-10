@@ -6,7 +6,7 @@ import (
 	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/strings"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Arena struct {
@@ -15,7 +15,7 @@ type Arena struct {
 }
 
 func (a *Arena) NewSlice(n int) []byte {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	if a.Used+n >= cap(a.Buffer) {
 		a.Buffer = make([]byte, ints.Max(a.Used+n*2, cap(a.Buffer)*2))
@@ -24,27 +24,27 @@ func (a *Arena) NewSlice(n int) []byte {
 	ret := a.Buffer[a.Used : a.Used+n]
 	a.Used += n
 
-	trace.End(t)
+	trace_.End(t)
 	return ret
 }
 
 func (a *Arena) Copy(bs []byte) []byte {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	ret := a.NewSlice(len(bs))
 	copy(ret, bs)
 
-	trace.End(t)
+	trace_.End(t)
 	return ret
 }
 
 func (a *Arena) CopyString(s string) string {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	ret := a.NewSlice(len(s))
 	copy(ret, s)
 
-	trace.End(t)
+	trace_.End(t)
 	return bytes.AsString(ret)
 }
 
