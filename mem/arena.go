@@ -5,9 +5,9 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/bytes"
-	"github.com/anton2920/gofa/debug"
+	"github.com/anton2920/gofa/debug/debug_"
 	"github.com/anton2920/gofa/pointers"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Arena struct {
@@ -47,23 +47,23 @@ func (a *Arena) PushSize(n int) unsafe.Pointer {
 }
 
 func (a *Arena) PushSizeWithAlignment(n int, align uintptr) unsafe.Pointer {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	curr := pointers.Add(a.Base, uintptr(a.CurrOfft))
 	a.CurrOfft += pointers.Delta(pointers.AlignUpPow2(curr, align), curr)
 	if a.CurrOfft+n <= a.Size {
 		curr := pointers.Add(a.Base, uintptr(a.CurrOfft))
-		debug.AssertZero(int(uintptr(curr)&(align-1)), "(*Arena).PushSizeWithAlignment tried to return unaligned pointer")
+		debug_.AssertZero(int(uintptr(curr)&(align-1)), "(*Arena).PushSizeWithAlignment tried to return unaligned pointer")
 
 		a.PrevOfft = a.CurrOfft
 		a.CurrOfft += n
 		bytes.SliceClear(bytes.SliceFromUnsafePointer(a.Base, a.Size)[a.PrevOfft:a.CurrOfft])
 
-		trace.End(t)
+		trace_.End(t)
 		return curr
 	}
 
-	trace.End(t)
+	trace_.End(t)
 
 	/* TODO(anton2920): handle shortage of memory better. */
 	panic("BUY MORE RAM!")
@@ -74,11 +74,11 @@ func (a *Arena) RepushSize(optr unsafe.Pointer, on int, nn int) unsafe.Pointer {
 }
 
 func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on int, nn int, align uintptr) unsafe.Pointer {
-	t := trace.Begin("")
+	t := trace_.Begin("")
 
 	if on == 0 {
 		nptr := a.PushSizeWithAlignment(nn, align)
-		trace.End(t)
+		trace_.End(t)
 		return nptr
 	} else if (uintptr(optr) >= uintptr(a.Base)) && ((uintptr(optr) + uintptr(on)) <= (uintptr(a.Base) + uintptr(a.CurrOfft))) {
 		if optr == pointers.Add(a.Base, uintptr(a.PrevOfft)) {
@@ -86,17 +86,17 @@ func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on int, nn int, ali
 				bytes.SliceClear(bytes.SliceFromUnsafePointer(a.Base, a.Size)[a.PrevOfft+on : a.CurrOfft])
 			}
 			a.CurrOfft = a.PrevOfft + nn
-			trace.End(t)
+			trace_.End(t)
 			return optr
 		} else {
 			nptr := a.PushSizeWithAlignment(nn, align)
 			copy(bytes.SliceFromUnsafePointer(nptr, int(nn)), bytes.SliceFromUnsafePointer(optr, int(on)))
-			trace.End(t)
+			trace_.End(t)
 			return nptr
 		}
 	}
 
-	trace.End(t)
+	trace_.End(t)
 	panic("old memory does not come from this arena")
 }
 
