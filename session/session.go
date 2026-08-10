@@ -13,7 +13,7 @@ import (
 	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/log"
 	"github.com/anton2920/gofa/time"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Session struct {

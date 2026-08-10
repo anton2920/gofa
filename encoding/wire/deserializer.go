@@ -5,7 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/bytes"
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Deserializer struct {

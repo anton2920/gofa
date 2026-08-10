@@ -3,7 +3,7 @@ package l10n
 import (
 	stdstrings "strings"
 
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Language int32

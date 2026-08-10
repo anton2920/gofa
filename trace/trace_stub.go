@@ -3,12 +3,23 @@
 
 package trace
 
-func BeginProfile() {}
+type (
+	Block    struct{}
+	Profiler struct{}
+)
 
-func Begin(_ string) int { return 0 }
+//go:nosplit
+func (p Profiler) BeginBody(_ uintptr, _ string) int { return 0 }
 
-func End(_ int) {}
+//go:nosplit
+func (p Profiler) Begin(_ string) int { return 0 }
 
-func EndProfile() {}
+func (p Profiler) BeginProfile() {}
 
-func DumpProfile(_ []byte) int { return 0 }
+//go:nosplit
+func (b Block) End() {}
+
+//go:nosplit
+func (p Profiler) EndProfile() {}
+
+func (p Profiler) DumpProfile(_ []byte) int { return 0 }

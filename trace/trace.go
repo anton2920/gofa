@@ -4,7 +4,7 @@
 package trace
 
 import (
-	"runtime" /* TODO(anton2920): replace with my own soring routine. */
+	"runtime"
 	"unsafe"
 
 	"github.com/anton2920/gofa/bools"
@@ -32,11 +32,11 @@ type Block struct {
 	PC    uintptr /* for lazy function name resolution. */
 	Label string  /* for names of non-function blocks. */
 
-	ParentIndex int32
-	AnchorIndex int32
-
 	StartCycles               cpu.Cycles
 	OldElapsedCyclesInclusive cpu.Cycles
+
+	ParentIndex int32
+	AnchorIndex int32
 }
 
 type Profiler struct {
@@ -114,7 +114,7 @@ func (p *Profiler) anchorIndexForPC(pc uintptr) int32 {
 }
 
 //go:nosplit
-func (p *Profiler) begin(pc uintptr, label string) Block {
+func (p *Profiler) BeginBody(pc uintptr, label string) Block {
 	var b Block
 
 	b.Profiler = p
@@ -137,9 +137,10 @@ func (p *Profiler) begin(pc uintptr, label string) Block {
 //go:nosplit
 func (p *Profiler) Begin(label string) Block {
 	cpu.WaitForLoadOperationsToComplete()
-	return p.begin(funcs.GetCallerPC(unsafe.Pointer(&label)), label)
+	return p.BeginBody(funcs.GetCallerPC(unsafe.Pointer(&label)), label)
 }
 
+//go:nosplit
 func (p *Profiler) BeginProfile() {
 	for i := 0; i < len(p.Anchors)/2; i++ {
 		p.Anchors[i] = Anchor{}
@@ -148,16 +149,8 @@ func (p *Profiler) BeginProfile() {
 	p.StartCycles = cpu.ReadPerformanceCounter()
 }
 
-func CyclesToNanoseconds(c cpu.Cycles) float64 {
-	return 1000000000 * float64(c) / float64(cpu.CPUHz)
-}
-
-func CyclesToMilliseconds(c cpu.Cycles) float64 {
-	return 1000 * float64(c) / float64(cpu.CPUHz)
-}
-
 //go:nosplit
-func (b *Block) End() {
+func (b Block) End() {
 	elapsed := cpu.ReadPerformanceCounter() - b.StartCycles
 	anchor := &b.Profiler.Anchors[b.AnchorIndex]
 	parent := &b.Profiler.Anchors[b.ParentIndex]
@@ -177,17 +170,18 @@ func (b *Block) End() {
 func (p *Profiler) dumpTimeElapsed(f *fmt.Formatter, label string, totalElapsed cpu.Cycles, curr *Anchor, parent *Anchor) {
 	percentTotal := 100 * (float64(curr.ElapsedCyclesExclusive) / float64(totalElapsed))
 	percentParent := 100 * (float64(curr.ElapsedCyclesExclusive) / float64(parent.ElapsedCyclesInclusive))
-	f.S(strings.Or(p.Prefix, defaultPrefix)).S("\t ").S(label).S("[").D(curr.HitCount).S("]: flat [").Prec(4).F(curr.ElapsedCyclesExclusive.ToMilliseconds()).S("ms ").Prec(2).F(percentTotal).S("%/").Prec(2).F(percentParent).S("% ").Prec(2).F(curr.ElapsedCyclesExclusive.ToNanoseconds() / float64(curr.HitCount)).S("ns/op")
+	f.S(strings.Or(p.Prefix, defaultPrefix)).S("\t ").S(label).S("[").D(curr.HitCount).S("]: flat [").Prec(4).F(curr.ElapsedCyclesExclusive.ToMilliseconds()).S("ms ").Prec(2).F(percentTotal).S("%/").Prec(2).F(percentParent).S("% ").Prec(2).F(curr.ElapsedCyclesExclusive.ToNanoseconds() / float64(curr.HitCount)).S("ns/op]")
 
 	if curr.ElapsedCyclesInclusive > curr.ElapsedCyclesExclusive {
 		percentWithChildrenTotal := 100 * (float64(curr.ElapsedCyclesInclusive) / float64(totalElapsed))
 		percentWithChildrenParent := 100 * (float64(curr.ElapsedCyclesInclusive) / float64(parent.ElapsedCyclesInclusive))
-		f.S(", cum [").Prec(4).F(curr.ElapsedCyclesInclusive.ToMilliseconds()).S("ms ").Prec(2).F(percentWithChildrenTotal).S("%/").Prec(2).F(percentWithChildrenParent).S("% ").Prec(2).F(curr.ElapsedCyclesInclusive.ToNanoseconds() / float64(curr.HitCount)).S("ns/op")
+		f.S(", cum [").Prec(4).F(curr.ElapsedCyclesInclusive.ToMilliseconds()).S("ms ").Prec(2).F(percentWithChildrenTotal).S("%/").Prec(2).F(percentWithChildrenParent).S("% ").Prec(2).F(curr.ElapsedCyclesInclusive.ToNanoseconds() / float64(curr.HitCount)).S("ns/op]")
 	}
 
 	f.Ln()
 }
 
+//go:nosplit
 func (p *Profiler) EndProfile() {
 	p.EndCycles = cpu.ReadPerformanceCounter()
 }
@@ -206,6 +200,8 @@ func (p *Profiler) DumpProfile(buffer []byte) int {
 	/* NOTE(anton2920): Anchor.ParentIndex uses original order, so we need to preserve it after Sort. Copy filled half to the latter half to create a backup. */
 	half := len(p.Anchors) / 2
 	copy(p.Anchors[half:], p.Anchors[:half])
+
+	SortAnchors(p.Anchors[:half])
 
 	for i := 0; i < half; i++ {
 		anchor := &p.Anchors[i]

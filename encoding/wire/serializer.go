@@ -3,7 +3,7 @@ package wire
 import (
 	"unsafe"
 
-	"github.com/anton2920/gofa/trace"
+	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Serializer struct {

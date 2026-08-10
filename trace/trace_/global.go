@@ -4,6 +4,10 @@
 package trace_
 
 import (
+	"unsafe"
+
+	"github.com/anton2920/gofa/cpu"
+	"github.com/anton2920/gofa/funcs"
 	"github.com/anton2920/gofa/os"
 	"github.com/anton2920/gofa/time"
 	"github.com/anton2920/gofa/time/time_"
@@ -24,7 +28,8 @@ func BeginProfile() {
 
 //go:nosplit
 func Begin(label string) trace.Block {
-	return prof.Begin(label)
+	cpu.WaitForLoadOperationsToComplete()
+	return prof.BeginBody(funcs.GetCallerPC(unsafe.Pointer(&label)), label)
 }
 
 //go:nosplit
