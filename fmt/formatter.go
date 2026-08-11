@@ -6,6 +6,7 @@ import (
 
 	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/debug/debug_"
+	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/time"
@@ -84,6 +85,10 @@ func (f *Formatter) DateTime(t int64) *Formatter {
 func (f *Formatter) Err(err error) *Formatter {
 	s := "<nil>"
 	if err != nil {
+		switch err := err.(type) {
+		case errors.WrappedError:
+			return f.S(err.Message).Err(err.InnerError)
+		}
 		s = err.Error()
 	}
 	return f.S(s)
