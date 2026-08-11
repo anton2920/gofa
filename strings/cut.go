@@ -4,6 +4,7 @@ package strings
 func Cut(s, sep string) (before, after string, found bool) {
 	if i := FindSubstring(s, sep); i >= 0 {
 		return s[:i], s[i+len(sep):], true
+	} else {
+		return s, "", false
 	}
-	return s, "", false
 }

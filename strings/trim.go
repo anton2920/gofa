@@ -1,5 +1,6 @@
 package strings
 
+/* TODO(anton2920): implement these myself. */
 import "strings"
 
 func Trim(s string, cutset string) string {
