@@ -1,3 +1,23 @@
+Action items:
+
+- Get rid of _syscall.
+- Get rid of _alloc.
+- Get rid of _buffer.
+- Get rid of errors_/panic.go.
+- Split gui to pure and abnormal packages.
+- Get rid of libx11 depencency.
+- Rethink policy on allowing 'init' function in packages.
+- Rework container/bplus package:
+	- Remove Pager interface — move to just using memory.
+	- Complete B+tree implementation.
+	- Enhance B+tree algorithms.
+- Rework jail container.
+- Add ability to allocate file-backed virtual memory to os package.
+- Split l10n to pure and abnormal packages.
+- Remove usage of standard 'fmt' package from everywhere.
+- Remove net/html package.
+- Add net/net_.Listener?
+
 New structure:
 
 - containers
