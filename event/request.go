@@ -6,8 +6,3 @@ const (
 	RequestRead = bits.Flags(1 << iota)
 	RequestWrite
 )
-
-const (
-	TriggerLevel = int(iota)
-	TriggerEdge
-)
