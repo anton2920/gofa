@@ -1,10 +1,10 @@
 package oss
 
 import (
-	"fmt"
 	"unsafe"
 
 	"github.com/anton2920/gofa/audio/wave"
+	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/os/posix/freebsd"
 )
@@ -71,13 +71,13 @@ func SetDeviceParameters(fd int32, params DeviceParameters) error {
 	speed := int32(params.SamplingRate)
 
 	if err := freebsd.Ioctl(fd, SNDCTL_DSP_SETFMT, unsafe.Pointer(&format)); err != nil {
-		return fmt.Errorf("failed to set sample format: %v", err)
+		return errors.Wrap("failed to set sample format: ", err)
 	}
 	if err := freebsd.Ioctl(fd, SNDCTL_DSP_CHANNELS, unsafe.Pointer(&channels)); err != nil {
-		return fmt.Errorf("failed to set number of channels: %v", err)
+		return errors.Wrap("failed to set number of channels: ", err)
 	}
 	if err := freebsd.Ioctl(fd, SNDCTL_DSP_SPEED, unsafe.Pointer(&speed)); err != nil {
-		return fmt.Errorf("failed to set sampling rate: %v", err)
+		return errors.Wrap("failed to set sampling rate: ", err)
 	}
 
 	return nil

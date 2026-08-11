@@ -1,8 +1,7 @@
 package oss
 
 import (
-	"fmt"
-
+	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/os"
 	"github.com/anton2920/gofa/os/posix/freebsd"
 )
@@ -25,7 +24,7 @@ func Open(path string, mode Mode, params ...DeviceParameters) (Device, error) {
 
 	fd, err := freebsd.Open(path, int32(mode), 0)
 	if err != nil {
-		return d, fmt.Errorf("failed ot open audio device: %v", err)
+		return d, errors.Wrap("failed ot open audio device: ", err)
 	}
 
 	result := MergeDeviceParameters(params...)
@@ -41,7 +40,7 @@ func Open(path string, mode Mode, params ...DeviceParameters) (Device, error) {
 
 	if err := SetDeviceParameters(fd, result); err != nil {
 		freebsd.Close(fd)
-		return d, fmt.Errorf("failed to set device parameters: %v", err)
+		return d, errors.Wrap("failed to set device parameters: ", err)
 	}
 
 	d.Handle = os.Handle(fd)
