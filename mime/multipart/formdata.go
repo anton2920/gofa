@@ -2,7 +2,6 @@ package multipart
 
 import (
 	"fmt"
-	stdstrings "strings"
 
 	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/errors"
@@ -37,7 +36,7 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 			trace_.End(t)
 			return errors.New("expected new line after boundary")
 		}
-		if stdstrings.Trim(form[pos:pos+lineEnd], "-") != stdstrings.Trim(boundary, "-") {
+		if strings.Trim(form[pos:pos+lineEnd], "-") != strings.Trim(boundary, "-") {
 			trace_.End(t)
 			return fmt.Errorf("expected boundary got %q", form[pos:pos+lineEnd])
 		}
@@ -91,9 +90,9 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 						trace_.End(t)
 						return fmt.Errorf("expected key=value, got %q", pair)
 					}
-					value = stdstrings.Trim(value, `"`)
+					value = strings.Trim(value, `"`)
 
-					switch stdstrings.TrimSpace(key) {
+					switch strings.TrimSpace(key) {
 					case "name":
 						name = value
 					case "filename":
@@ -102,7 +101,7 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 					}
 				}
 			case "Content-Type":
-				contentType = stdstrings.Trim(value, `"`)
+				contentType = strings.Trim(value, `"`)
 			}
 
 			pos += len(header) + len("\r\n")
