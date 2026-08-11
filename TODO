@@ -1,8 +1,7 @@
 Action items:
 
-- Get rid of _syscall.
-- Get rid of _alloc.
-- Get rid of _buffer.
+- Think about memory reporting strategy.
+- Think about memory allocation strategy.
 - Get rid of errors_/panic.go.
 - Split gui to pure and abnormal packages.
 - Get rid of libx11 depencency.
@@ -17,6 +16,11 @@ Action items:
 - Remove usage of standard 'fmt' package from everywhere.
 - Remove net/html package.
 - Add net/net_.Listener?
+- Introduce tcp/tcp_ package.
+- Split net/http to pure and abnormal packages.
+- Split session to pure and abnormal packages.
+- Remove slices package.
+- OS package should have only '_posix.go', '_windows.go', and '_plan9.go' files.
 
 New structure:
 
