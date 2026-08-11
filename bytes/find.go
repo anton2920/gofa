@@ -1,5 +1,6 @@
 package bytes
 
+//go:nosplit
 func FindByte(xs []byte, x byte) int {
 	for i := 0; i < len(xs); i++ {
 		if xs[i] == x {
@@ -9,6 +10,7 @@ func FindByte(xs []byte, x byte) int {
 	return -1
 }
 
+//go:nosplit
 func FindByteReverse(xs []byte, x byte) int {
 	for i := len(xs) - 1; i >= 0; i-- {
 		if xs[i] == x {
