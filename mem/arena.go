@@ -105,11 +105,11 @@ func (a *Arena) Reset() {
 	a.CurrOfft = 0
 }
 
-func (a *Arena) Begin() ArenaSavePoint {
+func (a *Arena) Save() ArenaSavePoint {
 	return ArenaSavePoint{Arena: a, PrevOfft: a.PrevOfft, CurrOfft: a.CurrOfft}
 }
 
-func (a *ArenaSavePoint) Rollback() {
-	a.Arena.PrevOfft = a.PrevOfft
-	a.Arena.CurrOfft = a.CurrOfft
+func (a *Arena) Restore(save *ArenaSavePoint) {
+	save.Arena.PrevOfft = save.PrevOfft
+	save.Arena.CurrOfft = save.CurrOfft
 }
