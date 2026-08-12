@@ -1,9 +1,5 @@
 Action items:
 
-- Don't use error interface at all?
-- Think about error reporting strategy.
-- Think about memory allocation strategy.
-- Get rid of errors_/panic.go.
 - Split gui to pure and abnormal packages.
 - Get rid of libx11 depencency.
 - Rethink policy on allowing 'init' function in packages.
