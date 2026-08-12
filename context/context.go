@@ -34,6 +34,10 @@ func (ctx *Context) InitWithMinimumLogLevelAndEvenlySplitByteSlice(level log.Lev
 	ctx.InitWithMinimumLogLevelAndFourByteSlices(level, buf[0:size], buf[size:2*size], buf[2*size:3*size], buf[3*size:])
 }
 
+func (ctx *Context) Init(level log.Level, buf []byte) {
+	ctx.InitWithMinimumLogLevelAndEvenlySplitByteSlice(level, buf)
+}
+
 func (ctx *Context) Error() string {
 	return ctx.ErrFmt[ctx.ErrCurr].String()
 }
