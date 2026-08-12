@@ -4,6 +4,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/bits"
+	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/cpu"
 	"github.com/anton2920/gofa/event"
 	"github.com/anton2920/gofa/os"
@@ -26,17 +27,17 @@ var units2flags = map[int]bits.Flags32{
 	time.Nanosecond:  os.EventNoteNanoseconds,
 }
 
-func (q *Queue) Init() error {
-	kq, err := os.CreateNewEventQueue()
-	if err != nil {
-		return err
+func (q *Queue) Init(ctx *context.Context) bool {
+	kq, ok := os.CreateNewEventQueue(ctx)
+	if !ok {
+		return false
 	}
 
 	q.KernelQueue = kq
-	return nil
+	return true
 }
 
-func (q *Queue) AddFile(f os.Handle, request bits.Flags, trigger int, userData unsafe.Pointer) error {
+func (q *Queue) AddFile(ctx *context.Context, f os.Handle, request bits.Flags, trigger int, userData unsafe.Pointer) bool {
 	var flags bits.Flags16
 	if trigger == event.TriggerEdge {
 		flags |= os.EventQueueActionResetStateAfterRetrieval
@@ -50,10 +51,10 @@ func (q *Queue) AddFile(f os.Handle, request bits.Flags, trigger int, userData u
 		events = append(events, os.Event{Identifier: uintptr(f), EventType: os.EventTypeWrite, ActionFlags: flags, UserData: userData})
 	}
 
-	return os.RegisterEventsWithQueue(q.KernelQueue, events)
+	return os.RegisterEventsWithQueue(ctx, q.KernelQueue, events)
 }
 
-func (q *Queue) AddSignals(sigs ...os.Signal) error {
+func (q *Queue) AddSignals(ctx *context.Context, sigs ...os.Signal) bool {
 	events := make([]os.Event, 0, 64)
 
 	for len(sigs) > 0 {
@@ -65,49 +66,51 @@ func (q *Queue) AddSignals(sigs ...os.Signal) error {
 			i++
 		}
 
-		if err := os.RegisterEventsWithQueue(q.KernelQueue, events); err != nil {
-			return err
+		if !os.RegisterEventsWithQueue(ctx, q.KernelQueue, events) {
+			return false
 		}
 
 		sigs = sigs[i:]
 	}
 
-	return nil
+	return true
 }
 
-func (q *Queue) AddAndIgnoreSignals(sigs ...os.Signal) error {
-	if err := q.AddSignals(sigs...); err != nil {
-		return err
+func (q *Queue) AddAndIgnoreSignals(ctx *context.Context, sigs ...os.Signal) bool {
+	if !q.AddSignals(ctx, sigs...) {
+		return false
 	}
+
 	for i := 0; i < len(sigs); i++ {
-		if err := os.InstallSignalHandler(sigs[i], os.IgnoreSignalHandler); err != nil {
-			return err
+		if !os.InstallSignalHandler(ctx, sigs[i], os.IgnoreSignalHandler) {
+			return false
 		}
 	}
-	return nil
+
+	return true
 }
 
-func (q *Queue) AddAndIgnoreTerminateSignals() error {
-	return q.AddAndIgnoreSignals(os.SignalHangup, os.SignalInterrupt, os.SignalTerminate)
+func (q *Queue) AddAndIgnoreTerminateSignals(ctx *context.Context) bool {
+	return q.AddAndIgnoreSignals(ctx, os.SignalHangup, os.SignalInterrupt, os.SignalTerminate)
 }
 
-func (q *Queue) AddPeriodicTimer(id uintptr, quantity int, units int, userData unsafe.Pointer) error {
+func (q *Queue) AddPeriodicTimer(ctx *context.Context, id uintptr, quantity int, units int, userData unsafe.Pointer) bool {
 	events := make([]os.Event, 1)
 	events[0] = os.Event{Identifier: id, EventData: int64(quantity), EventType: os.EventTypeTimer, EventFlags: units2flags[units], UserData: userData}
-	return os.RegisterEventsWithQueue(q.KernelQueue, events)
+	return os.RegisterEventsWithQueue(ctx, q.KernelQueue, events)
 }
 
-func (q *Queue) AddTimerAt(id uintptr, at int, units int, userData unsafe.Pointer) error {
+func (q *Queue) AddTimerAt(ctx *context.Context, id uintptr, at int, units int, userData unsafe.Pointer) bool {
 	events := make([]os.Event, 1)
 	events[0] = os.Event{Identifier: id, EventData: int64(at), EventType: os.EventTypeTimer, ActionFlags: os.EventQueueActionResetStateAfterRetrieval, EventFlags: units2flags[units] | os.EventNoteAbsoluteTime, UserData: userData}
-	return os.RegisterEventsWithQueue(q.KernelQueue, events)
+	return os.RegisterEventsWithQueue(ctx, q.KernelQueue, events)
 }
 
-func (q *Queue) Close() error {
-	return os.CloseHandle(q.KernelQueue)
+func (q *Queue) Close(ctx *context.Context) bool {
+	return os.CloseHandle(ctx, q.KernelQueue)
 }
 
-func (q *Queue) GetEvents(events []os.Event) (int, error) {
+func (q *Queue) GetEvents(ctx *context.Context, events []os.Event) (int, bool) {
 	if q.head < q.tail {
 		n := copy(events, q.events[q.head:q.tail])
 		q.head += n
@@ -115,35 +118,35 @@ func (q *Queue) GetEvents(events []os.Event) (int, error) {
 			q.head = 0
 			q.tail = 0
 		}
-		return n, nil
+		return n, true
 	}
-	return os.ReturnPendingEventsFromQueue(q.KernelQueue, events, nil)
+	return os.ReturnPendingEventsFromQueue(ctx, q.KernelQueue, events, nil)
 }
 
-func (q *Queue) requestNewEvents(t *os.SecondsWithNanoseconds) error {
-	n, err := os.ReturnPendingEventsFromQueue(q.KernelQueue, q.events[:], t)
-	if err != nil {
-		return err
+func (q *Queue) requestNewEvents(ctx *context.Context, t *os.SecondsWithNanoseconds) bool {
+	n, ok := os.ReturnPendingEventsFromQueue(ctx, q.KernelQueue, q.events[:], t)
+	if !ok {
+		return false
 	}
 
 	q.tail += n
-	return nil
+	return true
 }
 
-func (q *Queue) HasEvents() bool {
+func (q *Queue) HasEvents(ctx *context.Context) bool {
 	if q.head < q.tail {
 		return true
 	}
 
 	var t os.SecondsWithNanoseconds
-	if err := q.requestNewEvents(&t); err != nil {
+	if !q.requestNewEvents(ctx, &t) {
 		return false
 	}
 
 	return q.tail > 0
 }
 
-func (q *Queue) SyncFPS(fps int) {
+func (q *Queue) SyncFPS(ctx *context.Context, fps int) {
 	now := cpu.ReadPerformanceCounter()
 	durationBetweenPauses := now - q.LastSync
 	targetRate := int64(float64(time.Second/time.Millisecond) / float64(fps) * float64(time.Millisecond))
@@ -152,7 +155,7 @@ func (q *Queue) SyncFPS(fps int) {
 	if duration > 0 {
 		if q.head >= q.tail {
 			t := os.SecondsWithNanoseconds{Seconds: int(duration / time.Second), Nanoseconds: int(duration % time.Second)}
-			q.requestNewEvents(&t)
+			q.requestNewEvents(ctx, &t)
 		}
 		now = cpu.ReadPerformanceCounter()
 	}

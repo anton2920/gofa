@@ -6,6 +6,7 @@ package os
 import (
 	"unsafe"
 
+	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/os/posix/freebsd"
 )
 
@@ -14,12 +15,10 @@ type SecondsWithNanoseconds struct {
 	Nanoseconds int
 }
 
-func BlockForSpecifiedAmountOfTime(t SecondsWithNanoseconds) error {
-	return freebsd.Nanosleep((*freebsd.Timespec)(unsafe.Pointer(&t)), nil)
+func BlockForSpecifiedAmountOfTime(ctx *context.Context, t SecondsWithNanoseconds) bool {
+	return freebsd.Nanosleep(ctx, (*freebsd.Timespec)(unsafe.Pointer(&t)), nil)
 }
 
-func GetCurrentTime() (SecondsWithNanoseconds, error) {
-	var t SecondsWithNanoseconds
-	err := freebsd.ClockGettime(freebsd.CLOCK_REALTIME, (*freebsd.Timespec)(unsafe.Pointer(&t)))
-	return t, err
+func GetCurrentTime(ctx *context.Context, t *SecondsWithNanoseconds) bool {
+	return freebsd.ClockGettime(ctx, freebsd.CLOCK_REALTIME, (*freebsd.Timespec)(unsafe.Pointer(t)))
 }

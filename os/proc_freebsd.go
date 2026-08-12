@@ -3,7 +3,10 @@
 
 package os
 
-import "github.com/anton2920/gofa/os/posix/freebsd"
+import (
+	"github.com/anton2920/gofa/context"
+	"github.com/anton2920/gofa/os/posix/freebsd"
+)
 
 type (
 	Signal        freebsd.Signal
@@ -34,7 +37,7 @@ func Exit(code int) {
 //go:nosplit
 func AsSignalHandler(fn func(Signal)) SignalHandler
 
-func InstallSignalHandler(s Signal, handler SignalHandler) error {
+func InstallSignalHandler(ctx *context.Context, s Signal, handler SignalHandler) bool {
 	act := freebsd.Sigaction_t{Handler: uintptr(handler)}
-	return freebsd.Sigaction(int32(s), &act, nil)
+	return freebsd.Sigaction(ctx, int32(s), &act, nil)
 }

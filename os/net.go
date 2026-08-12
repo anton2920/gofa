@@ -3,14 +3,14 @@ package os
 import (
 	"unsafe"
 
-	"github.com/anton2920/gofa/errors"
+	"github.com/anton2920/gofa/context"
 )
 
-func BindSocketToAddressAndListenForIncomingConnections(s Handle, addr *NetworkAddress, addrLen uint32, backlog int) error {
-	return errors.Or(BindSocketToAddress(s, addr, addrLen), ListenForIncomingConnections(s, backlog))
+func BindSocketToAddressAndListenForIncomingConnections(ctx *context.Context, s Handle, addr *NetworkAddress, addrLen uint32, backlog int) bool {
+	return BindSocketToAddress(ctx, s, addr, addrLen) || ListenForIncomingConnections(ctx, s, backlog)
 }
 
-func SetSocketBooleanOption(s Handle, name SocketOptionName, enabled bool) error {
+func SetSocketBooleanOption(ctx *context.Context, s Handle, name SocketOptionName, enabled bool) bool {
 	var enable uint32
 	if enabled {
 		enable = 1
@@ -21,5 +21,5 @@ func SetSocketBooleanOption(s Handle, name SocketOptionName, enabled bool) error
 		panic("no mapping between socket option name and socket option level")
 	}
 
-	return SetSocketOption(s, level, name, unsafe.Pointer(&enable), uint32(unsafe.Sizeof(enable)))
+	return SetSocketOption(ctx, s, level, name, unsafe.Pointer(&enable), uint32(unsafe.Sizeof(enable)))
 }

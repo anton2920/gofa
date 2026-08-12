@@ -7,6 +7,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/bits"
+	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/go/types"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/os/posix/freebsd"
@@ -31,48 +32,48 @@ const (
 	VirtualMemoryIsPrivate = bits.Flags(freebsd.MAP_PRIVATE)
 )
 
-func AllocateVirtualMemoryStartingFrom(base unsafe.Pointer, size int, rwx bits.Flags, extra bits.Flags) (unsafe.Pointer, error) {
-	return freebsd.Mmap(base, uint(size), int32(rwx), int32(extra)|freebsd.MAP_ANON|freebsd.MAP_FIXED, -1, 0)
+func AllocateVirtualMemoryStartingFrom(ctx *context.Context, base unsafe.Pointer, size int, rwx bits.Flags, extra bits.Flags) (unsafe.Pointer, bool) {
+	return freebsd.Mmap(ctx, base, uint(size), int32(rwx), int32(extra)|freebsd.MAP_ANON|freebsd.MAP_FIXED, -1, 0)
 }
 
-func AllocateVirtualMemory(size int, rwx bits.Flags) (unsafe.Pointer, error) {
-	return freebsd.Mmap(nil, uint(size), int32(rwx), freebsd.MAP_ANON|freebsd.MAP_PRIVATE, -1, 0)
+func AllocateVirtualMemory(ctx *context.Context, size int, rwx bits.Flags) (unsafe.Pointer, bool) {
+	return freebsd.Mmap(ctx, nil, uint(size), int32(rwx), freebsd.MAP_ANON|freebsd.MAP_PRIVATE, -1, 0)
 }
 
-func DeallocateVirtualMemory(addr unsafe.Pointer, size int) error {
-	return freebsd.Munmap(addr, uint(size))
+func DeallocateVirtualMemory(ctx *context.Context, addr unsafe.Pointer, size int) bool {
+	return freebsd.Munmap(ctx, addr, uint(size))
 }
 
-func CreateCircularMemoryMapping(realSize int, virtualSize int) (unsafe.Pointer, error) {
+func CreateCircularMemoryMapping(ctx *context.Context, realSize int, virtualSize int) (unsafe.Pointer, bool) {
 	/* TODO(anton2920): enable mappings backed by large pages. */
 	realSize = ints.AlignUpPow2(realSize, PageSize)
 	virtualSize = ints.AlignUpPow2(virtualSize, PageSize)
 
 	/* NOTE(anton2920): first argument is SHM_ANON, cannot have that as a variable as Go's checkptr doesn't like it. */
-	fd, err := freebsd.ShmOpen2(*(*string)(unsafe.Pointer(&types.StringHeader{Data: 1, Len: 8})), freebsd.O_RDWR, 0, 0, *(*string)(unsafe.Pointer(&types.StringHeader{Data: 0, Len: 0})))
-	if err != nil {
-		return nil, err
+	fd, ok := freebsd.ShmOpen2(ctx, *(*string)(unsafe.Pointer(&types.StringHeader{Data: 1, Len: 8})), freebsd.O_RDWR, 0, 0, *(*string)(unsafe.Pointer(&types.StringHeader{Data: 0, Len: 0})))
+	if !ok {
+		return nil, false
 	}
 
-	if err := freebsd.Ftruncate(fd, int64(realSize)); err != nil {
-		freebsd.Close(fd)
-		return nil, err
+	if !freebsd.Ftruncate(ctx, fd, int64(realSize)) {
+		freebsd.Close(ctx, fd)
+		return nil, false
 	}
 
-	ptr, err := freebsd.Mmap(nil, uint(virtualSize), freebsd.PROT_NONE, freebsd.MAP_PRIVATE|freebsd.MAP_ANON, -1, 0)
-	if err != nil {
-		freebsd.Close(fd)
-		return nil, err
+	ptr, ok := freebsd.Mmap(ctx, nil, uint(virtualSize), freebsd.PROT_NONE, freebsd.MAP_PRIVATE|freebsd.MAP_ANON, -1, 0)
+	if !ok {
+		freebsd.Close(ctx, fd)
+		return nil, false
 	}
 
 	for i := 0; i < virtualSize; i += realSize {
-		if _, err := freebsd.Mmap(pointers.Add(ptr, uintptr(i)), uint(realSize), freebsd.PROT_READ|freebsd.PROT_WRITE, freebsd.MAP_SHARED|freebsd.MAP_FIXED, fd, 0); err != nil {
-			freebsd.Munmap(ptr, uint(virtualSize))
-			freebsd.Close(fd)
-			return nil, err
+		if _, ok := freebsd.Mmap(ctx, pointers.Add(ptr, uintptr(i)), uint(realSize), freebsd.PROT_READ|freebsd.PROT_WRITE, freebsd.MAP_SHARED|freebsd.MAP_FIXED, fd, 0); !ok {
+			freebsd.Munmap(ctx, ptr, uint(virtualSize))
+			freebsd.Close(ctx, fd)
+			return nil, false
 		}
 	}
 
-	freebsd.Close(fd)
-	return ptr, nil
+	freebsd.Close(ctx, fd)
+	return ptr, true
 }

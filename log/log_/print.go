@@ -1,11 +1,12 @@
 package log_
 
 import (
+	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/log"
 	"github.com/anton2920/gofa/os"
 )
 
-var panicMsg interface{} = "caused by log_.Panic"
+var panicMsg interface{} = "caused by log_.Println with level being PANIC"
 
 func Println(f *log.Formatter) {
 	if f != nil {
@@ -13,7 +14,7 @@ func Println(f *log.Formatter) {
 		if f.CurrentLevel > log.LevelWarn {
 			h = os.StandardErrorStream
 		}
-		os.WriteToFile(h, f.Fmt.Ln().Bytes())
+		os.WriteToFile(&context.Context{}, h, f.Fmt.Ln().Bytes())
 		switch f.CurrentLevel {
 		case log.LevelFatal:
 			os.Exit(1)

@@ -6,6 +6,7 @@ package os
 import (
 	"unsafe"
 
+	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/os/posix/freebsd"
 )
 
@@ -72,28 +73,28 @@ func (ia *InternetAddress) AsNetworkAddress() *NetworkAddress {
 	return (*NetworkAddress)(unsafe.Pointer(ia))
 }
 
-func CreateNetworkSocket(pf ProtocolFamily, typ SocketType, proto Protocol) (Handle, error) {
-	s, err := freebsd.Socket(int32(pf), int32(typ), int32(proto))
-	return Handle(s), err
+func CreateNetworkSocket(ctx *context.Context, pf ProtocolFamily, typ SocketType, proto Protocol) (Handle, bool) {
+	s, ok := freebsd.Socket(ctx, int32(pf), int32(typ), int32(proto))
+	return Handle(s), ok
 }
 
-func BindSocketToAddress(s Handle, addr *NetworkAddress, addrLen uint32) error {
-	return freebsd.Bind(int32(s), (*freebsd.Sockaddr)(unsafe.Pointer(addr)), addrLen)
+func BindSocketToAddress(ctx *context.Context, s Handle, addr *NetworkAddress, addrLen uint32) bool {
+	return freebsd.Bind(ctx, int32(s), (*freebsd.Sockaddr)(unsafe.Pointer(addr)), addrLen)
 }
 
-func ListenForIncomingConnections(s Handle, backlog int) error {
-	return freebsd.Listen(int32(s), int32(backlog))
+func ListenForIncomingConnections(ctx *context.Context, s Handle, backlog int) bool {
+	return freebsd.Listen(ctx, int32(s), int32(backlog))
 }
 
-func AcceptIncomingConnection(s Handle, addr *NetworkAddress, addrLen *uint32) (Handle, error) {
-	c, err := freebsd.Accept(int32(s), (*freebsd.Sockaddr)(unsafe.Pointer(addr)), addrLen)
-	return Handle(c), err
+func AcceptIncomingConnection(ctx *context.Context, s Handle, addr *NetworkAddress, addrLen *uint32) (Handle, bool) {
+	c, ok := freebsd.Accept(ctx, int32(s), (*freebsd.Sockaddr)(unsafe.Pointer(addr)), addrLen)
+	return Handle(c), ok
 }
 
-func ConnectToAddress(s Handle, addr *NetworkAddress, addrLen uint32) error {
-	return freebsd.Connect(int32(s), (*freebsd.Sockaddr)(unsafe.Pointer(addr)), addrLen)
+func ConnectToAddress(ctx *context.Context, s Handle, addr *NetworkAddress, addrLen uint32) bool {
+	return freebsd.Connect(ctx, int32(s), (*freebsd.Sockaddr)(unsafe.Pointer(addr)), addrLen)
 }
 
-func SetSocketOption(s Handle, level SocketOptionLevel, name SocketOptionName, val unsafe.Pointer, valLen uint32) error {
-	return freebsd.Setsockopt(int32(s), int32(level), int32(name), val, valLen)
+func SetSocketOption(ctx *context.Context, s Handle, level SocketOptionLevel, name SocketOptionName, val unsafe.Pointer, valLen uint32) bool {
+	return freebsd.Setsockopt(ctx, int32(s), int32(level), int32(name), val, valLen)
 }

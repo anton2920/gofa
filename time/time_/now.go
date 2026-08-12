@@ -1,12 +1,14 @@
 package time_
 
 import (
+	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/os"
 	"github.com/anton2920/gofa/time"
 )
 
 func NowInSeconds() int {
-	t, _ := os.GetCurrentTime()
+	var t os.SecondsWithNanoseconds
+	_ = os.GetCurrentTime(&context.Context{}, &t)
 	return t.Seconds
 }
 
@@ -19,6 +21,7 @@ func NowInMicroseconds() int64 {
 }
 
 func NowInNanoseconds() int64 {
-	t, _ := os.GetCurrentTime()
+	var t os.SecondsWithNanoseconds
+	_ = os.GetCurrentTime(&context.Context{}, &t)
 	return int64(t.Seconds)*time.Second + int64(t.Nanoseconds)
 }

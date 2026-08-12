@@ -47,3 +47,11 @@ func (f *Formatter) Warn(t int64) *Formatter {
 func (f *Formatter) Error(t int64) *Formatter {
 	return f.Log(LevelError, t)
 }
+
+func (f *Formatter) Fatal(t int64) *Formatter {
+	return f.Log(LevelFatal, t)
+}
+
+func (f *Formatter) Panic(t int64) *Formatter {
+	return f.Log(LevelPanic, t)
+}

@@ -1,7 +1,10 @@
 package os
 
-import "github.com/anton2920/gofa/bits"
+import (
+	"github.com/anton2920/gofa/bits"
+	"github.com/anton2920/gofa/context"
+)
 
-func OpenFile(path string, rw bits.Flags) (Handle, error) {
-	return OpenOrCreateFile(path, rw, 0, 0)
+func OpenFile(ctx *context.Context, path string, rw bits.Flags) (Handle, bool) {
+	return OpenOrCreateFile(ctx, path, rw, 0, 0)
 }

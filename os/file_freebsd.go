@@ -5,6 +5,7 @@ package os
 
 import (
 	"github.com/anton2920/gofa/bits"
+	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/os/posix/freebsd"
 )
 
@@ -22,7 +23,7 @@ const (
 	TruncateSizeToZero
 )
 
-func OpenOrCreateFile(path string, rw bits.Flags, creat bits.Flags, perms uint) (Handle, error) {
+func OpenOrCreateFile(ctx *context.Context, path string, rw bits.Flags, creat bits.Flags, perms uint) (Handle, bool) {
 	var rwFlags, creatFlags uint
 
 	/* Read/Write/Append flags. */
@@ -50,31 +51,31 @@ func OpenOrCreateFile(path string, rw bits.Flags, creat bits.Flags, perms uint) 
 		creatFlags |= freebsd.O_TRUNC
 	}
 
-	f, err := freebsd.Open(path, int32(rwFlags|creatFlags), uint16(perms))
-	return Handle(f), err
+	f, ok := freebsd.Open(ctx, path, int32(rwFlags|creatFlags), uint16(perms))
+	return Handle(f), ok
 }
 
 //go:nosplit
-func CloseHandle(f Handle) error {
-	return freebsd.Close(int32(f))
+func CloseHandle(ctx *context.Context, f Handle) bool {
+	return freebsd.Close(ctx, int32(f))
 }
 
 //go:nosplit
-func ReadFromFile(f Handle, buf []byte) (int, error) {
-	return freebsd.Read(int32(f), buf)
+func ReadFromFile(ctx *context.Context, f Handle, buf []byte) (int, bool) {
+	return freebsd.Read(ctx, int32(f), buf)
 }
 
 //go:nosplit
-func ReadFromFileAt(f Handle, buf []byte, offt int64) (int, error) {
-	return freebsd.Pread(int32(f), buf, offt)
+func ReadFromFileAt(ctx *context.Context, f Handle, buf []byte, offt int64) (int, bool) {
+	return freebsd.Pread(ctx, int32(f), buf, offt)
 }
 
 //go:nosplit
-func WriteToFile(f Handle, buf []byte) (int, error) {
-	return freebsd.Write(int32(f), buf)
+func WriteToFile(ctx *context.Context, f Handle, buf []byte) (int, bool) {
+	return freebsd.Write(ctx, int32(f), buf)
 }
 
 //go:nosplit
-func WriteToFileAt(f Handle, buf []byte, offt int64) (int, error) {
-	return freebsd.Pwrite(int32(f), buf, offt)
+func WriteToFileAt(ctx *context.Context, f Handle, buf []byte, offt int64) (int, bool) {
+	return freebsd.Pwrite(ctx, int32(f), buf, offt)
 }

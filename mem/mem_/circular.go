@@ -4,7 +4,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/bytes"
-	"github.com/anton2920/gofa/errors"
+	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/os"
 )
 
@@ -14,25 +14,23 @@ type CircularBuffer struct {
 	Tail   int
 }
 
-var errMappingNotCircular error = errors.New("created memory mapping is not circular")
-
-func (c *CircularBuffer) Init(size int) error {
+func (c *CircularBuffer) Init(ctx *context.Context, size int) bool {
 	const value = 0xDEADBEEF
 
-	ptr, err := os.CreateCircularMemoryMapping(size, 2*size)
-	if err != nil {
-		return err
+	ptr, ok := os.CreateCircularMemoryMapping(ctx, size, 2*size)
+	if !ok {
+		return false
 	}
 	c.Buffer = bytes.SliceFromUnsafePointer(ptr, 2*size)
 
 	*(*uint)(unsafe.Pointer(&c.Buffer[0])) = value
 	if *(*uint)(unsafe.Pointer(&c.Buffer[size])) != value {
-		c.Free()
-		return errMappingNotCircular
+		c.Free(ctx)
+		return false
 	}
 	*(*uint)(unsafe.Pointer(&c.Buffer[0])) = 0
 
-	return nil
+	return true
 }
 
 func (c *CircularBuffer) Consume(n int) {
@@ -74,6 +72,6 @@ func (c *CircularBuffer) UnconsumedString() string {
 	return bytes.AsString(c.UnconsumedSlice())
 }
 
-func (c *CircularBuffer) Free() error {
-	return os.DeallocateVirtualMemory(unsafe.Pointer(&c.Buffer[0]), len(c.Buffer)*2)
+func (c *CircularBuffer) Free(ctx *context.Context) bool {
+	return os.DeallocateVirtualMemory(ctx, unsafe.Pointer(&c.Buffer[0]), len(c.Buffer)*2)
 }

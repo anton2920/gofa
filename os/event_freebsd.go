@@ -7,6 +7,7 @@ import (
 	"unsafe"
 
 	"github.com/anton2920/gofa/bits"
+	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/os/posix/freebsd"
 )
 
@@ -48,22 +49,22 @@ func (e *Event) EndOfFile() bool {
 	return e.ActionFlags.Have(freebsd.EV_EOF)
 }
 
-func (e *Event) Error() freebsd.Errno {
+func (e *Event) Error() uintptr {
 	if e.ActionFlags.Have(freebsd.EV_ERROR) {
-		return freebsd.Errno(e.EventData)
+		return uintptr(e.EventData)
 	}
 	return 0
 }
 
-func CreateNewEventQueue() (Handle, error) {
-	q, err := freebsd.Kqueue()
-	return Handle(q), err
+func CreateNewEventQueue(ctx *context.Context) (Handle, bool) {
+	q, ok := freebsd.Kqueue(ctx)
+	return Handle(q), ok
 }
 
-func RegisterAndReturnPendingEventsFromQueue(q Handle, chlist []Event, evlist []Event, t *SecondsWithNanoseconds) (int, error) {
+func RegisterAndReturnPendingEventsFromQueue(ctx *context.Context, q Handle, chlist []Event, evlist []Event, t *SecondsWithNanoseconds) (int, bool) {
 	for i := 0; i < len(chlist); i++ {
 		chlist[i].ActionFlags |= EventQueueActionAdd
 	}
-	n, err := freebsd.Kevent(int32(q), *(*[]freebsd.Kevent_t)(unsafe.Pointer(&chlist)), *(*[]freebsd.Kevent_t)(unsafe.Pointer(&evlist)), (*freebsd.Timespec)(unsafe.Pointer(t)))
-	return int(n), err
+	n, ok := freebsd.Kevent(ctx, int32(q), *(*[]freebsd.Kevent_t)(unsafe.Pointer(&chlist)), *(*[]freebsd.Kevent_t)(unsafe.Pointer(&evlist)), (*freebsd.Timespec)(unsafe.Pointer(t)))
+	return int(n), ok
 }

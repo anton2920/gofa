@@ -1,5 +1,7 @@
 package freebsd
 
+import "github.com/anton2920/gofa/context"
+
 type Errno uintptr
 
 const (
@@ -248,22 +250,16 @@ var strerror = [...]string{
 	EINTEGRITY:      "integrity check failed",
 }
 
-var errors [ELAST]error
-
-func init() {
-	for i := Errno(1); i < ELAST; i++ {
-		errors[i] = i
-	}
-}
-
-func NewError(errno uintptr) error {
+func ReportPotentialError(ctx *context.Context, errno uintptr) bool {
 	if errno == 0 {
-		return nil
+		return true
+	} else {
+		ctx.NewErrorWithCode(int(errno)).S(Errno(errno).String())
+		return false
 	}
-	return errors[errno]
 }
 
-func (errno Errno) Error() string {
+func (errno Errno) String() string {
 	if (errno >= 0) && (errno <= ELAST) {
 		return strerror[errno]
 	}

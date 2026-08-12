@@ -3,11 +3,12 @@ package net_
 import (
 	"unsafe"
 
+	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/net/tcp"
 	"github.com/anton2920/gofa/os"
 )
 
-func Listen(proto string, endpoint string) (os.Handle, error) {
+func Listen(ctx *context.Context, proto string, endpoint string) (os.Handle, bool) {
 	var addrBuf [unsafe.Sizeof(os.NetworkAddress{})]byte
 	var pf os.ProtocolFamily
 	var typ os.SocketType
@@ -19,9 +20,9 @@ func Listen(proto string, endpoint string) (os.Handle, error) {
 		pf = os.ProtocolFamilyInternet
 		typ = os.SocketTypeStream
 
-		addr, port, err := tcp.ParseEndpoint(endpoint)
-		if err != nil {
-			return -1, err
+		addr, port, ok := tcp.ParseEndpoint(ctx, endpoint)
+		if !ok {
+			return -1, false
 		}
 
 		iaddr := (*os.InternetAddress)(unsafe.Pointer(&addrBuf))
@@ -34,34 +35,34 @@ func Listen(proto string, endpoint string) (os.Handle, error) {
 		panic("protocol is not supported")
 	}
 
-	s, err := os.CreateNetworkSocket(pf, typ, prot)
-	if err != nil {
-		return -1, err
+	s, ok := os.CreateNetworkSocket(ctx, pf, typ, prot)
+	if !ok {
+		return -1, false
 	}
 
 	paddr := (*os.NetworkAddress)(unsafe.Pointer(&addrBuf))
-	if err := os.BindSocketToAddress(s, paddr, addrLen); err != nil {
-		os.CloseHandle(s)
-		return -1, err
+	if !os.BindSocketToAddress(ctx, s, paddr, addrLen) {
+		os.CloseHandle(ctx, s)
+		return -1, false
 	}
 
 	if pf == os.ProtocolFamilyInternet {
-		if err := os.SetSocketBooleanOption(s, os.SocketOptionReuseLocalAddressAndPortWithLoadBalancing, true); err != nil {
-			os.CloseHandle(s)
-			return -1, err
+		if !os.SetSocketBooleanOption(ctx, s, os.SocketOptionReuseLocalAddressAndPortWithLoadBalancing, true) {
+			os.CloseHandle(ctx, s)
+			return -1, false
 		}
 		if typ == os.SocketTypeStream {
-			if err := os.SetSocketBooleanOption(s, os.SocketOptionTCPNoDelay, true); err != nil {
-				os.CloseHandle(s)
-				return -1, err
+			if !os.SetSocketBooleanOption(ctx, s, os.SocketOptionTCPNoDelay, true) {
+				os.CloseHandle(ctx, s)
+				return -1, false
 			}
 		}
 	}
 
-	if err := os.ListenForIncomingConnections(s, 128); err != nil {
-		os.CloseHandle(s)
-		return -1, err
+	if !os.ListenForIncomingConnections(ctx, s, 128) {
+		os.CloseHandle(ctx, s)
+		return -1, false
 	}
 
-	return s, nil
+	return s, true
 }
