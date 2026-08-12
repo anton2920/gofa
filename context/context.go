@@ -45,7 +45,7 @@ func (ctx *Context) ErrorCode() int {
 func (ctx *Context) NewErrorWithCode(code int) *fmt.Formatter {
 	ctx.ErrCurr = 1 - ctx.ErrCurr
 	ctx.ErrCode[ctx.ErrCurr] = code
-	return &ctx.ErrFmt[ctx.ErrCurr]
+	return &ctx.ErrFmt[ctx.ErrCurr].Reset()
 }
 
 func (ctx *Context) NewError() *fmt.Formatter {
