@@ -22,7 +22,7 @@ func init() {
 /* NOTE(anton2920): there's a risk of a race, if more than 'len(fs)' goroutines try to use it simultaneously. */
 func Reset() *log.Formatter {
 	n := atomic.AddInt32(&current, 1)
-	return fs[n&int32(len(fs)-1)].Reset(time_.Now())
+	return fs[n&int32(len(fs)-1)].Reset(time_.NowInNanoseconds())
 }
 
 /* NOTE(anton2920): there's a risk of a race, if more than 'len(fs)' goroutines try to use it simultaneously. */
@@ -32,7 +32,7 @@ func Log(level log.Level) *log.Formatter {
 		n := atomic.AddInt32(&current, 1)
 		f := &fs[n&int32(len(fs)-1)]
 		f.MinimumLevel = logLevel
-		return f.Log(level, time_.Now())
+		return f.Log(level, time_.NowInNanoseconds())
 	}
 	return nil
 }
