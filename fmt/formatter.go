@@ -2,6 +2,7 @@ package fmt
 
 import (
 	"strconv"
+	"unicode/utf8"
 	"unsafe"
 
 	"github.com/anton2920/gofa/bytes"
@@ -172,6 +173,129 @@ func (f *Formatter) P(p unsafe.Pointer) *Formatter {
 	buf = strconv.AppendInt(buf, int64(uintptr(p)), 16)
 
 	return f.S(bytes.AsString(buf))
+}
+
+func quotedStringLength(s string) int {
+	var runeTmp [utf8.UTFMax]byte
+	quote := '"'
+	size := 2
+
+	for width := 0; len(s) > 0; s = s[width:] {
+		r := rune(s[0])
+		width = 1
+		if r >= utf8.RuneSelf {
+			r, width = utf8.DecodeRuneInString(s)
+		}
+		if (width == 1) && (r == utf8.RuneError) {
+			size += 2 + 2
+			continue
+		}
+		if (r == rune(quote)) || (r == '\\') {
+			size += 2
+			continue
+		}
+		if strconv.IsPrint(r) {
+			size += utf8.EncodeRune(runeTmp[:], r)
+			continue
+		}
+		switch r {
+		case '\a', '\b', '\f', '\n', '\r', '\t', '\v':
+			size++
+		default:
+			switch {
+			case r < ' ':
+				size += 2 + 2
+			case r > utf8.MaxRune:
+				r = 0xFFFD
+				fallthrough
+			case r < 0x10000:
+				size += 2 + 4
+			default:
+				size += 2 + 8
+			}
+		}
+	}
+
+	return size
+}
+
+var lowerhex = []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"}
+
+func (f *Formatter) quoteString(s string) {
+	var runeTmp [utf8.UTFMax]byte
+	quote := '"'
+
+	f.Pos += copy(f.Buffer[f.Pos:], "\"")
+	for width := 0; len(s) > 0; s = s[width:] {
+		r := rune(s[0])
+		width = 1
+		if r >= utf8.RuneSelf {
+			r, width = utf8.DecodeRuneInString(s)
+		}
+		if width == 1 && r == utf8.RuneError {
+			f.Pos += copy(f.Buffer[f.Pos:], `\x`)
+			f.Pos += copy(f.Buffer[f.Pos:], lowerhex[s[0]>>4])
+			f.Pos += copy(f.Buffer[f.Pos:], lowerhex[s[0]&0xF])
+			continue
+		}
+		if r == rune(quote) || r == '\\' {
+			f.Pos += copy(f.Buffer[f.Pos:], "\\")
+			f.Pos += copy(f.Buffer[f.Pos:], s[:1])
+			continue
+		}
+		if strconv.IsPrint(r) {
+			n := utf8.EncodeRune(runeTmp[:], r)
+			f.Pos += copy(f.Buffer[f.Pos:], runeTmp[:n])
+			continue
+		}
+		switch r {
+		case '\a':
+			f.Pos += copy(f.Buffer[f.Pos:], `\a`)
+		case '\b':
+			f.Pos += copy(f.Buffer[f.Pos:], `\b`)
+		case '\f':
+			f.Pos += copy(f.Buffer[f.Pos:], `\f`)
+		case '\n':
+			f.Pos += copy(f.Buffer[f.Pos:], `\n`)
+		case '\r':
+			f.Pos += copy(f.Buffer[f.Pos:], `\r`)
+		case '\t':
+			f.Pos += copy(f.Buffer[f.Pos:], `\t`)
+		case '\v':
+			f.Pos += copy(f.Buffer[f.Pos:], `\v`)
+		default:
+			switch {
+			case r < ' ':
+				f.Pos += copy(f.Buffer[f.Pos:], `\x`)
+				f.Pos += copy(f.Buffer[f.Pos:], lowerhex[s[0]>>4])
+				f.Pos += copy(f.Buffer[f.Pos:], lowerhex[s[0]&0xF])
+			case r > utf8.MaxRune:
+				r = 0xFFFD
+				fallthrough
+			case r < 0x10000:
+				f.Pos += copy(f.Buffer[f.Pos:], `\u`)
+				for s := 12; s >= 0; s -= 4 {
+					f.Pos += copy(f.Buffer[f.Pos:], lowerhex[r>>uint(s)&0xF])
+				}
+			default:
+				f.Pos += copy(f.Buffer[f.Pos:], `\U`)
+				for s := 28; s >= 0; s -= 4 {
+					f.Pos += copy(f.Buffer[f.Pos:], lowerhex[r>>uint(s)&0xF])
+				}
+			}
+		}
+	}
+	f.Pos += copy(f.Buffer[f.Pos:], "\"")
+}
+
+func (f *Formatter) Q(q string) *Formatter {
+	size := quotedStringLength(q)
+
+	f.applyWidth(size, false)
+	f.quoteString(q)
+	f.applyWidth(size, true)
+
+	return f
 }
 
 func (f *Formatter) S(s string) *Formatter {
