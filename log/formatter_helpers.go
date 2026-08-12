@@ -136,6 +136,13 @@ func (f *Formatter) P(p unsafe.Pointer) *Formatter {
 	return f
 }
 
+func (f *Formatter) Q(q string) *Formatter {
+	if f != nil {
+		f.Fmt.Q(q)
+	}
+	return f
+}
+
 func (f *Formatter) S(s string) *Formatter {
 	if f != nil {
 		f.Fmt.S(s)
