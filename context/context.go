@@ -46,6 +46,14 @@ func (ctx *Context) ErrorCode() int {
 	return ctx.ErrCode[ctx.ErrCurr]
 }
 
+func (ctx *Context) LastError() string {
+	return ctx.ErrFmt[1-ctx.ErrCurr].String()
+}
+
+func (ctx *Context) LastErrorCode() int {
+	return ctx.ErrCode[1-ctx.ErrCurr]
+}
+
 func (ctx *Context) NewErrorWithCode(code int) *fmt.Formatter {
 	ctx.ErrCurr = 1 - ctx.ErrCurr
 	ctx.ErrCode[ctx.ErrCurr] = code
