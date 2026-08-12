@@ -15,11 +15,11 @@ func init() {
 		)
 		var osElapsed int64
 
-		osStart := Now()
+		osStart := NowInNanoseconds()
 		cpuStart := cpu.ReadPerformanceCounter()
 
 		for osElapsed < osWaitTime {
-			osElapsed = Now() - osStart
+			osElapsed = NowInNanoseconds() - osStart
 		}
 
 		cpuEnd := cpu.ReadPerformanceCounter()
