@@ -18,12 +18,6 @@ type Arena struct {
 	CurrOfft int
 }
 
-type ArenaSavePoint struct {
-	Arena    *Arena
-	PrevOfft int
-	CurrOfft int
-}
-
 const arenaDefaultAlignment = unsafe.Alignof(uintptr(0))
 
 func (a *Arena) InitWithByteSlice(buf []byte) {
@@ -42,8 +36,8 @@ func (a *Arena) InitWithUnsafePointer(ptr unsafe.Pointer, n int) {
 	a.CurrOfft = 0
 }
 
-func (a *Arena) PushSize(n int) unsafe.Pointer {
-	return a.PushSizeWithAlignment(n, arenaDefaultAlignment)
+func (a *Arena) AllocationComesFromHere(ptr unsafe.Pointer, n int) bool {
+	return (uintptr(ptr) >= uintptr(a.Base)) && ((uintptr(ptr) + uintptr(n)) <= (uintptr(a.Base) + uintptr(a.CurrOfft)))
 }
 
 func (a *Arena) PushSizeWithAlignment(n int, align uintptr) unsafe.Pointer {
@@ -69,8 +63,8 @@ func (a *Arena) PushSizeWithAlignment(n int, align uintptr) unsafe.Pointer {
 	panic("BUY MORE RAM!")
 }
 
-func (a *Arena) RepushSize(optr unsafe.Pointer, on int, nn int) unsafe.Pointer {
-	return a.RepushSizeWithAlignment(optr, on, nn, arenaDefaultAlignment)
+func (a *Arena) PushSize(n int) unsafe.Pointer {
+	return a.PushSizeWithAlignment(n, arenaDefaultAlignment)
 }
 
 func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on int, nn int, align uintptr) unsafe.Pointer {
@@ -80,7 +74,7 @@ func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on int, nn int, ali
 		nptr := a.PushSizeWithAlignment(nn, align)
 		trace_.End(t)
 		return nptr
-	} else if (uintptr(optr) >= uintptr(a.Base)) && ((uintptr(optr) + uintptr(on)) <= (uintptr(a.Base) + uintptr(a.CurrOfft))) {
+	} else if a.AllocationComesFromHere(optr, on) {
 		if optr == pointers.Add(a.Base, uintptr(a.PrevOfft)) {
 			if nn > on {
 				bytes.SliceClear(bytes.SliceFromUnsafePointer(a.Base, a.Size)[a.PrevOfft+on : a.CurrOfft])
@@ -100,16 +94,11 @@ func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on int, nn int, ali
 	panic("old memory does not come from this arena")
 }
 
+func (a *Arena) RepushSize(optr unsafe.Pointer, on int, nn int) unsafe.Pointer {
+	return a.RepushSizeWithAlignment(optr, on, nn, arenaDefaultAlignment)
+}
+
 func (a *Arena) Reset() {
 	a.PrevOfft = 0
 	a.CurrOfft = 0
-}
-
-func (a *Arena) Save() ArenaSavePoint {
-	return ArenaSavePoint{Arena: a, PrevOfft: a.PrevOfft, CurrOfft: a.CurrOfft}
-}
-
-func (a *Arena) Restore(save *ArenaSavePoint) {
-	save.Arena.PrevOfft = save.PrevOfft
-	save.Arena.CurrOfft = save.CurrOfft
 }
