@@ -9,9 +9,13 @@ type Formatter struct {
 	CurrentLevel Level
 }
 
+func (f *Formatter) InitWithByteSlice(buf []byte) {
+	f.Fmt.InitWithByteSlice(buf)
+}
+
 func (f *Formatter) InitWithMinimumLevelAndByteSlice(level Level, buf []byte) {
 	f.MinimumLevel = level
-	f.Fmt.InitWithByteSlice(buf)
+	f.InitWithByteSlice(buf)
 }
 
 func (f *Formatter) Reset(t int64) *Formatter {
