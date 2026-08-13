@@ -8,6 +8,10 @@ import (
 )
 
 func Fatal(ctx *context.Context, msg string) {
-	fmt_.Eprintln(ctx, ctx.Fmt.Reset().S(msg).S(": ").S(ctx.Error()))
+	ctx.Fmt.Reset().S(msg).S(": ").S(ctx.Error())
+	if ctx.ErrorCode() > 0 {
+		ctx.Fmt.S(" (code=").D(ctx.ErrorCode()).S(")")
+	}
+	fmt_.Eprintln(ctx, &ctx.Fmt)
 	os.Exit(1)
 }
