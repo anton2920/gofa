@@ -15,17 +15,17 @@ func Fprintln(ctx *context.Context, h os.Handle, f *fmt.Formatter) (int, bool) {
 }
 
 func Eprint(ctx *context.Context, f *fmt.Formatter) (int, bool) {
-	return Fprint(ctx, os.StandardOutputStream, f)
-}
-
-func Eprintln(ctx *context.Context, f *fmt.Formatter) (int, bool) {
-	return Fprintln(ctx, os.StandardOutputStream, f)
-}
-
-func Print(ctx *context.Context, f *fmt.Formatter) (int, bool) {
 	return Fprint(ctx, os.StandardErrorStream, f)
 }
 
-func Println(ctx *context.Context, f *fmt.Formatter) (int, bool) {
+func Eprintln(ctx *context.Context, f *fmt.Formatter) (int, bool) {
 	return Fprintln(ctx, os.StandardErrorStream, f)
+}
+
+func Print(ctx *context.Context, f *fmt.Formatter) (int, bool) {
+	return Fprint(ctx, os.StandardOutputStream, f)
+}
+
+func Println(ctx *context.Context, f *fmt.Formatter) (int, bool) {
+	return Fprintln(ctx, os.StandardOutputStream, f)
 }
