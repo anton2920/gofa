@@ -53,6 +53,11 @@ func (f *Formatter) InitWithByteSlice(buf []byte) {
 	f.Buffer = bytes.SliceFromBytePointer(&buf[0], len(buf))
 }
 
+func (f *Formatter) Backspace(n int) *Formatter {
+	f.Pos -= ints.Min(n, f.Pos)
+	return f
+}
+
 func (f *Formatter) D(d int) *Formatter {
 	buf := make([]byte, ints.Bufsize)
 	n := slices.PutInt(buf, d)
