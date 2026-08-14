@@ -3,6 +3,13 @@ package log
 
 import "unsafe"
 
+func (f *Formatter) Backspace(n int) *Formatter {
+	if f != nil {
+		f.Fmt.Backspace(n)
+	}
+	return f
+}
+
 func (f *Formatter) D(d int) *Formatter {
 	if f != nil {
 		f.Fmt.D(d)
