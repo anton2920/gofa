@@ -1,6 +1,7 @@
 package intel
 
 import (
+	"strings"
 	"unsafe"
 
 	"github.com/anton2920/gofa/bytes"
@@ -14,15 +15,38 @@ var (
 	VendorString string
 
 	Stepping      int
-	Model         int /* NOTE(anton2920): this contains both Model and ExtendedModel fields. */
-	Family        int /* NOTE(anton2920): this contains both Family and ExtendedFamily fields. */
-	ProcessorType int /* NOTE(anton2920): 00 - Original OEM Processor, 01 - Intel OverDrive® Processor, 10 - Dual processor. */
+	Model         int /* this contains both Model and ExtendedModel fields. */
+	Family        int /* this contains both Family and ExtendedFamily fields. */
+	ProcessorType int /* 00 - Original OEM Processor, 01 - Intel OverDrive® Processor, 10 - Dual processor. */
 
 	BrandIndex  int
 	BrandString string
 
 	CPUHz uint64
 )
+
+var BrandIndex2BrandString = [...]string{
+	0x01: "Intel(R) Celeron(R) processor",
+	0x02: "Intel(R) Pentium(R) III processor",
+	0x03: "Intel(R) Pentium(R) III Xeon(R) processor", /* if processor signature = 0x000006B1, then "Intel(R) Celeron(R) processor". */
+	0x04: "Intel(R) Pentium(R) III processor",
+	0x06: "Mobile Intel(R) Pentium(R) III processor-M",
+	0x07: "Mobile Intel(R) Celeron(R) processor",
+	0x08: "Intel(R) Pentium(R) 4 processor",
+	0x09: "Intel(R) Pentium(R) 4 processor",
+	0x0A: "Intel(R) Celeron(R) processor",
+	0x0B: "Intel(R) Xeon(R) processor", /* if processor signature = 0x00000F13, "Intel(R) Xeon(R) processor". */
+	0x0C: "Intel(R) Xeon(R) processor MP",
+	0x0E: "Mobile Intel(R) Pentium(R) 4 processor-M", /* if processor signature = 0x00000F13, then "Intel(R) Xeon(R) processor" */
+	0x0F: "Mobile Intel(R) Celeron(R) processor",
+	0x11: "Mobile Genuine Intel(R) processor",
+	0x12: "Intel(R) Celeron(R) M processor",
+	0x13: "Mobile Intel(R) Celeron processor",
+	0x14: "Intel(R) Celeron(R) processor",
+	0x15: "Mobile Genuine Intel(R) processor",
+	0x16: "Intel(R) Pentium(R) M processor",
+	0x17: "Mobile Intel(R) Celeron(R) processor",
+}
 
 func init() {
 	{
@@ -36,7 +60,6 @@ func init() {
 		buffer := bytes.SliceFromUnsafePointer(unsafe.Pointer(&vendor[0]), len(vendor)*int(unsafe.Sizeof(vendor[0])))
 		VendorString = string(buffer)
 	}
-
 	{
 		info, index, _, _ := CPUID(0x1, 0)
 		Stepping = int(info & 0xF)
@@ -49,14 +72,18 @@ func init() {
 			Model += (int((info>>16)&0xF) << 4)
 		}
 		ProcessorType = int((info >> 12) & 0x3)
-		debug_.Printf("[cpu/intel]: %s Family %X Model %X Stepping %X Type %.2b", VendorString, Family, Model, Stepping, ProcessorType)
-
 		BrandIndex = int(index & 0xFF)
 	}
+	debug_.Printf("[cpu/intel]: %s Family %X Model %X Stepping %X Type %.2b", VendorString, Family, Model, Stepping, ProcessorType)
 
 	{
 		HighestExtendedFunction, _, _, _ = CPUID(0x80000000, 0)
-		if HighestExtendedFunction > 0x80000004 {
+		if (HighestExtendedFunction & 0x80000000) == 0 {
+			/* Brand index method. */
+			BrandString = BrandIndex2BrandString[BrandIndex]
+
+		} else if HighestExtendedFunction >= 0x80000004 {
+			/* Brand string method. */
 			base := uint32(0x80000002)
 			brand := make([]uint32, 12)
 			for i := 0; i < 3; i++ {
@@ -74,8 +101,9 @@ func init() {
 			for BrandString[len(BrandString)-1] == '\x00' {
 				BrandString = BrandString[:len(BrandString)-1]
 			}
-
-			debug_.Printf("[cpu/intel]: %s", BrandString)
+		}
+		if len(BrandString) > 0 {
+			debug_.Printf("[cpu/intel]: %s", strings.TrimSpace(BrandString))
 		}
 	}
 
