@@ -33,16 +33,25 @@ func main() {
 	for _, typ := range types {
 		String(b, fmt.Sprintf(`
 func (a *Arena) Push%s() *%s {
-	return (*%s)(a.PushSizeWithAlignment(int(unsafe.Sizeof(%s(0))), unsafe.Alignof(%s(0))))
+	return (*%s)(a.PushSizeWithAlignment(unsafe.Sizeof(%s(0)), unsafe.Alignof(%s(0))))
 }`, strings.Title(typ), typ, typ, typ, typ))
 		String(b, fmt.Sprintf(`
 func (a *Arena) Push%sArray(n int) []%s {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(%s(0)))*n, unsafe.Alignof(%s(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(%s(0))*uintptr(n), unsafe.Alignof(%s(0)))
 	return *(*[]%s)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }`, strings.Title(typ), typ, typ, typ, typ))
 		String(b, fmt.Sprintf(`
+func (a *Arena) Push%sArrayFrom(arr []%s) []%s {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.Push%sArray(len(arr))
+	copy(narr, arr)
+	return narr
+}`, strings.Title(typ), typ, typ, strings.Title(typ)))
+		String(b, fmt.Sprintf(`
 func (a *Arena) Repush%sArray(old []%s, n int) []%s {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(%s(0)))*len(old), int(unsafe.Sizeof(%s(0)))*n, unsafe.Alignof(%s(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(%s(0))*uintptr(len(old)), unsafe.Sizeof(%s(0))*uintptr(n), unsafe.Alignof(%s(0)))
 	return *(*[]%s)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }`, strings.Title(typ), typ, typ, typ, typ, typ, typ))
 	}

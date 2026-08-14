@@ -14,11 +14,11 @@ type Arena struct {
 	Base unsafe.Pointer
 	Size int
 
-	PrevOfft int
-	CurrOfft int
+	PrevOfft uintptr
+	CurrOfft uintptr
 }
 
-const arenaDefaultAlignment = unsafe.Alignof(uintptr(0))
+const arenaDefaultAlignment = 2 * unsafe.Alignof(uintptr(0))
 
 func (a *Arena) InitWithByteSlice(buf []byte) {
 	a.InitWithBytePointer(&buf[0], len(buf))
@@ -36,17 +36,17 @@ func (a *Arena) InitWithUnsafePointer(ptr unsafe.Pointer, n int) {
 	a.CurrOfft = 0
 }
 
-func (a *Arena) AllocationComesFromHere(ptr unsafe.Pointer, n int) bool {
-	return (uintptr(ptr) >= uintptr(a.Base)) && ((uintptr(ptr) + uintptr(n)) <= (uintptr(a.Base) + uintptr(a.CurrOfft)))
+func (a *Arena) AllocationComesFromHere(ptr unsafe.Pointer, n uintptr) bool {
+	return (uintptr(ptr) >= uintptr(a.Base)) && ((uintptr(ptr) + n) <= (uintptr(a.Base) + a.CurrOfft))
 }
 
-func (a *Arena) PushSizeWithAlignment(n int, align uintptr) unsafe.Pointer {
+func (a *Arena) PushSizeWithAlignment(n uintptr, align uintptr) unsafe.Pointer {
 	t := trace_.Begin("")
 
-	curr := pointers.Add(a.Base, uintptr(a.CurrOfft))
-	a.CurrOfft += pointers.Delta(pointers.AlignUpPow2(curr, align), curr)
-	if a.CurrOfft+n <= a.Size {
-		curr := pointers.Add(a.Base, uintptr(a.CurrOfft))
+	curr := pointers.Add(a.Base, a.CurrOfft)
+	a.CurrOfft += uintptr(pointers.Delta(pointers.AlignUpPow2(curr, align), curr))
+	if a.CurrOfft+n <= uintptr(a.Size) {
+		curr := pointers.Add(a.Base, a.CurrOfft)
 		debug_.AssertZero(int(uintptr(curr)&(align-1)), "(*Arena).PushSizeWithAlignment tried to return unaligned pointer")
 
 		a.PrevOfft = a.CurrOfft
@@ -63,11 +63,11 @@ func (a *Arena) PushSizeWithAlignment(n int, align uintptr) unsafe.Pointer {
 	panic("BUY MORE RAM!")
 }
 
-func (a *Arena) PushSize(n int) unsafe.Pointer {
+func (a *Arena) PushSize(n uintptr) unsafe.Pointer {
 	return a.PushSizeWithAlignment(n, arenaDefaultAlignment)
 }
 
-func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on int, nn int, align uintptr) unsafe.Pointer {
+func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on uintptr, nn uintptr, align uintptr) unsafe.Pointer {
 	t := trace_.Begin("")
 
 	if on == 0 {
@@ -94,7 +94,7 @@ func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on int, nn int, ali
 	panic("old memory does not come from this arena")
 }
 
-func (a *Arena) RepushSize(optr unsafe.Pointer, on int, nn int) unsafe.Pointer {
+func (a *Arena) RepushSize(optr unsafe.Pointer, on uintptr, nn uintptr) unsafe.Pointer {
 	return a.RepushSizeWithAlignment(optr, on, nn, arenaDefaultAlignment)
 }
 

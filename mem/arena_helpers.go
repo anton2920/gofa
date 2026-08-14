@@ -8,211 +8,346 @@ import (
 )
 
 func (a *Arena) PushByte() *byte {
-	return (*byte)(a.PushSizeWithAlignment(int(unsafe.Sizeof(byte(0))), unsafe.Alignof(byte(0))))
+	return (*byte)(a.PushSizeWithAlignment(unsafe.Sizeof(byte(0)), unsafe.Alignof(byte(0))))
 }
 
 func (a *Arena) PushByteArray(n int) []byte {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(byte(0)))*n, unsafe.Alignof(byte(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(byte(0))*uintptr(n), unsafe.Alignof(byte(0)))
 	return *(*[]byte)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
+func (a *Arena) PushByteArrayFrom(arr []byte) []byte {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushByteArray(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
 func (a *Arena) RepushByteArray(old []byte, n int) []byte {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(byte(0)))*len(old), int(unsafe.Sizeof(byte(0)))*n, unsafe.Alignof(byte(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(byte(0))*uintptr(len(old)), unsafe.Sizeof(byte(0))*uintptr(n), unsafe.Alignof(byte(0)))
 	return *(*[]byte)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
 func (a *Arena) PushInt8() *int8 {
-	return (*int8)(a.PushSizeWithAlignment(int(unsafe.Sizeof(int8(0))), unsafe.Alignof(int8(0))))
+	return (*int8)(a.PushSizeWithAlignment(unsafe.Sizeof(int8(0)), unsafe.Alignof(int8(0))))
 }
 
 func (a *Arena) PushInt8Array(n int) []int8 {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(int8(0)))*n, unsafe.Alignof(int8(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(int8(0))*uintptr(n), unsafe.Alignof(int8(0)))
 	return *(*[]int8)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
+func (a *Arena) PushInt8ArrayFrom(arr []int8) []int8 {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushInt8Array(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
 func (a *Arena) RepushInt8Array(old []int8, n int) []int8 {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(int8(0)))*len(old), int(unsafe.Sizeof(int8(0)))*n, unsafe.Alignof(int8(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(int8(0))*uintptr(len(old)), unsafe.Sizeof(int8(0))*uintptr(n), unsafe.Alignof(int8(0)))
 	return *(*[]int8)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
 func (a *Arena) PushUint8() *uint8 {
-	return (*uint8)(a.PushSizeWithAlignment(int(unsafe.Sizeof(uint8(0))), unsafe.Alignof(uint8(0))))
+	return (*uint8)(a.PushSizeWithAlignment(unsafe.Sizeof(uint8(0)), unsafe.Alignof(uint8(0))))
 }
 
 func (a *Arena) PushUint8Array(n int) []uint8 {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(uint8(0)))*n, unsafe.Alignof(uint8(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(uint8(0))*uintptr(n), unsafe.Alignof(uint8(0)))
 	return *(*[]uint8)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
+func (a *Arena) PushUint8ArrayFrom(arr []uint8) []uint8 {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushUint8Array(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
 func (a *Arena) RepushUint8Array(old []uint8, n int) []uint8 {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(uint8(0)))*len(old), int(unsafe.Sizeof(uint8(0)))*n, unsafe.Alignof(uint8(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(uint8(0))*uintptr(len(old)), unsafe.Sizeof(uint8(0))*uintptr(n), unsafe.Alignof(uint8(0)))
 	return *(*[]uint8)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
 func (a *Arena) PushInt16() *int16 {
-	return (*int16)(a.PushSizeWithAlignment(int(unsafe.Sizeof(int16(0))), unsafe.Alignof(int16(0))))
+	return (*int16)(a.PushSizeWithAlignment(unsafe.Sizeof(int16(0)), unsafe.Alignof(int16(0))))
 }
 
 func (a *Arena) PushInt16Array(n int) []int16 {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(int16(0)))*n, unsafe.Alignof(int16(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(int16(0))*uintptr(n), unsafe.Alignof(int16(0)))
 	return *(*[]int16)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
+func (a *Arena) PushInt16ArrayFrom(arr []int16) []int16 {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushInt16Array(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
 func (a *Arena) RepushInt16Array(old []int16, n int) []int16 {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(int16(0)))*len(old), int(unsafe.Sizeof(int16(0)))*n, unsafe.Alignof(int16(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(int16(0))*uintptr(len(old)), unsafe.Sizeof(int16(0))*uintptr(n), unsafe.Alignof(int16(0)))
 	return *(*[]int16)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
 func (a *Arena) PushUint16() *uint16 {
-	return (*uint16)(a.PushSizeWithAlignment(int(unsafe.Sizeof(uint16(0))), unsafe.Alignof(uint16(0))))
+	return (*uint16)(a.PushSizeWithAlignment(unsafe.Sizeof(uint16(0)), unsafe.Alignof(uint16(0))))
 }
 
 func (a *Arena) PushUint16Array(n int) []uint16 {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(uint16(0)))*n, unsafe.Alignof(uint16(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(uint16(0))*uintptr(n), unsafe.Alignof(uint16(0)))
 	return *(*[]uint16)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
+func (a *Arena) PushUint16ArrayFrom(arr []uint16) []uint16 {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushUint16Array(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
 func (a *Arena) RepushUint16Array(old []uint16, n int) []uint16 {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(uint16(0)))*len(old), int(unsafe.Sizeof(uint16(0)))*n, unsafe.Alignof(uint16(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(uint16(0))*uintptr(len(old)), unsafe.Sizeof(uint16(0))*uintptr(n), unsafe.Alignof(uint16(0)))
 	return *(*[]uint16)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
 func (a *Arena) PushInt32() *int32 {
-	return (*int32)(a.PushSizeWithAlignment(int(unsafe.Sizeof(int32(0))), unsafe.Alignof(int32(0))))
+	return (*int32)(a.PushSizeWithAlignment(unsafe.Sizeof(int32(0)), unsafe.Alignof(int32(0))))
 }
 
 func (a *Arena) PushInt32Array(n int) []int32 {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(int32(0)))*n, unsafe.Alignof(int32(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(int32(0))*uintptr(n), unsafe.Alignof(int32(0)))
 	return *(*[]int32)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
+func (a *Arena) PushInt32ArrayFrom(arr []int32) []int32 {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushInt32Array(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
 func (a *Arena) RepushInt32Array(old []int32, n int) []int32 {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(int32(0)))*len(old), int(unsafe.Sizeof(int32(0)))*n, unsafe.Alignof(int32(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(int32(0))*uintptr(len(old)), unsafe.Sizeof(int32(0))*uintptr(n), unsafe.Alignof(int32(0)))
 	return *(*[]int32)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
 func (a *Arena) PushUint32() *uint32 {
-	return (*uint32)(a.PushSizeWithAlignment(int(unsafe.Sizeof(uint32(0))), unsafe.Alignof(uint32(0))))
+	return (*uint32)(a.PushSizeWithAlignment(unsafe.Sizeof(uint32(0)), unsafe.Alignof(uint32(0))))
 }
 
 func (a *Arena) PushUint32Array(n int) []uint32 {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(uint32(0)))*n, unsafe.Alignof(uint32(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(uint32(0))*uintptr(n), unsafe.Alignof(uint32(0)))
 	return *(*[]uint32)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
+func (a *Arena) PushUint32ArrayFrom(arr []uint32) []uint32 {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushUint32Array(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
 func (a *Arena) RepushUint32Array(old []uint32, n int) []uint32 {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(uint32(0)))*len(old), int(unsafe.Sizeof(uint32(0)))*n, unsafe.Alignof(uint32(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(uint32(0))*uintptr(len(old)), unsafe.Sizeof(uint32(0))*uintptr(n), unsafe.Alignof(uint32(0)))
 	return *(*[]uint32)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
 func (a *Arena) PushInt64() *int64 {
-	return (*int64)(a.PushSizeWithAlignment(int(unsafe.Sizeof(int64(0))), unsafe.Alignof(int64(0))))
+	return (*int64)(a.PushSizeWithAlignment(unsafe.Sizeof(int64(0)), unsafe.Alignof(int64(0))))
 }
 
 func (a *Arena) PushInt64Array(n int) []int64 {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(int64(0)))*n, unsafe.Alignof(int64(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(int64(0))*uintptr(n), unsafe.Alignof(int64(0)))
 	return *(*[]int64)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
+func (a *Arena) PushInt64ArrayFrom(arr []int64) []int64 {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushInt64Array(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
 func (a *Arena) RepushInt64Array(old []int64, n int) []int64 {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(int64(0)))*len(old), int(unsafe.Sizeof(int64(0)))*n, unsafe.Alignof(int64(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(int64(0))*uintptr(len(old)), unsafe.Sizeof(int64(0))*uintptr(n), unsafe.Alignof(int64(0)))
 	return *(*[]int64)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
 func (a *Arena) PushUint64() *uint64 {
-	return (*uint64)(a.PushSizeWithAlignment(int(unsafe.Sizeof(uint64(0))), unsafe.Alignof(uint64(0))))
+	return (*uint64)(a.PushSizeWithAlignment(unsafe.Sizeof(uint64(0)), unsafe.Alignof(uint64(0))))
 }
 
 func (a *Arena) PushUint64Array(n int) []uint64 {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(uint64(0)))*n, unsafe.Alignof(uint64(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(uint64(0))*uintptr(n), unsafe.Alignof(uint64(0)))
 	return *(*[]uint64)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
+func (a *Arena) PushUint64ArrayFrom(arr []uint64) []uint64 {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushUint64Array(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
 func (a *Arena) RepushUint64Array(old []uint64, n int) []uint64 {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(uint64(0)))*len(old), int(unsafe.Sizeof(uint64(0)))*n, unsafe.Alignof(uint64(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(uint64(0))*uintptr(len(old)), unsafe.Sizeof(uint64(0))*uintptr(n), unsafe.Alignof(uint64(0)))
 	return *(*[]uint64)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
 func (a *Arena) PushInt() *int {
-	return (*int)(a.PushSizeWithAlignment(int(unsafe.Sizeof(int(0))), unsafe.Alignof(int(0))))
+	return (*int)(a.PushSizeWithAlignment(unsafe.Sizeof(int(0)), unsafe.Alignof(int(0))))
 }
 
 func (a *Arena) PushIntArray(n int) []int {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(int(0)))*n, unsafe.Alignof(int(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(int(0))*uintptr(n), unsafe.Alignof(int(0)))
 	return *(*[]int)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
+func (a *Arena) PushIntArrayFrom(arr []int) []int {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushIntArray(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
 func (a *Arena) RepushIntArray(old []int, n int) []int {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(int(0)))*len(old), int(unsafe.Sizeof(int(0)))*n, unsafe.Alignof(int(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(int(0))*uintptr(len(old)), unsafe.Sizeof(int(0))*uintptr(n), unsafe.Alignof(int(0)))
 	return *(*[]int)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
 func (a *Arena) PushUint() *uint {
-	return (*uint)(a.PushSizeWithAlignment(int(unsafe.Sizeof(uint(0))), unsafe.Alignof(uint(0))))
+	return (*uint)(a.PushSizeWithAlignment(unsafe.Sizeof(uint(0)), unsafe.Alignof(uint(0))))
 }
 
 func (a *Arena) PushUintArray(n int) []uint {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(uint(0)))*n, unsafe.Alignof(uint(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(uint(0))*uintptr(n), unsafe.Alignof(uint(0)))
 	return *(*[]uint)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
+func (a *Arena) PushUintArrayFrom(arr []uint) []uint {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushUintArray(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
 func (a *Arena) RepushUintArray(old []uint, n int) []uint {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(uint(0)))*len(old), int(unsafe.Sizeof(uint(0)))*n, unsafe.Alignof(uint(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(uint(0))*uintptr(len(old)), unsafe.Sizeof(uint(0))*uintptr(n), unsafe.Alignof(uint(0)))
 	return *(*[]uint)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
 func (a *Arena) PushFloat32() *float32 {
-	return (*float32)(a.PushSizeWithAlignment(int(unsafe.Sizeof(float32(0))), unsafe.Alignof(float32(0))))
+	return (*float32)(a.PushSizeWithAlignment(unsafe.Sizeof(float32(0)), unsafe.Alignof(float32(0))))
 }
 
 func (a *Arena) PushFloat32Array(n int) []float32 {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(float32(0)))*n, unsafe.Alignof(float32(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(float32(0))*uintptr(n), unsafe.Alignof(float32(0)))
 	return *(*[]float32)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
+func (a *Arena) PushFloat32ArrayFrom(arr []float32) []float32 {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushFloat32Array(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
 func (a *Arena) RepushFloat32Array(old []float32, n int) []float32 {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(float32(0)))*len(old), int(unsafe.Sizeof(float32(0)))*n, unsafe.Alignof(float32(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(float32(0))*uintptr(len(old)), unsafe.Sizeof(float32(0))*uintptr(n), unsafe.Alignof(float32(0)))
 	return *(*[]float32)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
 func (a *Arena) PushFloat64() *float64 {
-	return (*float64)(a.PushSizeWithAlignment(int(unsafe.Sizeof(float64(0))), unsafe.Alignof(float64(0))))
+	return (*float64)(a.PushSizeWithAlignment(unsafe.Sizeof(float64(0)), unsafe.Alignof(float64(0))))
 }
 
 func (a *Arena) PushFloat64Array(n int) []float64 {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(float64(0)))*n, unsafe.Alignof(float64(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(float64(0))*uintptr(n), unsafe.Alignof(float64(0)))
 	return *(*[]float64)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
+func (a *Arena) PushFloat64ArrayFrom(arr []float64) []float64 {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushFloat64Array(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
 func (a *Arena) RepushFloat64Array(old []float64, n int) []float64 {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(float64(0)))*len(old), int(unsafe.Sizeof(float64(0)))*n, unsafe.Alignof(float64(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(float64(0))*uintptr(len(old)), unsafe.Sizeof(float64(0))*uintptr(n), unsafe.Alignof(float64(0)))
 	return *(*[]float64)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
 func (a *Arena) PushComplex64() *complex64 {
-	return (*complex64)(a.PushSizeWithAlignment(int(unsafe.Sizeof(complex64(0))), unsafe.Alignof(complex64(0))))
+	return (*complex64)(a.PushSizeWithAlignment(unsafe.Sizeof(complex64(0)), unsafe.Alignof(complex64(0))))
 }
 
 func (a *Arena) PushComplex64Array(n int) []complex64 {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(complex64(0)))*n, unsafe.Alignof(complex64(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(complex64(0))*uintptr(n), unsafe.Alignof(complex64(0)))
 	return *(*[]complex64)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
+func (a *Arena) PushComplex64ArrayFrom(arr []complex64) []complex64 {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushComplex64Array(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
 func (a *Arena) RepushComplex64Array(old []complex64, n int) []complex64 {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(complex64(0)))*len(old), int(unsafe.Sizeof(complex64(0)))*n, unsafe.Alignof(complex64(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(complex64(0))*uintptr(len(old)), unsafe.Sizeof(complex64(0))*uintptr(n), unsafe.Alignof(complex64(0)))
 	return *(*[]complex64)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
 func (a *Arena) PushComplex128() *complex128 {
-	return (*complex128)(a.PushSizeWithAlignment(int(unsafe.Sizeof(complex128(0))), unsafe.Alignof(complex128(0))))
+	return (*complex128)(a.PushSizeWithAlignment(unsafe.Sizeof(complex128(0)), unsafe.Alignof(complex128(0))))
 }
 
 func (a *Arena) PushComplex128Array(n int) []complex128 {
-	ptr := a.PushSizeWithAlignment(int(unsafe.Sizeof(complex128(0)))*n, unsafe.Alignof(complex128(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(complex128(0))*uintptr(n), unsafe.Alignof(complex128(0)))
 	return *(*[]complex128)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
 
+func (a *Arena) PushComplex128ArrayFrom(arr []complex128) []complex128 {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushComplex128Array(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
 func (a *Arena) RepushComplex128Array(old []complex128, n int) []complex128 {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), int(unsafe.Sizeof(complex128(0)))*len(old), int(unsafe.Sizeof(complex128(0)))*n, unsafe.Alignof(complex128(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(complex128(0))*uintptr(len(old)), unsafe.Sizeof(complex128(0))*uintptr(n), unsafe.Alignof(complex128(0)))
 	return *(*[]complex128)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
