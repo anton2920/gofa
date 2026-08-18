@@ -79,13 +79,13 @@ TEXT ·Syscall6(SB), NOSPLIT, $0-80
 	MOVQ	a5+40(FP), R8
 	MOVQ	a6+48(FP), R9
 	SYSCALL
-	JCC	RawSyscall6OK
+	JCC	Syscall6OK
 	MOVQ	$-1, r1+56(FP)
 	MOVQ	$-1, r2+64(FP)
 	MOVQ	AX, errno+72(FP)
 	CALL	runtime·exitsyscall(SB)
 	RET
-RawSyscall6OK:
+Syscall6OK:
 	MOVQ	AX, r1+56(FP)
 	MOVQ	DX, r2+64(FP)
 	MOVQ	$0, errno+72(FP)
