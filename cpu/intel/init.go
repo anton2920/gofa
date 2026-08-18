@@ -122,5 +122,8 @@ func init() {
 				CPUHz = (uint64(19200000) * uint64(numerator)) / uint64(denominator)
 			}
 		}
+		if CPUHz > 0 {
+			debug_.Printf("[cpu/intel]: CPU frequency: %dHz", CPUHz)
+		}
 	}
 }
