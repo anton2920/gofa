@@ -1,11 +1,5 @@
 package linked
 
-import (
-	"unsafe"
-
-	"github.com/anton2920/gofa/mem"
-)
-
 type ListNode struct {
 	Prev *ListNode
 	Next *ListNode
@@ -16,28 +10,6 @@ type List struct {
 
 	First *ListNode
 	Last  *ListNode
-
-	Arena            *mem.Arena
-	ElementSize      uintptr
-	ElementAlignment uintptr
-}
-
-func ArenaPushListNode(a *mem.Arena, elementSize uintptr, elementAlignment uintptr) *ListNode {
-	alignment := unsafe.Alignof(ListNode{})
-	if elementAlignment > alignment {
-		alignment = elementAlignment
-	}
-	return (*ListNode)(a.PushSizeWithAlignment(unsafe.Sizeof(ListNode{})+elementSize, alignment))
-}
-
-func (l *List) Init(a *mem.Arena, elementSize uintptr, elementAlignment uintptr) {
-	l.Arena = a
-	l.ElementSize = elementSize
-	l.ElementAlignment = elementAlignment
-}
-
-func (l *List) NewNode() *ListNode {
-	return ArenaPushListNode(l.Arena, l.ElementSize, l.ElementAlignment)
 }
 
 func (l *List) At(index int) *ListNode {
