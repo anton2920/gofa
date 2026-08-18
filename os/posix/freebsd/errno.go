@@ -253,10 +253,9 @@ var strerror = [...]string{
 func ReportPotentialError(ctx *context.Context, errno uintptr) bool {
 	if errno == 0 {
 		return true
-	} else {
-		ctx.NewErrorWithCode(int(errno)).S(Errno(errno).String())
-		return false
 	}
+	ctx.NewErrorWithCode(int(errno)).S(Errno(errno).String())
+	return false
 }
 
 func (errno Errno) String() string {

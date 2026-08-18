@@ -1,5 +1,5 @@
-#include "textflag.h"
-
+/* From "textflag.h". */
+#define NOSPLIT	4
 
 /* func RDRANDW() (uint16, bool) */
 TEXT ·RDRANDW(SB), NOSPLIT, $0-3

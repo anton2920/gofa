@@ -1,4 +1,5 @@
-#include "textflag.h"
+/* From "textflag.h". */
+#define NOSPLIT	4
 
 /* func RDTSC() intel.Cycles */
 TEXT ·RDTSC(SB), NOSPLIT, $0-8

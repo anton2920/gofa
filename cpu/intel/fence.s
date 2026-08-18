@@ -1,4 +1,5 @@
-#include "textflag.h"
+/* From "textflag.h". */
+#define NOSPLIT	4
 
 /* func LFENCE() */
 TEXT ·LFENCE(SB), NOSPLIT, $0

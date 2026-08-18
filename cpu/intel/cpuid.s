@@ -1,4 +1,5 @@
-#include "textflag.h"
+/* From "textflag.h". */
+#define NOSPLIT	4
 
 /* func CPUID(eax, ecx uint32) (reax, rebx, recx, redx uint32) */
 TEXT ·CPUID(SB), NOSPLIT, $0-24
