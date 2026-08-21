@@ -8,7 +8,10 @@ import (
 )
 
 func Fatal(ctx *context.Context, msg string) {
-	ctx.Fmt.Reset().S(msg).S(": ").S(ctx.Error())
+	ctx.Fmt.Reset().S(msg)
+	if len(ctx.Error()) > 0 {
+		ctx.Fmt.S(": ").S(ctx.Error())
+	}
 	if ctx.ErrorCode() > 0 {
 		ctx.Fmt.S(" (code=").D(ctx.ErrorCode()).S(")")
 	}

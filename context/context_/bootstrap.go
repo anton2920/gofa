@@ -21,7 +21,7 @@ func BootstrapWithFourSizes(ctx *context.Context, arenaSize int, fmtSize int, lo
 	errSize = ints.AlignUpPow2(errSize, int(unsafe.Alignof(int(0))))
 
 	size := ints.AlignUpPow2(arenaSize+fmtSize+logSize+errSize, os.PageSize)
-	ptr, ok := os.AllocateVirtualMemory(ctx, size, os.AllocateForReading|os.AllocateForWriting)
+	ptr, ok := os.AllocateVirtualMemory(ctx, size)
 	if !ok {
 		ctx.NewError().S("failed to allocate requested amount of virtual memory: ").S(ctx.OldError()).S(" (code=").D(ctx.OldErrorCode()).S(")")
 		return false
@@ -40,7 +40,7 @@ func BootstrapWithEvenlySplitSize(ctx *context.Context, size int) bool {
 	ctx.InitWithEvenlySplitByteSlice(stub)
 
 	size = ints.AlignUpPow2(size, os.PageSize)
-	ptr, ok := os.AllocateVirtualMemory(ctx, size, os.AllocateForReading|os.AllocateForWriting)
+	ptr, ok := os.AllocateVirtualMemory(ctx, size)
 	if !ok {
 		ctx.NewError().S("failed to allocate requested amount of virtual memory: ").S(ctx.OldError()).S(" (code=").D(ctx.OldErrorCode()).S(")")
 		return false
