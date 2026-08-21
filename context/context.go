@@ -63,6 +63,11 @@ func (ctx *Context) NewError() *fmt.Formatter {
 	return ctx.NewErrorWithCode(0)
 }
 
+func (ctx *Context) ResetError() {
+	ctx.ErrFmt[ctx.ErrCurr].Reset()
+	ctx.ErrCode[ctx.ErrCurr] = 0
+}
+
 func (ctx *Context) Noescape() *Context {
 	return (*Context)(pointers.UnsafeNoescape(unsafe.Pointer(ctx)))
 }
