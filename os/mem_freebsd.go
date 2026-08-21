@@ -32,12 +32,12 @@ const (
 	VirtualMemoryIsPrivate = bits.Flags(freebsd.MAP_PRIVATE)
 )
 
-func AllocateVirtualMemoryStartingFrom(ctx *context.Context, base unsafe.Pointer, size int, rwx bits.Flags, extra bits.Flags) (unsafe.Pointer, bool) {
-	return freebsd.Mmap(ctx, base, uint(size), int32(rwx), int32(extra)|freebsd.MAP_ANON|freebsd.MAP_FIXED, -1, 0)
+func AllocateVirtualMemory(ctx *context.Context, size int) (unsafe.Pointer, bool) {
+	return freebsd.Mmap(ctx, nil, uint(size), int32(AllocateForReading|AllocateForWriting), freebsd.MAP_ANON|freebsd.MAP_PRIVATE, -1, 0)
 }
 
-func AllocateVirtualMemory(ctx *context.Context, size int, rwx bits.Flags) (unsafe.Pointer, bool) {
-	return freebsd.Mmap(ctx, nil, uint(size), int32(rwx), freebsd.MAP_ANON|freebsd.MAP_PRIVATE, -1, 0)
+func AllocateFileBackedVirtualMemory(ctx *context.Context, size int, fd Handle) (unsafe.Pointer, bool) {
+	return freebsd.Mmap(ctx, nil, uint(size), int32(AllocateForReading|AllocateForWriting), freebsd.MAP_SHARED, int32(fd), 0)
 }
 
 func DeallocateVirtualMemory(ctx *context.Context, addr unsafe.Pointer, size int) bool {

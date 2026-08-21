@@ -79,3 +79,8 @@ func WriteToFile(ctx *context.Context, f Handle, buf []byte) (int, bool) {
 func WriteToFileAt(ctx *context.Context, f Handle, buf []byte, offt int64) (int, bool) {
 	return freebsd.Pwrite(ctx, int32(f), buf, offt)
 }
+
+//go:nosplit
+func ResizeFile(ctx *context.Context, f Handle, size int) bool {
+	return freebsd.Ftruncate(ctx, int32(f), int64(size))
+}
