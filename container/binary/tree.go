@@ -56,7 +56,7 @@ func (bt *SearchTree) Add(node *TreeNode) {
 func (bt *SearchTree) getFromChildOf(key TreeKeyPointer, node *TreeNode) *TreeNode {
 	for {
 		if node == nil {
-			return nil
+			break
 		}
 
 		res := bt.Comparator(key, node.KeyPointer())
@@ -69,6 +69,8 @@ func (bt *SearchTree) getFromChildOf(key TreeKeyPointer, node *TreeNode) *TreeNo
 			return node
 		}
 	}
+
+	return nil
 }
 
 func (bt *SearchTree) Get(key TreeKeyPointer) *TreeNode {
@@ -82,7 +84,7 @@ func (bt *SearchTree) Has(key TreeKeyPointer) bool {
 func (bt *SearchTree) delFromChildOf(key TreeKeyPointer, pnode **TreeNode) *TreeNode {
 	for {
 		if *pnode == nil {
-			return nil
+			break
 		}
 		node := *pnode
 
@@ -121,6 +123,8 @@ func (bt *SearchTree) delFromChildOf(key TreeKeyPointer, pnode **TreeNode) *Tree
 			return node
 		}
 	}
+
+	return nil
 }
 
 func (bt *SearchTree) Del(key TreeKeyPointer) *TreeNode {
