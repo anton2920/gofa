@@ -6,6 +6,7 @@ package trace_
 import (
 	"unsafe"
 
+	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/cpu"
 	"github.com/anton2920/gofa/funcs"
 	"github.com/anton2920/gofa/os"
@@ -45,5 +46,5 @@ func EndAndPrintProfile() {
 
 	profile := make([]byte, 16*1024)
 	n := prof.DumpProfile(profile)
-	os.WriteToFile(os.StandardErrorStream, profile[:n])
+	os.WriteToFile(&context.Context{}, os.StandardErrorStream, profile[:n])
 }
