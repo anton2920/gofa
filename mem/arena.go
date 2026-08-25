@@ -7,7 +7,6 @@ import (
 	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/debug/debug_"
 	"github.com/anton2920/gofa/pointers"
-	"github.com/anton2920/gofa/trace/trace_"
 )
 
 type Arena struct {
@@ -41,8 +40,6 @@ func (a *Arena) AllocationComesFromHere(ptr unsafe.Pointer, n uintptr) bool {
 }
 
 func (a *Arena) PushSizeWithAlignment(n uintptr, align uintptr) unsafe.Pointer {
-	t := trace_.Begin("")
-
 	curr := pointers.Add(a.Base, a.CurrOfft)
 	a.CurrOfft += uintptr(pointers.Delta(pointers.AlignUpPow2(curr, align), curr))
 	if a.CurrOfft+n <= uintptr(a.Size) {
@@ -53,11 +50,8 @@ func (a *Arena) PushSizeWithAlignment(n uintptr, align uintptr) unsafe.Pointer {
 		a.CurrOfft += n
 		bytes.SliceClear(bytes.SliceFromUnsafePointer(a.Base, a.Size)[a.PrevOfft:a.CurrOfft])
 
-		trace_.End(t)
 		return curr
 	}
-
-	trace_.End(t)
 
 	/* TODO(anton2920): handle shortage of memory better. */
 	panic("BUY MORE RAM!")
@@ -68,11 +62,8 @@ func (a *Arena) PushSize(n uintptr) unsafe.Pointer {
 }
 
 func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on uintptr, nn uintptr, align uintptr) unsafe.Pointer {
-	t := trace_.Begin("")
-
 	if on == 0 {
 		nptr := a.PushSizeWithAlignment(nn, align)
-		trace_.End(t)
 		return nptr
 	} else if a.AllocationComesFromHere(optr, on) {
 		if optr == pointers.Add(a.Base, uintptr(a.PrevOfft)) {
@@ -80,17 +71,14 @@ func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on uintptr, nn uint
 				bytes.SliceClear(bytes.SliceFromUnsafePointer(a.Base, a.Size)[a.PrevOfft+on : a.CurrOfft])
 			}
 			a.CurrOfft = a.PrevOfft + nn
-			trace_.End(t)
 			return optr
 		} else {
 			nptr := a.PushSizeWithAlignment(nn, align)
 			copy(bytes.SliceFromUnsafePointer(nptr, int(nn)), bytes.SliceFromUnsafePointer(optr, int(on)))
-			trace_.End(t)
 			return nptr
 		}
 	}
 
-	trace_.End(t)
 	panic("old memory does not come from this arena")
 }
 
