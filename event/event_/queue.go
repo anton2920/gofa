@@ -90,7 +90,7 @@ func (q *Queue) AddAndIgnoreSignals(ctx *context.Context, sigs ...os.Signal) boo
 	return true
 }
 
-func (q *Queue) AddAndIgnoreTerminateSignals(ctx *context.Context) bool {
+func (q *Queue) AddAndIgnoreTerminationSignals(ctx *context.Context) bool {
 	return q.AddAndIgnoreSignals(ctx, os.SignalHangup, os.SignalInterrupt, os.SignalTerminate)
 }
 
