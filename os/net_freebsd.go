@@ -69,7 +69,7 @@ var SocketOptionName2SocketOptionLevel = map[SocketOptionName]SocketOptionLevel{
 	SocketOptionTCPNoDelay: SocketOptionLevelTCP,
 }
 
-func (ia *InternetAddress) AsNetworkAddress() *NetworkAddress {
+func (ia *InternetAddress) AsNetworkAddressPointer() *NetworkAddress {
 	return (*NetworkAddress)(unsafe.Pointer(ia))
 }
 
