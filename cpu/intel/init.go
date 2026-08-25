@@ -1,13 +1,13 @@
 package intel
 
 import (
-	"strings"
 	"unsafe"
 
 	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/debug/debug_"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/slices"
+	"github.com/anton2920/gofa/strings"
 )
 
 var (
