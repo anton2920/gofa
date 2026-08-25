@@ -8,7 +8,6 @@ Action items:
 	- Complete B+tree implementation.
 	- Enhance B+tree algorithms.
 - Rework jail container.
-- Add ability to allocate file-backed virtual memory to os package.
 - Split l10n to pure and abnormal packages.
 - Remove usage of standard 'fmt' package from everywhere.
 - Remove net/html package.
