@@ -1,10 +1,9 @@
 package context_
 
 import (
-	"os"
-
 	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/fmt/fmt_"
+	"github.com/anton2920/gofa/os"
 )
 
 func Fatal(ctx *context.Context, msg string) {
