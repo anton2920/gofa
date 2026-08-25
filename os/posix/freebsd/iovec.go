@@ -1,9 +1,6 @@
 package freebsd
 
-import (
-	"reflect"
-	"unsafe"
-)
+import "github.com/anton2920/gofa/bytes"
 
 /* NOTE(anton2920): this is basically a Go's string type. */
 /* From <sys/_iovec.h>. */
@@ -15,11 +12,11 @@ import (
  */
 type Iovec string
 
-var IovecZ = *(*Iovec)(unsafe.Pointer(&reflect.StringHeader{Data: 0, Len: 0}))
+var IovecZ = Iovec("")
 
 func IovecForByteSlice(buf []byte) Iovec {
 	if buf == nil {
 		return IovecZ
 	}
-	return *(*Iovec)(unsafe.Pointer(&reflect.StringHeader{Data: uintptr(unsafe.Pointer(&buf[0])), Len: len(buf)}))
+	return Iovec(bytes.AsString(buf))
 }
