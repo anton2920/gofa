@@ -6,6 +6,8 @@ import (
 
 	"github.com/anton2920/gofa/bytes"
 	"github.com/anton2920/gofa/debug/debug_"
+	"github.com/anton2920/gofa/ints"
+	"github.com/anton2920/gofa/slices"
 )
 
 var (
@@ -74,7 +76,18 @@ func init() {
 		ProcessorType = int((info >> 12) & 0x3)
 		BrandIndex = int(index & 0xFF)
 	}
-	debug_.Printf("[cpu/intel]: %s Family %X Model %X Stepping %X Type %.2b", VendorString, Family, Model, Stepping, ProcessorType)
+	{
+		hexdigits0 := [...]string{"", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"}
+		hexdigits := [...]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"}
+		bindigits := [...]string{"00", "01", "10", "11"}
+
+		debug_.Println("[cpu/intel]: ", VendorString,
+			" Family ", hexdigits0[(Family>>4)&0xF], hexdigits[Family&0xF],
+			" Model ", hexdigits0[(Model>>4)&0xF], hexdigits[Model&0xF],
+			" Stepping ", hexdigits0[(Stepping>>4)&0xF], hexdigits[Stepping&0xF],
+			" Type ", bindigits[ProcessorType],
+		)
+	}
 
 	{
 		HighestExtendedFunction, _, _, _ = CPUID(0x80000000, 0)
@@ -103,7 +116,7 @@ func init() {
 			}
 		}
 		if len(BrandString) > 0 {
-			debug_.Printf("[cpu/intel]: %s", strings.TrimSpace(BrandString))
+			debug_.Println("[cpu/intel]: ", strings.TrimSpace(BrandString))
 		}
 	}
 
@@ -123,7 +136,9 @@ func init() {
 			}
 		}
 		if CPUHz > 0 {
-			debug_.Printf("[cpu/intel]: CPU frequency: %dHz", CPUHz)
+			buf := make([]byte, ints.Bufsize)
+			n := slices.PutUint64(buf, CPUHz)
+			debug_.Println("[cpu/intel]: CPU frequency: ", bytes.AsString(buf[:n]), "Hz")
 		}
 	}
 }
