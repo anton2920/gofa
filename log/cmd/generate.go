@@ -24,7 +24,7 @@ func StringSliceContains(xs []string, x string) bool {
 }
 
 func main() {
-	blacklist := [...]string{"InitWithUnsafePointer", "InitWithBytePointer", "InitWithByteSlice", "Reset"}
+	blacklist := [...]string{"InitWithUnsafePointer", "InitWithBytePointer", "InitWithByteSlice", "String", "Reset"}
 
 	const path = "formatter_helpers.go"
 	f, err := os.Create(path)

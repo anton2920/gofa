@@ -59,3 +59,10 @@ func (f *Formatter) Fatal(t int64) *Formatter {
 func (f *Formatter) Panic(t int64) *Formatter {
 	return f.Log(LevelPanic, t)
 }
+
+func (f *Formatter) String() string {
+	if f != nil {
+		return f.Fmt.String()
+	}
+	return ""
+}
