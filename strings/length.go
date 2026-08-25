@@ -1,7 +1,13 @@
 package strings
 
-import "unicode/utf8"
+func CountRunes(s string) int {
+	var count int
+	for _, _ = range s {
+		count++
+	}
+	return count
+}
 
 func LengthInRange(s string, min, max int) bool {
-	return (utf8.RuneCountInString(s) >= min) && (utf8.RuneCountInString(s) <= max)
+	return (CountRunes(s) >= min) && (CountRunes(s) <= max)
 }
