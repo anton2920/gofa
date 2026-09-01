@@ -12,7 +12,7 @@ func FindChar(s string, c byte) int {
 
 /* TODO(anton2920): rewrite using SIMD. */
 func FindSubstring(haystack string, needle string) int {
-	for i := 0; i < len(haystack)-len(needle); i++ {
+	for i := 0; i <= len(haystack)-len(needle); i++ {
 		if StartsWith(haystack[i:], needle) {
 			return i
 		}
