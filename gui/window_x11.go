@@ -15,9 +15,9 @@ package gui
 */
 import "C"
 import (
+	"errors"
 	"unsafe"
 
-	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/gui/color"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/pointers"
