@@ -1,13 +1,31 @@
 package tcp
 
 import (
-	"strconv"
-
 	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
 )
+
+func atoi(ctx *context.Context, s string) (int, bool) {
+	var n, i int
+
+	sign := 1
+	if s[0] == '-' {
+		sign = -1
+		i++
+	}
+
+	for ; i < len(s); i++ {
+		if (s[i] < '0') || (s[i] > '9') {
+			ctx.NewError().S("invalid character for a number ").S(string(s[i]))
+			return 0, false
+		}
+		n = n*10 + int(s[i]-'0')
+	}
+
+	return sign * n, true
+}
 
 func ParseEndpoint(ctx *context.Context, endpoint string) (uint32, uint16, bool) {
 	var addr uint32
@@ -18,10 +36,9 @@ func ParseEndpoint(ctx *context.Context, endpoint string) (uint32, uint16, bool)
 		return 0, 0, false
 	}
 
-	/* TODO(anton2920): replace this with my own 'strings.ToInt'. */
-	part, err := strconv.Atoi(endpoint[colon+1:])
-	if err != nil {
-		ctx.NewError().S("failed to parse port value: ").Err(err)
+	part, ok := atoi(ctx, endpoint[colon+1:])
+	if !ok {
+		ctx.NewError().S("failed to parse port value: ").S(ctx.OldError())
 		return 0, 0, false
 	}
 	port := ints.SwapBytesInWord(uint16(part))
@@ -31,9 +48,9 @@ func ParseEndpoint(ctx *context.Context, endpoint string) (uint32, uint16, bool)
 	if dot == -1 {
 		return 0, port, true
 	}
-	part, err = strconv.Atoi(endpoint[:dot])
-	if err != nil {
-		ctx.NewError().S("failed to parse first endpoint octet: ").Err(err)
+	part, ok = atoi(ctx, endpoint[:dot])
+	if !ok {
+		ctx.NewError().S("failed to parse first endpoint octet: ").S(ctx.OldError())
 		return 0, 0, false
 	}
 	addr |= uint32(part)
@@ -44,9 +61,9 @@ func ParseEndpoint(ctx *context.Context, endpoint string) (uint32, uint16, bool)
 		ctx.NewError().S("expected second endpoint octet, found nothing")
 		return 0, 0, false
 	}
-	part, err = strconv.Atoi(endpoint[:dot])
-	if err != nil {
-		ctx.NewError().S("failed to parse second endpoint octet: ").Err(err)
+	part, ok = atoi(ctx, endpoint[:dot])
+	if !ok {
+		ctx.NewError().S("failed to parse second endpoint octet: ").S(ctx.OldError())
 		return 0, 0, false
 	}
 	addr |= uint32(part) << 8
@@ -57,17 +74,17 @@ func ParseEndpoint(ctx *context.Context, endpoint string) (uint32, uint16, bool)
 		ctx.NewError().S("expected third endpoint octet, found nothing")
 		return 0, 0, false
 	}
-	part, err = strconv.Atoi(endpoint[:dot])
-	if err != nil {
-		ctx.NewError().S("failed to parse third endpoint octet: ").Err(err)
+	part, ok = atoi(ctx, endpoint[:dot])
+	if !ok {
+		ctx.NewError().S("failed to parse third endpoint octet: ").S(ctx.OldError())
 		return 0, 0, false
 	}
 	addr |= uint32(part) << 16
 
 	endpoint = endpoint[dot+1:]
-	part, err = strconv.Atoi(endpoint)
-	if err != nil {
-		ctx.NewError().S("failed to parse fourth endpoint octet: ").Err(err)
+	part, ok = atoi(ctx, endpoint)
+	if !ok {
+		ctx.NewError().S("failed to parse fourth endpoint octet: ").S(ctx.OldError())
 		return 0, 0, false
 	}
 	addr |= uint32(part) << 24
