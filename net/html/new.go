@@ -1,16 +1,8 @@
 package html
 
 import (
-	stdbytes "bytes"
-
-	"github.com/anton2920/gofa/bytes"
-	"github.com/anton2920/gofa/debug"
-	"github.com/anton2920/gofa/errors"
 	"github.com/anton2920/gofa/l10n"
-	"github.com/anton2920/gofa/log"
-	"github.com/anton2920/gofa/net/http"
 	"github.com/anton2920/gofa/session"
-	"github.com/anton2920/gofa/strings"
 )
 
 func (h *HTML) Begin2() *HTML {
@@ -36,13 +28,6 @@ func (h *HTML) HeadBegin2() *HTML {
 
 	h.String(`<meta charset="UTF-8">`)
 	h.String(`<meta name="viewport" content="width=device-width, initial-scale=1.0">`)
-
-	if len(h.Theme.HeadLink.Href) > 0 {
-		h.Link2(h.Theme.HeadLink.Href).Rel("stylesheet")
-	}
-	if len(h.Theme.HeadScript.Src) > 0 {
-		h.ScriptBegin2().Src(h.Theme.HeadScript.Src).ScriptEnd2()
-	}
 
 	return h
 }
@@ -80,7 +65,7 @@ func (h *HTML) ScriptEnd2() *HTML {
 }
 
 func (h *HTML) BodyBegin2() *HTML {
-	return h.String(` <body>`).Class_(h.Theme.Body.Class)
+	return h.String(` <body>`)
 }
 
 func (h *HTML) BodyEnd2() *HTML {
@@ -103,28 +88,6 @@ func (h *HTML) ErrorMessage2(message string) *HTML {
 		h.DivEnd2()
 	}
 	return h
-}
-
-func (h *HTML) Error2(err error) *HTML {
-	var message string
-
-	if err != nil {
-		if httpError, ok := err.(http.Error); ok {
-			h.Status = httpError.Status
-			message = httpError.DisplayErrorMessage
-		} else if _, ok := err.(errors.Panic); ok {
-			h.Status = http.StatusInternalServerError
-			message = http.ServerDisplayErrorMessage
-		} else {
-			log.Panicf("Unsupported error type: %T (%v)", err, err)
-		}
-
-		if debug.Debug {
-			message = err.Error()
-		}
-	}
-
-	return h.ErrorMessage2(message)
 }
 
 func (h *HTML) DivBegin2() *HTML {
@@ -196,7 +159,7 @@ func (h *HTML) IEnd2() *HTML {
 }
 
 func (h *HTML) SpanBegin2() *HTML {
-	return h.String(` <span>`).Class_(h.Theme.Span.Class)
+	return h.String(` <span>`)
 }
 
 func (h *HTML) Span2(span string) *HTML {
@@ -208,7 +171,7 @@ func (h *HTML) SpanEnd2() *HTML {
 }
 
 func (h *HTML) H1Begin2() *HTML {
-	return h.String(` <h1>`).Class_(h.Theme.H1.Class)
+	return h.String(` <h1>`)
 }
 
 func (h *HTML) H12(h1 string) *HTML {
@@ -220,7 +183,7 @@ func (h *HTML) H1End2() *HTML {
 }
 
 func (h *HTML) H2Begin2() *HTML {
-	return h.String(` <h2>`).Class_(h.Theme.H2.Class)
+	return h.String(` <h2>`)
 }
 
 func (h *HTML) H22(h2 string) *HTML {
@@ -232,7 +195,7 @@ func (h *HTML) H2End2() *HTML {
 }
 
 func (h *HTML) H3Begin2() *HTML {
-	return h.String(` <h3>`).Class_(h.Theme.H3.Class)
+	return h.String(` <h3>`)
 }
 
 func (h *HTML) H32(h3 string) *HTML {
@@ -244,7 +207,7 @@ func (h *HTML) H3End2() *HTML {
 }
 
 func (h *HTML) H4Begin2() *HTML {
-	return h.String(` <h4>`).Class_(h.Theme.H4.Class)
+	return h.String(` <h4>`)
 }
 
 func (h *HTML) H42(h4 string) *HTML {
@@ -256,7 +219,7 @@ func (h *HTML) H4End2() *HTML {
 }
 
 func (h *HTML) H5Begin2() *HTML {
-	return h.String(` <h5>`).Class_(h.Theme.H5.Class)
+	return h.String(` <h5>`)
 }
 
 func (h *HTML) H52(h5 string) *HTML {
@@ -268,7 +231,7 @@ func (h *HTML) H5End2() *HTML {
 }
 
 func (h *HTML) H6Begin2() *HTML {
-	return h.String(` <h6>`).Class_(h.Theme.H6.Class)
+	return h.String(` <h6>`)
 }
 
 func (h *HTML) H62(h6 string) *HTML {
@@ -280,7 +243,7 @@ func (h *HTML) H6End2() *HTML {
 }
 
 func (h *HTML) ABegin2(href string) *HTML {
-	return h.String(` <a href="`).String(href).String(`">`).Class_(h.Theme.A.Class)
+	return h.String(` <a href="`).String(href).String(`">`)
 }
 
 func (h *HTML) A2(href string, contents string) *HTML {
@@ -300,7 +263,7 @@ func (h *HTML) Img2(alt string, src string) *HTML {
 }
 
 func (h *HTML) Input2(typ string) *HTML {
-	return h.String(` <input type="`).String(typ).String(`">`).Class_(h.Theme.Input.Class)
+	return h.String(` <input type="`).String(typ).String(`">`)
 }
 
 func (h *HTML) TextareaBegin2() *HTML {
@@ -316,7 +279,7 @@ func (h *HTML) ButtonBegin2() *HTML {
 }
 
 func (h *HTML) Button2(value string) *HTML {
-	return h.WithoutTheme().Input2("submit").Value(value).Class_(h.Theme.Button.Class)
+	return h.Input2("submit").Value(value)
 }
 
 func (h *HTML) ButtonEnd2() *HTML {
@@ -324,7 +287,7 @@ func (h *HTML) ButtonEnd2() *HTML {
 }
 
 func (h *HTML) FormBegin2(method string) *HTML {
-	return h.String(` <form method="`).String(method).String(`">`).Class_(h.Theme.Form.Class)
+	return h.String(` <form method="`).String(method).String(`">`)
 }
 
 func (h *HTML) FormEnd2() *HTML {
@@ -332,7 +295,7 @@ func (h *HTML) FormEnd2() *HTML {
 }
 
 func (h *HTML) LabelBegin2() *HTML {
-	return h.String(` <label>`).Class_(h.Theme.Label.Class)
+	return h.String(` <label>`)
 }
 
 func (h *HTML) Label2(label string) *HTML {
@@ -344,7 +307,7 @@ func (h *HTML) LabelEnd2() *HTML {
 }
 
 func (h *HTML) Checkbox2() *HTML {
-	return h.WithoutTheme().Input2("checkbox").Class_(h.Theme.Checkbox.Class)
+	return h.Input2("checkbox")
 }
 
 func (h *HTML) SelectBegin2() *HTML {
@@ -437,64 +400,67 @@ func (h *HTML) Class_(class string) *HTML {
 }
 
 func (h *HTML) Class(class string) *HTML {
-	if len(class) > 0 {
-		closeTagBegin := -1
+	/*
+		if len(class) > 0 {
+			closeTagBegin := -1
 
-		/* TODO(anton2920): persist positions on TagBegin, Class_, TagEnd. */
-		openTagBegin := bytes.FindByteReverse(h.Response.Body, '<')
-		if openTagBegin == -1 {
-			panic("failed to find open angle bracket")
-		}
-		if h.Response.Body[openTagBegin+1] == '/' {
-			closeTagBegin = openTagBegin
-			openTagBegin = bytes.FindByteReverse(h.Response.Body[:closeTagBegin], '<')
+	*/ /* TODO(anton2920): persist positions on TagBegin, Class_, TagEnd. */ /*
+			openTagBegin := bytes.FindByteReverse(h.Response.Body, '<')
 			if openTagBegin == -1 {
 				panic("failed to find open angle bracket")
 			}
-		}
-
-		openTagEnd := bytes.FindByte(h.Response.Body[openTagBegin:], '>')
-		if openTagEnd == -1 {
-			panic("failed to find close angle bracket")
-		}
-		openTagEnd += openTagBegin
-
-		classPos := stdbytes.Index(h.Response.Body[openTagBegin:openTagEnd], _class)
-		if (classPos == -1) && (closeTagBegin == -1) {
-			h.Backspace().String(` class="`).String(class).String(`">`)
-		} else if classPos == -1 {
-			backup := h.Response.Arena.Copy(h.Response.Body[openTagEnd:])
-			h.Response.Body = h.Response.Body[:openTagEnd]
-			h.String(` class="`).String(class).String(`"`).Bytes(backup)
-		} else {
-			classPos += openTagBegin + len(`class="`)
-			quote := bytes.FindByte(h.Response.Body[classPos:], '"')
-			if quote == -1 {
-				panic("failed to find end quote in class definitions")
-			}
-			quote += classPos
-
-			classes := bytes.AsString(h.Response.Body[classPos:quote])
-			var done bool
-			for !done {
-				cls, rest, ok := strings.Cut(classes, " ")
-				if !ok {
-					done = true
+			if h.Response.Body[openTagBegin+1] == '/' {
+				closeTagBegin = openTagBegin
+				openTagBegin = bytes.FindByteReverse(h.Response.Body[:closeTagBegin], '<')
+				if openTagBegin == -1 {
+					panic("failed to find open angle bracket")
 				}
-				if cls == class {
-					return h
-				}
-				classes = rest
 			}
 
-			backup := h.Response.Arena.Copy(h.Response.Body[quote:])
-			h.Response.Body = h.Response.Body[:quote]
-			h.String(" ").String(class).Bytes(backup)
+			openTagEnd := bytes.FindByte(h.Response.Body[openTagBegin:], '>')
+			if openTagEnd == -1 {
+				panic("failed to find close angle bracket")
+			}
+			openTagEnd += openTagBegin
+
+			classPos := stdbytes.Index(h.Response.Body[openTagBegin:openTagEnd], _class)
+			if (classPos == -1) && (closeTagBegin == -1) {
+				h.Backspace().String(` class="`).String(class).String(`">`)
+			} else if classPos == -1 {
+				backup := h.Response.Arena.Copy(h.Response.Body[openTagEnd:])
+				h.Response.Body = h.Response.Body[:openTagEnd]
+				h.String(` class="`).String(class).String(`"`).Bytes(backup)
+			} else {
+				classPos += openTagBegin + len(`class="`)
+				quote := bytes.FindByte(h.Response.Body[classPos:], '"')
+				if quote == -1 {
+					panic("failed to find end quote in class definitions")
+				}
+				quote += classPos
+
+				classes := bytes.AsString(h.Response.Body[classPos:quote])
+				var done bool
+				for !done {
+					cls, rest, ok := strings.Cut(classes, " ")
+					if !ok {
+						done = true
+					}
+					if cls == class {
+						return h
+					}
+					classes = rest
+				}
+
+				backup := h.Response.Arena.Copy(h.Response.Body[quote:])
+				h.Response.Body = h.Response.Body[:quote]
+				h.String(" ").String(class).Bytes(backup)
+			}
 		}
-	}
+	*/
 	return h
 }
 
+/*
 func (h *HTML) Classes(classes ...string) *HTML {
 	var required int
 	for i := 0; i < len(classes); i++ {
@@ -517,6 +483,7 @@ func (h *HTML) Classes(classes ...string) *HTML {
 
 	return h
 }
+*/
 
 func (h *HTML) Accept(accept string) *HTML {
 	return h.Backspace().String(` accept="`).String(accept).String(`">`)

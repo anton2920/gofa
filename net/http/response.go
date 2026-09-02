@@ -1,11 +1,7 @@
 package http
 
 import (
-	"strconv"
-
-	"github.com/anton2920/gofa/alloc"
 	"github.com/anton2920/gofa/bytes"
-	"github.com/anton2920/gofa/database"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/time"
@@ -13,52 +9,12 @@ import (
 )
 
 type Response struct {
-	Arena alloc.Arena
-
 	Status  Status
 	Headers Headers
-
-	Body []byte
+	Body    []byte
 }
 
-func (w *Response) Concat(ss ...string) string {
-	var n int
-
-	for i := 0; i < len(ss); i++ {
-		n += len(ss[i])
-	}
-
-	buf := w.Arena.NewSlice(n)
-	n = 0
-
-	for i := 0; i < len(ss); i++ {
-		n += copy(buf[n:], ss[i])
-	}
-
-	return bytes.AsString(buf)
-}
-
-func (w *Response) Join(ss ...string) string {
-	var n int
-
-	for i := 0; i < len(ss); i++ {
-		n += len(ss[i])
-	}
-
-	buf := w.Arena.NewSlice(n + len(ss) - 1)
-	n = 0
-
-	for i := 0; i < len(ss); i++ {
-		if i > 0 {
-			buf[n] = ' '
-			n++
-		}
-		n += copy(buf[n:], ss[i])
-	}
-
-	return bytes.AsString(buf)
-}
-
+/*
 func (w *Response) DelCookie(name string) {
 	t := trace_.Begin("")
 
@@ -99,7 +55,7 @@ func (w *Response) SetCookie(name, value string, expiry int64) {
 	trace_.End(t)
 }
 
-/* SetCookieUnsafe is useful for debugging purposes. It's also more compatible with older browsers. */
+*/ /* SetCookieUnsafe is useful for debugging purposes. It's also more compatible with older browsers. */ /*
 func (w *Response) SetCookieUnsafe(name, value string, expiry int64) {
 	t := trace_.Begin("")
 
@@ -122,6 +78,7 @@ func (w *Response) SetCookieUnsafe(name, value string, expiry int64) {
 	trace_.End(t)
 }
 
+
 func (w *Response) Redirect(path string, code Status) {
 	t := trace_.Begin("")
 
@@ -134,53 +91,7 @@ func (w *Response) Redirect(path string, code Status) {
 
 	trace_.End(t)
 }
-
-func (w *Response) PathID(path string, id database.ID) string {
-	var n int
-
-	buf := w.Arena.NewSlice(len(path) + ints.Bufsize + 1)
-	n += copy(buf[n:], path)
-	if path[len(path)-1] != '/' {
-		buf[n] = '/'
-		n++
-	}
-	n += slices.PutInt(buf[n:], int(id))
-
-	return bytes.AsString(buf[:n])
-}
-
-func (w *Response) PathIDPath(path1 string, id database.ID, path2 string) string {
-	var n int
-
-	buf := w.Arena.NewSlice(len(path1) + ints.Bufsize + len(path2) + 2)
-	n += copy(buf[n:], path1)
-	if path1[len(path1)-1] != '/' {
-		buf[n] = '/'
-		n++
-	}
-	n += slices.PutInt(buf[n:], int(id))
-	if path2[0] != '/' {
-		buf[n] = '/'
-		n++
-	}
-	n += copy(buf[n:], path2)
-
-	return bytes.AsString(buf[:n])
-}
-
-func (w *Response) PathPath(path1 string, path2 string) string {
-	var n int
-
-	buf := w.Arena.NewSlice(len(path1) + len(path2) + 1)
-	n += copy(buf[n:], path1)
-	if (path1[len(path1)-1] != '/') && (path2[0] != '/') {
-		buf[n] = '/'
-		n++
-	}
-	n += copy(buf[n:], path2)
-
-	return bytes.AsString(buf[:n])
-}
+*/
 
 func (w *Response) Write(b []byte) (int, error) {
 	w.Body = append(w.Body, b...)
@@ -189,16 +100,6 @@ func (w *Response) Write(b []byte) (int, error) {
 
 func (w *Response) WriteHTML(b []byte) {
 	w.WriteHTMLString(bytes.AsString(b))
-}
-
-func (w *Response) WriteFloat64(f float64) {
-	w.Body = strconv.AppendFloat(w.Body, f, 'f', -1, 64)
-}
-
-func (w *Response) WriteInt(i int) {
-	buffer := make([]byte, ints.Bufsize)
-	n := slices.PutInt(buffer, i)
-	w.Body = append(w.Body, buffer[:n]...)
 }
 
 func (w *Response) WriteString(s string) (int, error) {
@@ -237,60 +138,58 @@ func (w *Response) Reset() {
 	w.Status = StatusOK
 	w.Headers.Reset()
 	w.Body = w.Body[:0]
-	w.Arena.Reset()
 }
 
-var dateBuf = []byte("Mon, 24 Nov 2025 17:49:23 GMT")
-
-func FillResponses(c *Conn, ws []Response) {
+func FillResponsesV1(response []byte, now int64, ws []Response) {
 	t := trace_.Begin("")
 
 	for i := 0; i < len(ws); i++ {
 		w := &ws[i]
 
-		c.ResponseBuffer = append(c.ResponseBuffer, StatusLines[c.Version][w.Status]...)
+		/* TODO(anton2920): fill in status line. */
+		//response = append(response, StatusLines[c.Version][w.Status]...)
 
 		if !w.Headers.Has("Date") {
-			//dateBuf := make([]byte, time.RFC822Len)
-			//time.PutTmRFC822(dateBuf, time.ToTm(time.Now()))
-			c.ResponseBuffer = append(c.ResponseBuffer, "Date: "...)
-			c.ResponseBuffer = append(c.ResponseBuffer, dateBuf...)
-			c.ResponseBuffer = append(c.ResponseBuffer, "\r\n"...)
+			dateBuf := make([]byte, time.RFC822Len)
+			time.PutTmRFC822(dateBuf, time.ToTm(now))
+			response = append(response, "Date: "...)
+			response = append(response, dateBuf...)
+			response = append(response, "\r\n"...)
 		}
 
 		if !w.Headers.Has("Server") {
-			c.ResponseBuffer = append(c.ResponseBuffer, "Server: gofa/http\r\n"...)
+			response = append(response, "Server: gofa/http\r\n"...)
 		}
 
 		if !w.Headers.Has("Content-Type") {
-			c.ResponseBuffer = append(c.ResponseBuffer, "Content-Type: text/plain; charset=\"UTF-8\"\r\n"...)
+			response = append(response, "Content-Type: text/plain; charset=\"UTF-8\"\r\n"...)
 		}
 
 		if !w.Headers.Has("Content-Length") {
 			lengthBuf := make([]byte, ints.Bufsize)
 			n := slices.PutInt(lengthBuf, len(w.Body))
 
-			c.ResponseBuffer = append(c.ResponseBuffer, "Content-Length: "...)
-			c.ResponseBuffer = append(c.ResponseBuffer, lengthBuf[:n]...)
-			c.ResponseBuffer = append(c.ResponseBuffer, "\r\n"...)
+			response = append(response, "Content-Length: "...)
+			response = append(response, lengthBuf[:n]...)
+			response = append(response, "\r\n"...)
 		}
 
 		for i := 0; i < len(w.Headers.Keys); i++ {
 			key := w.Headers.Keys[i]
-			c.ResponseBuffer = append(c.ResponseBuffer, key...)
-			c.ResponseBuffer = append(c.ResponseBuffer, ": "...)
+			response = append(response, key...)
+			response = append(response, ": "...)
 			for j := 0; j < len(w.Headers.Values[i]); j++ {
 				value := w.Headers.Values[i][j]
 				if j > 0 {
-					c.ResponseBuffer = append(c.ResponseBuffer, ","...)
+					response = append(response, ","...)
 				}
-				c.ResponseBuffer = append(c.ResponseBuffer, value...)
+				response = append(response, value...)
 			}
-			c.ResponseBuffer = append(c.ResponseBuffer, "\r\n"...)
+			response = append(response, "\r\n"...)
 		}
 
-		c.ResponseBuffer = append(c.ResponseBuffer, "\r\n"...)
-		c.ResponseBuffer = append(c.ResponseBuffer, w.Body...)
+		response = append(response, "\r\n"...)
+		response = append(response, w.Body...)
 
 		//connection := w.Headers.Get("Connection")
 		w.Reset()

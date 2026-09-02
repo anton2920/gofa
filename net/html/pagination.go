@@ -23,6 +23,7 @@ func (pagination *Pagination) GetItemsStartPosition() int {
 	return pagination.ItemsPerPage * (pagination.CurrentPage - bools.ToInt(pagination.CurrentPage > 0))
 }
 
+/*
 func (h *HTML) PageSelectorButton(text string, page int, active bool) {
 	attrs := h.Theme.PageSelectorButtonContainer
 	if active {
@@ -108,3 +109,4 @@ func (h *HTML) Pager2(pagination *Pagination) *HTML {
 	h.PageSelector(pagination)
 	return h
 }
+*/
