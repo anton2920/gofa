@@ -45,13 +45,6 @@ func (f *Formatter) DateTime(t int64) *Formatter {
 	return f
 }
 
-func (f *Formatter) Err(err error) *Formatter {
-	if f != nil {
-		f.Fmt.Err(err)
-	}
-	return f
-}
-
 func (f *Formatter) E(e float64) *Formatter {
 	if f != nil {
 		f.Fmt.E(e)
