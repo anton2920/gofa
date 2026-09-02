@@ -1,9 +1,10 @@
 package oss
 
 import (
-	"fmt"
+	"errors"
 	"unsafe"
 
+	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/os/posix/freebsd"
 )
 
@@ -21,8 +22,8 @@ var (
 
 func (d *Device) OutputBufferAvailableSpace() (int, error) {
 	var ab AudioBufInfo
-	if err := freebsd.Ioctl(int32(d.Handle), SNDCTL_DSP_GETOSPACE, unsafe.Pointer(&ab)); err != nil {
-		return -1, fmt.Errorf("failed to get output audio buf info: %v", err)
+	if !freebsd.Ioctl(&context.Context{}, int32(d.Handle), SNDCTL_DSP_GETOSPACE, unsafe.Pointer(&ab)) {
+		return -1, errors.New("failed to get output audio buf info")
 	}
 	return int(ab.Bytes), nil
 }

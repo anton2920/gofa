@@ -1,7 +1,9 @@
 package oss
 
 import (
-	"github.com/anton2920/gofa/errors"
+	"errors"
+
+	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/os"
 	"github.com/anton2920/gofa/os/posix/freebsd"
 )
@@ -22,9 +24,9 @@ const (
 func Open(path string, mode Mode, params ...DeviceParameters) (Device, error) {
 	var d Device
 
-	fd, err := freebsd.Open(path, int32(mode), 0)
-	if err != nil {
-		return d, errors.Wrap("failed ot open audio device: ", err)
+	fd, ok := freebsd.Open(&context.Context{}, path, int32(mode), 0)
+	if !ok {
+		return d, errors.New("failed ot open audio device")
 	}
 
 	result := MergeDeviceParameters(params...)
@@ -39,8 +41,8 @@ func Open(path string, mode Mode, params ...DeviceParameters) (Device, error) {
 	}
 
 	if err := SetDeviceParameters(fd, result); err != nil {
-		freebsd.Close(fd)
-		return d, errors.Wrap("failed to set device parameters: ", err)
+		freebsd.Close(&context.Context{}, fd)
+		return d, errors.New("failed to set device parameters")
 	}
 
 	d.Handle = os.Handle(fd)
@@ -49,10 +51,10 @@ func Open(path string, mode Mode, params ...DeviceParameters) (Device, error) {
 	return d, nil
 }
 
-func (d *Device) Close() error {
-	return os.CloseHandle(d.Handle)
+func (d *Device) Close() bool {
+	return os.CloseHandle(&context.Context{}, d.Handle)
 }
 
-func (d *Device) Write(buf []byte) (int, error) {
-	return os.WriteToFile(d.Handle, buf)
+func (d *Device) Write(buf []byte) (int, bool) {
+	return os.WriteToFile(&context.Context{}, d.Handle, buf)
 }
