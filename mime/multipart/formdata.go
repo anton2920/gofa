@@ -1,27 +1,27 @@
 package multipart
 
 import (
-	"fmt"
-
 	"github.com/anton2920/gofa/bytes"
-	"github.com/anton2920/gofa/errors"
+	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/net/url"
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/trace/trace_"
 )
 
-func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte) error {
+func ParseFormData(ctx *context.Context, contentType string, vs *url.Values, files *Files, body []byte) bool {
 	t := trace_.Begin("")
 
 	if !strings.StartsWith(contentType, "multipart/form-data") {
+		ctx.NewError().S("expected 'multipart/form-data' Content-Type, got ").Q(contentType)
 		trace_.End(t)
-		return fmt.Errorf("expected 'multipart/form-data' Content-Type, got %q", contentType)
+		return false
 	}
 
 	key, boundary, ok := strings.Cut(contentType, "=")
 	if (!ok) || (len(key)-len("boundary") <= 0) || (key[len(key)-len("boundary"):] != "boundary") {
+		ctx.NewError().S("expected boundary in Content-Type, got '").S(key[len(key)-len("boundary"):]).S(":").S(boundary).S("'")
 		trace_.End(t)
-		return fmt.Errorf("expected boundary in Content-Type, got '%s:%s'", key[len(key)-len("boundary"):], boundary)
+		return false
 	}
 
 	form := bytes.AsString(body)
@@ -33,12 +33,14 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 			break
 		}
 		if lineEnd == -1 {
+			ctx.NewError().S("expected new line after boundary")
 			trace_.End(t)
-			return errors.New("expected new line after boundary")
+			return false
 		}
 		if strings.Trim(form[pos:pos+lineEnd], "-") != strings.Trim(boundary, "-") {
+			ctx.NewError().S("expected boundary got ").Q(form[pos : pos+lineEnd])
 			trace_.End(t)
-			return fmt.Errorf("expected boundary got %q", form[pos:pos+lineEnd])
+			return false
 		}
 		if form[pos+lineEnd-2:pos+lineEnd] == "--" {
 			break
@@ -52,8 +54,9 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 		for {
 			lineEnd := strings.FindChar(form[pos:], '\r')
 			if lineEnd == -1 {
+				ctx.NewError().S("expected new line after header")
 				trace_.End(t)
-				return errors.New("expected new line after header")
+				return false
 			} else if lineEnd == 0 {
 				pos += len("\r\n")
 				break
@@ -63,16 +66,18 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 
 			key, value, ok := strings.Cut(header, ":")
 			if !ok {
+				ctx.NewError().S("invalid header")
 				trace_.End(t)
-				return errors.New("invalid header")
+				return false
 			}
 			value = strings.TrimSpace(value)
 
 			switch key {
 			case "Content-Disposition":
 				if !strings.StartsWith(value, "form-data;") {
+					ctx.NewError().S("expected 'form-data', got ").Q(value)
 					trace_.End(t)
-					return fmt.Errorf("expected 'form-data', got %q", value)
+					return false
 				}
 
 				leftover := value[len("form-data;"):]
@@ -81,14 +86,16 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 
 					pair, leftover, _ = strings.Cut(leftover, ";")
 					if len(pair) == 0 {
+						ctx.NewError().S("expected header value, got nothing")
 						trace_.End(t)
-						return errors.New("expected header value, got nothing")
+						return false
 					}
 
 					key, value, ok := strings.Cut(pair, "=")
 					if !ok {
+						ctx.NewError().S("expected key=value, got ").Q(pair)
 						trace_.End(t)
-						return fmt.Errorf("expected key=value, got %q", pair)
+						return false
 					}
 					value = strings.Trim(value, `"`)
 
@@ -110,13 +117,15 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 		/* Parsing value. */
 		nextBoundary := strings.FindSubstring(form[pos:], boundary)
 		if nextBoundary == -1 {
+			ctx.NewError().S("expected boundary after value")
 			trace_.End(t)
-			return errors.New("expected boundary after value")
+			return false
 		}
 		lineEnd = strings.FindCharReverse(form[pos:pos+nextBoundary], '\r')
 		if lineEnd == -1 {
+			ctx.NewError().S("expected new line after value")
 			trace_.End(t)
-			return errors.New("expected new line after value")
+			return false
 		}
 		value := form[pos : pos+lineEnd]
 		if len(name) > 0 {
@@ -130,5 +139,5 @@ func ParseFormData(contentType string, vs *url.Values, files *Files, body []byte
 	}
 
 	trace_.End(t)
-	return nil
+	return true
 }
