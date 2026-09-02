@@ -469,7 +469,7 @@ forIndex:
 		return fmt.Errorf("failed to write updated leaf: %v", err)
 	}
 
-	/* Update posing structure. */
+	/* Update indexing structure. */
 	for p := len(tx.SearchPath) - 1; p >= 0; p-- {
 		page := tx.SearchPath[p].Page
 		pos := tx.SearchPath[p].Pos
