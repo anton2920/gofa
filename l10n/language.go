@@ -1,8 +1,6 @@
 package l10n
 
 import (
-	stdstrings "strings"
-
 	"github.com/anton2920/gofa/trace/trace_"
 )
 
@@ -60,13 +58,13 @@ func Add(ls Localizations) {
 	for k, v := range ls {
 		localizations[k] = v
 
-		lowers := v
-		for i := 0; i < len(lowers); i++ {
-			lowers[i] = stdstrings.ToLower(lowers[i])
-		}
-		localizations[stdstrings.ToLower(k)] = lowers
-
 		/*
+			lowers := v
+			for i := 0; i < len(lowers); i++ {
+				lowers[i] = stdstrings.ToLower(lowers[i])
+			}
+			localizations[stdstrings.ToLower(k)] = lowers
+
 			capitals := v
 			for i := 0; i < len(capitals); i++ {
 				if len(capitals[i]) > 0 {
