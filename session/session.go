@@ -1,20 +1,6 @@
 package session
 
-import (
-	"crypto/rand"
-	"encoding/base64"
-	"encoding/gob"
-	"fmt"
-	"os"
-	"sync"
-	"unsafe"
-
-	"github.com/anton2920/gofa/bytes"
-	"github.com/anton2920/gofa/database"
-	"github.com/anton2920/gofa/log"
-	"github.com/anton2920/gofa/time"
-	"github.com/anton2920/gofa/trace/trace_"
-)
+import "github.com/anton2920/gofa/database"
 
 type Session struct {
 	/* ID is non-zero if user is authorized. */
@@ -30,6 +16,7 @@ type Session struct {
 	Token string
 }
 
+/*
 var (
 	Sessions     = make(map[string]Session)
 	SessionsLock sync.RWMutex
@@ -37,7 +24,7 @@ var (
 
 func New(userID database.ID) Session {
 	token := GenerateToken()
-	expiry := time.Now() + time.Week
+	expiry := time_.NowInNanoseconds() + time.Week
 
 	session := Session{ID: userID, Expiry: expiry, Token: token}
 	SessionsLock.Lock()
@@ -46,33 +33,38 @@ func New(userID database.ID) Session {
 
 	return session
 }
+*/
 
 func Get(token string) Session {
-	defer trace_.End(trace_.Begin(""))
+	/*
+		defer trace_.End(trace_.Begin(""))
 
-	SessionsLock.RLock()
-	session, ok := Sessions[token]
-	SessionsLock.RUnlock()
-	if !ok {
-		return Session{}
-	}
+		SessionsLock.RLock()
+		session, ok := Sessions[token]
+		SessionsLock.RUnlock()
+		if !ok {
+			return Session{}
+		}
 
-	now := time.Now()
-	if now-session.Expiry > 0 {
+		now := time_.NowInNanoseconds()
+		if now-session.Expiry > 0 {
+			SessionsLock.Lock()
+			delete(Sessions, token)
+			SessionsLock.Unlock()
+			return Session{}
+		}
+		session.Expiry = now + time.Week
+
 		SessionsLock.Lock()
-		delete(Sessions, token)
+		Sessions[session.Token] = session
 		SessionsLock.Unlock()
-		return Session{}
-	}
-	session.Expiry = now + time.Week
 
-	SessionsLock.Lock()
-	Sessions[session.Token] = session
-	SessionsLock.Unlock()
-
-	return session
+		return session
+	*/
+	return Session{}
 }
 
+/*
 func (session Session) RemoveAllForThisUser() {
 	SessionsLock.Lock()
 	for k, v := range Sessions {
@@ -95,24 +87,24 @@ func GenerateToken() string {
 	const n = 64
 	buffer := make([]byte, n)
 
-	/* NOTE(anton2920): see encoding/base64/base64.go:294. */
+*/ /* NOTE(anton2920): see encoding/base64/base64.go:294. */ /*
 	token := make([]byte, (n+2)/3*4)
 
-	/* TODO(anton2920): think about adding delay before next attempt. */
+*/ /* TODO(anton2920): think about adding delay before next attempt. */ /*
 	for {
-		/* NOTE(anton2920): usage of current time as a part of the token must prevent generation of identical tokens for different IDs. */
-		t := time.Now()
-		*(*int64)(unsafe.Pointer(&buffer[0])) = t
+*/ /* NOTE(anton2920): usage of current time as a part of the token must prevent generation of identical tokens for different IDs. */ /*
+	t := time_.NowInNanoseconds()
+	*(*int64)(unsafe.Pointer(&buffer[0])) = t
 
-		n, err := rand.Read(buffer[unsafe.Sizeof(t):])
-		if (err != nil) || (n != len(buffer[unsafe.Sizeof(t):])) {
-			log.Warnf("Failed to read random bytes: %v", err)
-			continue
-		}
+	n, err := rand.Read(buffer[unsafe.Sizeof(t):])
+	if (err != nil) || (n != len(buffer[unsafe.Sizeof(t):])) {
+		println("Failed to read random bytes: ", err.Error())
+		continue
+	}
 
-		base64.StdEncoding.Encode(token, buffer)
+	base64.StdEncoding.Encode(token, buffer)
 
-		/* Making sure that it's unique. */
+*/ /* Making sure that it's unique. */ /*
 		SessionsLock.RLock()
 		_, ok := Sessions[bytes.AsString(token)]
 		SessionsLock.RUnlock()
@@ -153,3 +145,4 @@ func StoreToFile(filename string) error {
 
 	return nil
 }
+*/

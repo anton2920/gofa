@@ -28,12 +28,14 @@ var ColorScheme2String = [...]string{
 }
 
 func FillCustomizationFromRequest(vs url.Values, customization *Customization) {
-	lang, _ := vs.GetInt("Language")
-	customization.Language = l10n.Language(lang)
+	/*
+		lang, _ := vs.GetInt("Language")
+		customization.Language = l10n.Language(lang)
 
-	tz, _ := vs.GetInt("Timezone")
-	customization.Timezone = time.Timezone(tz)
+		tz, _ := vs.GetInt("Timezone")
+		customization.Timezone = time.Timezone(tz)
 
-	clr, _ := vs.GetInt("ColorScheme")
-	customization.ColorScheme = ColorScheme(clr)
+		clr, _ := vs.GetInt("ColorScheme")
+		customization.ColorScheme = ColorScheme(clr)
+	*/
 }
