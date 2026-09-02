@@ -1,8 +1,6 @@
 package fmt
 
 import (
-	"strconv"
-	"unicode/utf8"
 	"unsafe"
 
 	"github.com/anton2920/gofa/bytes"
@@ -71,9 +69,12 @@ func (f *Formatter) D32(d int32) *Formatter {
 }
 
 func (f *Formatter) D64(d int64) *Formatter {
-	buf := make([]byte, 0, ints.Bufsize)
-	buf = strconv.AppendInt(buf, d, 10)
-	return f.S(bytes.AsString(buf))
+	/*
+		buf := make([]byte, 0, ints.Bufsize)
+		buf = strconv.AppendInt(buf, d, 10)
+		return f.S(bytes.AsString(buf))
+	*/
+	return f
 }
 
 func (f *Formatter) Date(t int64) *Formatter {
@@ -88,30 +89,28 @@ func (f *Formatter) DateTime(t int64) *Formatter {
 	return f.S(bytes.AsString(buf))
 }
 
-func (f *Formatter) Err(err error) *Formatter {
-	s := "<nil>"
-	if err != nil {
-		s = err.Error()
-	}
-	return f.S(s)
-}
-
 func (f *Formatter) E(e float64) *Formatter {
 	return f.E64(e)
 }
 
 func (f *Formatter) E32(e float32) *Formatter {
-	buf := make([]byte, 0, 128)
-	buf = strconv.AppendFloat(buf, float64(e), 'e', ints.Or(f.Precision, 6), int(unsafe.Sizeof(e)*8))
-	f.Precision = 0
-	return f.S(bytes.AsString(buf))
+	/*
+		buf := make([]byte, 0, 128)
+		buf = strconv.AppendFloat(buf, float64(e), 'e', ints.Or(f.Precision, 6), int(unsafe.Sizeof(e)*8))
+		f.Precision = 0
+		return f.S(bytes.AsString(buf))
+	*/
+	return f
 }
 
 func (f *Formatter) E64(e float64) *Formatter {
-	buf := make([]byte, 0, 128)
-	buf = strconv.AppendFloat(buf, e, 'e', ints.Or(f.Precision, 6), int(unsafe.Sizeof(e)*8))
-	f.Precision = 0
-	return f.S(bytes.AsString(buf))
+	/*
+		buf := make([]byte, 0, 128)
+		buf = strconv.AppendFloat(buf, e, 'e', ints.Or(f.Precision, 6), int(unsafe.Sizeof(e)*8))
+		f.Precision = 0
+		return f.S(bytes.AsString(buf))
+	*/
+	return f
 }
 
 func (f *Formatter) F(f_ float64) *Formatter {
@@ -119,17 +118,23 @@ func (f *Formatter) F(f_ float64) *Formatter {
 }
 
 func (f *Formatter) F32(f_ float32) *Formatter {
-	buf := make([]byte, 0, 128)
-	buf = strconv.AppendFloat(buf, float64(f_), 'f', ints.Or(f.Precision, 6), int(unsafe.Sizeof(f_)*8))
-	f.Precision = 0
-	return f.S(bytes.AsString(buf))
+	/*
+		buf := make([]byte, 0, 128)
+		buf = strconv.AppendFloat(buf, float64(f_), 'f', ints.Or(f.Precision, 6), int(unsafe.Sizeof(f_)*8))
+		f.Precision = 0
+		return f.S(bytes.AsString(buf))
+	*/
+	return f
 }
 
 func (f *Formatter) F64(f_ float64) *Formatter {
-	buf := make([]byte, 0, 128)
-	buf = strconv.AppendFloat(buf, f_, 'f', ints.Or(f.Precision, 6), int(unsafe.Sizeof(f_)*8))
-	f.Precision = 0
-	return f.S(bytes.AsString(buf))
+	/*
+		buf := make([]byte, 0, 128)
+		buf = strconv.AppendFloat(buf, f_, 'f', ints.Or(f.Precision, 6), int(unsafe.Sizeof(f_)*8))
+		f.Precision = 0
+		return f.S(bytes.AsString(buf))
+	*/
+	return f
 }
 
 func (f *Formatter) G(g float64) *Formatter {
@@ -137,17 +142,23 @@ func (f *Formatter) G(g float64) *Formatter {
 }
 
 func (f *Formatter) G32(g float32) *Formatter {
-	buf := make([]byte, 0, 128)
-	buf = strconv.AppendFloat(buf, float64(g), 'g', ints.Or(f.Precision, -1), int(unsafe.Sizeof(g)*8))
-	f.Precision = 0
-	return f.S(bytes.AsString(buf))
+	/*
+		buf := make([]byte, 0, 128)
+		buf = strconv.AppendFloat(buf, float64(g), 'g', ints.Or(f.Precision, -1), int(unsafe.Sizeof(g)*8))
+		f.Precision = 0
+		return f.S(bytes.AsString(buf))
+	*/
+	return f
 }
 
 func (f *Formatter) G64(g float64) *Formatter {
-	buf := make([]byte, 0, 128)
-	buf = strconv.AppendFloat(buf, g, 'g', ints.Or(f.Precision, -1), int(unsafe.Sizeof(g)*8))
-	f.Precision = 0
-	return f.S(bytes.AsString(buf))
+	/*
+	   buf := make([]byte, 0, 128)
+	   buf = strconv.AppendFloat(buf, g, 'g', ints.Or(f.Precision, -1), int(unsafe.Sizeof(g)*8))
+	   f.Precision = 0
+	   return f.S(bytes.AsString(buf))
+	*/
+	return f
 }
 
 func (f *Formatter) I(i int) *Formatter {
@@ -167,126 +178,16 @@ func (f *Formatter) Ln() *Formatter {
 }
 
 func (f *Formatter) P(p unsafe.Pointer) *Formatter {
-	const prefix = "0x"
+	/*
+		const prefix = "0x"
 
-	buf := make([]byte, len(prefix), ints.Bufsize)
-	copy(buf, prefix)
-	buf = strconv.AppendInt(buf, int64(uintptr(p)), 16)
+		buf := make([]byte, len(prefix), ints.Bufsize)
+		copy(buf, prefix)
+		buf = strconv.AppendInt(buf, int64(uintptr(p)), 16)
 
-	return f.S(bytes.AsString(buf))
-}
-
-func quotedStringLength(s string) int {
-	var runeTmp [utf8.UTFMax]byte
-	quote := '"'
-	size := 2
-
-	for width := 0; len(s) > 0; s = s[width:] {
-		r := rune(s[0])
-		width = 1
-		if r >= utf8.RuneSelf {
-			r, width = utf8.DecodeRuneInString(s)
-		}
-		if (width == 1) && (r == utf8.RuneError) {
-			size += 2 + 2
-			continue
-		}
-		if (r == rune(quote)) || (r == '\\') {
-			size += 2
-			continue
-		}
-		if strconv.IsPrint(r) {
-			size += utf8.EncodeRune(runeTmp[:], r)
-			continue
-		}
-		switch r {
-		case '\a', '\b', '\f', '\n', '\r', '\t', '\v':
-			size++
-		default:
-			switch {
-			case r < ' ':
-				size += 2 + 2
-			case r > utf8.MaxRune:
-				r = 0xFFFD
-				fallthrough
-			case r < 0x10000:
-				size += 2 + 4
-			default:
-				size += 2 + 8
-			}
-		}
-	}
-
-	return size
-}
-
-var lowerhex = []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"}
-
-func (f *Formatter) quoteString(s string) {
-	var runeTmp [utf8.UTFMax]byte
-	quote := '"'
-
-	f.Pos += copy(f.Buffer[f.Pos:], "\"")
-	for width := 0; len(s) > 0; s = s[width:] {
-		r := rune(s[0])
-		width = 1
-		if r >= utf8.RuneSelf {
-			r, width = utf8.DecodeRuneInString(s)
-		}
-		if width == 1 && r == utf8.RuneError {
-			f.Pos += copy(f.Buffer[f.Pos:], `\x`)
-			f.Pos += copy(f.Buffer[f.Pos:], lowerhex[s[0]>>4])
-			f.Pos += copy(f.Buffer[f.Pos:], lowerhex[s[0]&0xF])
-			continue
-		}
-		if r == rune(quote) || r == '\\' {
-			f.Pos += copy(f.Buffer[f.Pos:], "\\")
-			f.Pos += copy(f.Buffer[f.Pos:], s[:1])
-			continue
-		}
-		if strconv.IsPrint(r) {
-			n := utf8.EncodeRune(runeTmp[:], r)
-			f.Pos += copy(f.Buffer[f.Pos:], runeTmp[:n])
-			continue
-		}
-		switch r {
-		case '\a':
-			f.Pos += copy(f.Buffer[f.Pos:], `\a`)
-		case '\b':
-			f.Pos += copy(f.Buffer[f.Pos:], `\b`)
-		case '\f':
-			f.Pos += copy(f.Buffer[f.Pos:], `\f`)
-		case '\n':
-			f.Pos += copy(f.Buffer[f.Pos:], `\n`)
-		case '\r':
-			f.Pos += copy(f.Buffer[f.Pos:], `\r`)
-		case '\t':
-			f.Pos += copy(f.Buffer[f.Pos:], `\t`)
-		case '\v':
-			f.Pos += copy(f.Buffer[f.Pos:], `\v`)
-		default:
-			switch {
-			case r < ' ':
-				f.Pos += copy(f.Buffer[f.Pos:], `\x`)
-				f.Pos += copy(f.Buffer[f.Pos:], lowerhex[s[0]>>4])
-				f.Pos += copy(f.Buffer[f.Pos:], lowerhex[s[0]&0xF])
-			case r > utf8.MaxRune:
-				r = 0xFFFD
-				fallthrough
-			case r < 0x10000:
-				f.Pos += copy(f.Buffer[f.Pos:], `\u`)
-				for s := 12; s >= 0; s -= 4 {
-					f.Pos += copy(f.Buffer[f.Pos:], lowerhex[r>>uint(s)&0xF])
-				}
-			default:
-				f.Pos += copy(f.Buffer[f.Pos:], `\U`)
-				for s := 28; s >= 0; s -= 4 {
-					f.Pos += copy(f.Buffer[f.Pos:], lowerhex[r>>uint(s)&0xF])
-				}
-			}
-		}
-	}
-	f.Pos += copy(f.Buffer[f.Pos:], "\"")
+		return f.S(bytes.AsString(buf))
+	*/
+	return f
 }
 
 func (f *Formatter) Q(q string) *Formatter {
