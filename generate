@@ -17,7 +17,7 @@ run()
 GPPTARGET=`grep -n gpp *.go? 2>/dev/null | cut -d ':' -f 1 | uniq | grep -v gpp`
 test "$GPPTARGET" != "" && run gpp -r
 
-DIRS="bits log mem"
+DIRS="bits fmt log mem"
 BASE=`pwd`
 for dir in `echo $DIRS`; do
 	run cd $dir && run go run cmd/generate.go && cd $BASE
