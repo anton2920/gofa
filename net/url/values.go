@@ -1,11 +1,8 @@
 package url
 
 import (
-	"strconv"
-
-	"github.com/anton2920/gofa/alloc"
 	"github.com/anton2920/gofa/bytes"
-	"github.com/anton2920/gofa/errors"
+	"github.com/anton2920/gofa/context"
 	"github.com/anton2920/gofa/ints"
 	"github.com/anton2920/gofa/slices"
 	"github.com/anton2920/gofa/strings"
@@ -17,40 +14,34 @@ type Values struct {
 	Values [][]string
 }
 
-func ParseQuery(arena *alloc.Arena, vs *Values, query string) error {
+func ParseQuery(ctx *context.Context, vs *Values, query string) bool {
 	t := trace_.Begin("")
-
-	var err error
 
 	for query != "" {
 		var key string
 		key, query, _ = strings.Cut(query, "&")
 		if strings.FindChar(key, ';') != -1 {
-			err = errors.New("invalid semicolon separator in query")
-			continue
+			ctx.NewError().S("invalid semicolon separator in query")
+			return false
 		}
 		if key == "" {
 			continue
 		}
 		key, value, _ := strings.Cut(key, "=")
 
-		keyBuffer := arena.NewSlice(len(key))
+		keyBuffer := ctx.Arena.PushByteArray(len(key))
 		n, ok := QueryDecode(keyBuffer, key)
 		if !ok {
-			if err == nil {
-				err = errors.New("invalid key")
-			}
-			continue
+			ctx.NewError().S("invalid key")
+			return false
 		}
 		key = bytes.AsString(keyBuffer[:n])
 
-		valueBuffer := arena.NewSlice(len(value))
+		valueBuffer := ctx.Arena.PushByteArray(len(value))
 		n, ok = QueryDecode(valueBuffer, value)
 		if !ok {
-			if err == nil {
-				err = errors.New("invalid value")
-			}
-			continue
+			ctx.NewError().S("invalid value")
+			return false
 		}
 		value = bytes.AsString(valueBuffer[:n])
 
@@ -58,7 +49,7 @@ func ParseQuery(arena *alloc.Arena, vs *Values, query string) error {
 	}
 
 	trace_.End(t)
-	return err
+	return true
 }
 
 func RemoveStringAtIndex(vs []string, i int) []string {
@@ -137,10 +128,11 @@ func (vs *Values) Get(key string) string {
 }
 
 func (vs Values) GetInt(key string) (int, error) {
-	n, err := vs.GetInt64(key)
+	n, err := 0, error(nil) //vs.GetInt64(key)
 	return int(n), err
 }
 
+/*
 func (vs Values) GetInt32(key string) (int32, error) {
 	n, err := vs.GetInt64(key)
 	return int32(n), err
@@ -154,6 +146,7 @@ func (vs Values) GetInt64(key string) (int64, error) {
 	trace_.End(t)
 	return n, err
 }
+*/
 
 func (vs *Values) GetMany(key string) []string {
 	t := trace_.Begin("")

@@ -1,8 +1,6 @@
 package url
 
 import (
-	"fmt"
-
 	"github.com/anton2920/gofa/strings"
 	"github.com/anton2920/gofa/trace/trace_"
 )
@@ -63,7 +61,7 @@ func (p *Path) Match(format string, args ...interface{}) bool {
 		}
 
 		/* TODO(anton2920): moved to heap: fmt.str. */
-		n, err := fmt.Sscanf(path[:nextP], format[:nextF], args[narg:]...)
+		n, err := 0, error(nil) //fmt.Sscanf(path[:nextP], format[:nextF], args[narg:]...)
 		if (n == 0) && (err != nil) {
 			trace_.End(t)
 			return false
