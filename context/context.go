@@ -68,6 +68,10 @@ func (ctx *Context) ResetError() {
 	ctx.ErrCode[ctx.ErrCurr] = 0
 }
 
+func (ctx *Context) OK() bool {
+	return len(ctx.Error()) == 0
+}
+
 func (ctx *Context) Noescape() *Context {
 	return (*Context)(pointers.UnsafeNoescape(unsafe.Pointer(ctx)))
 }
