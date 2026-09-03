@@ -8,6 +8,8 @@ import (
 	"github.com/anton2920/gofa/os"
 )
 
+var protoNotSupportedMsg interface{} = "protocol is not supported"
+
 func Listen(ctx *context.Context, proto string, endpoint string) (os.Handle, bool) {
 	var addrBuf [unsafe.Sizeof(os.NetworkAddress{})]byte
 	var pf os.ProtocolFamily
@@ -32,7 +34,7 @@ func Listen(ctx *context.Context, proto string, endpoint string) (os.Handle, boo
 
 		addrLen = uint32(unsafe.Sizeof(*iaddr))
 	default:
-		panic("protocol is not supported")
+		panic(protoNotSupportedMsg)
 	}
 
 	s, ok := os.CreateNetworkSocket(ctx, pf, typ, prot)
