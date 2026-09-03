@@ -15,11 +15,5 @@ func SetSocketBooleanOption(ctx *context.Context, s Handle, name SocketOptionNam
 	if enabled {
 		enable = 1
 	}
-
-	level, ok := SocketOptionName2SocketOptionLevel[name]
-	if !ok {
-		panic("no mapping between socket option name and socket option level")
-	}
-
-	return SetSocketOption(ctx, s, level, name, unsafe.Pointer(&enable), uint32(unsafe.Sizeof(enable)))
+	return SetSocketOption(ctx, s, SocketOptionName2SocketOptionLevel(name), name, unsafe.Pointer(&enable), uint32(unsafe.Sizeof(enable)))
 }

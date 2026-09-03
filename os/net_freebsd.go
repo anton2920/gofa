@@ -61,12 +61,18 @@ const (
 	SocketOptionTCPNoDelay = SocketOptionName(freebsd.TCP_NODELAY)
 )
 
-var SocketOptionName2SocketOptionLevel = map[SocketOptionName]SocketOptionLevel{
-	SocketOptionReuseLocalAddress:                         SocketOptionLevelSocket,
-	SocketOptionReuseLocalAddressAndPort:                  SocketOptionLevelSocket,
-	SocketOptionReuseLocalAddressAndPortWithLoadBalancing: SocketOptionLevelSocket,
-
-	SocketOptionTCPNoDelay: SocketOptionLevelTCP,
+func SocketOptionName2SocketOptionLevel(name SocketOptionName) SocketOptionLevel {
+	switch name {
+	case SocketOptionReuseLocalAddress:
+		return SocketOptionLevelSocket
+	case SocketOptionReuseLocalAddressAndPort:
+		return SocketOptionLevelSocket
+	case SocketOptionReuseLocalAddressAndPortWithLoadBalancing:
+		return SocketOptionLevelSocket
+	case SocketOptionTCPNoDelay:
+		return SocketOptionLevelTCP
+	}
+	return 0
 }
 
 func (ia *InternetAddress) AsNetworkAddressPointer() *NetworkAddress {
