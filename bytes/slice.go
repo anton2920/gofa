@@ -7,13 +7,13 @@ import (
 	"github.com/anton2920/gofa/pointers"
 )
 
-var zeroSlice = make([]byte, 4096)
+var zeroArray [4096]byte
 
 //go:nosplit
 func SliceClear(buf []byte) {
 	var n int
 	for n < len(buf) {
-		n += copy(buf[n:], zeroSlice)
+		n += copy(buf[n:], zeroArray[:])
 	}
 }
 
