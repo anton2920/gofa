@@ -25,6 +25,8 @@ TEXT _rt0_amd64_freebsd(SB), 6, $-0
 	MOVQ	BX, (AX)
 	CALL	settls<>(SB)
 
+	/* TODO(anton2920): either remove the need of 'init' or make it work. */
+	//CALL	main·init(SB)
 	CALL	main·main(SB)
 
 	XORL	AX, AX
