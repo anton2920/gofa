@@ -29,7 +29,7 @@ func (f *Formatter) Log(level Level, t int64) *Formatter {
 	f.CurrentLevel = level
 
 	if f.CurrentLevel >= f.MinimumLevel {
-		f.DateTime(t).S(" ").W(5).S(Level2String[f.CurrentLevel]).S(" ")
+		f.DateTime(t).S(" ").W(5).S(Level2String(f.CurrentLevel)).S(" ")
 		return f
 	}
 

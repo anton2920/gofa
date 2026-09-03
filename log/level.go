@@ -12,11 +12,20 @@ const (
 	LevelLast
 )
 
-var Level2String = map[Level]string{
-	LevelDebug: "DEBUG",
-	LevelInfo:  "INFO",
-	LevelWarn:  "WARN",
-	LevelError: "ERROR",
-	LevelFatal: "FATAL",
-	LevelPanic: "PANIC",
+func Level2String(lvl Level) string {
+	switch lvl {
+	case LevelDebug:
+		return "DEBUG"
+	case LevelInfo:
+		return "INFO"
+	case LevelWarn:
+		return "WARN"
+	case LevelError:
+		return "ERROR"
+	case LevelFatal:
+		return "FATAL"
+	case LevelPanic:
+		return "PANIC"
+	}
+	return ""
 }
