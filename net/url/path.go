@@ -63,12 +63,14 @@ func (p *Path) Match(format string, args ...interface{}) bool {
 		/* TODO(anton2920): moved to heap: fmt.str. */
 		n, err := 0, error(nil) //fmt.Sscanf(path[:nextP], format[:nextF], args[narg:]...)
 		if (n == 0) && (err != nil) {
-			trace_.End(t)
-			return false
+			break
 		}
 		narg += n
 
 		path = path[nextP:]
 		format = format[nextF:]
 	}
+
+	trace_.End(t)
+	return false
 }

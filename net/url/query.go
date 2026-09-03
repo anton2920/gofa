@@ -12,10 +12,10 @@ func CharToByte(c byte) (byte, bool) {
 	} else if c >= 'A' && c <= 'F' {
 		trace_.End(t)
 		return 10 + c - 'A', true
-	} else {
-		trace_.End(t)
-		return '\x00', false
 	}
+
+	trace_.End(t)
+	return '\x00', false
 }
 
 func QueryDecode(decoded []byte, encoded string) (int, bool) {
