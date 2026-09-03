@@ -2,9 +2,9 @@ package gr
 
 import (
 	"image"
-	"reflect"
 	"unsafe"
 
+	"github.com/anton2920/gofa/go/types"
 	"github.com/anton2920/gofa/gui/color"
 )
 
@@ -44,7 +44,7 @@ func NewPixmap(width, height int, alpha AlphaType) Pixmap {
 func NewPixmapFromImage(img *image.RGBA, alpha AlphaType) Pixmap {
 	var pixmap Pixmap
 
-	pixmap.Pixels = *(*[]color.Color)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(&img.Pix[0])), Len: len(img.Pix) >> 2, Cap: len(img.Pix) >> 2}))
+	pixmap.Pixels = *(*[]color.Color)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(unsafe.Pointer(&img.Pix[0])), Len: len(img.Pix) >> 2, Cap: len(img.Pix) >> 2}))
 	pixmap.Width = img.Bounds().Max.X - img.Bounds().Min.X
 	pixmap.Height = img.Bounds().Max.Y - img.Bounds().Min.Y
 	pixmap.Stride = pixmap.Width
