@@ -39,6 +39,8 @@ func (a *Arena) AllocationComesFromHere(ptr unsafe.Pointer, n uintptr) bool {
 	return (uintptr(ptr) >= uintptr(a.Base)) && ((uintptr(ptr) + n) <= (uintptr(a.Base) + a.CurrOfft))
 }
 
+var buyMoreRamMsg interface{} = "BUY MORE RAM!"
+
 func (a *Arena) PushSizeWithAlignment(n uintptr, align uintptr) unsafe.Pointer {
 	curr := pointers.Add(a.Base, a.CurrOfft)
 	a.CurrOfft += uintptr(pointers.Delta(pointers.AlignUpPow2(curr, align), curr))
@@ -54,12 +56,14 @@ func (a *Arena) PushSizeWithAlignment(n uintptr, align uintptr) unsafe.Pointer {
 	}
 
 	/* TODO(anton2920): handle shortage of memory better. */
-	panic("BUY MORE RAM!")
+	panic(buyMoreRamMsg)
 }
 
 func (a *Arena) PushSize(n uintptr) unsafe.Pointer {
 	return a.PushSizeWithAlignment(n, arenaDefaultAlignment)
 }
+
+var oldMemoryIsNotFromHereMsg interface{} = "old memory does not come from this arena"
 
 func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on uintptr, nn uintptr, align uintptr) unsafe.Pointer {
 	if on == 0 {
@@ -79,7 +83,7 @@ func (a *Arena) RepushSizeWithAlignment(optr unsafe.Pointer, on uintptr, nn uint
 		}
 	}
 
-	panic("old memory does not come from this arena")
+	panic(oldMemoryIsNotFromHereMsg)
 }
 
 func (a *Arena) RepushSize(optr unsafe.Pointer, on uintptr, nn uintptr) unsafe.Pointer {
