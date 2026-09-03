@@ -20,13 +20,6 @@ type Queue struct {
 	tail   int
 }
 
-var units2flags = map[int]bits.Flags32{
-	time.Second:      os.EventNoteSeconds,
-	time.Millisecond: os.EventNoteMilliseconds,
-	time.Microsecond: os.EventNoteMicroseconds,
-	time.Nanosecond:  os.EventNoteNanoseconds,
-}
-
 func (q *Queue) Init(ctx *context.Context) bool {
 	kq, ok := os.CreateNewEventQueue(ctx)
 	if !ok {
@@ -94,15 +87,29 @@ func (q *Queue) AddAndIgnoreTerminationSignals(ctx *context.Context) bool {
 	return q.AddAndIgnoreSignals(ctx, os.SignalHangup, os.SignalInterrupt, os.SignalTerminate)
 }
 
+func units2flags(units int) bits.Flags32 {
+	switch units {
+	case time.Second:
+		return os.EventNoteSeconds
+	case time.Millisecond:
+		return os.EventNoteMilliseconds
+	case time.Microsecond:
+		return os.EventNoteMicroseconds
+	case time.Nanosecond:
+		return os.EventNoteNanoseconds
+	}
+	return 0
+}
+
 func (q *Queue) AddPeriodicTimer(ctx *context.Context, id uintptr, quantity int, units int, userData unsafe.Pointer) bool {
 	events := make([]os.Event, 1)
-	events[0] = os.Event{Identifier: id, EventData: int64(quantity), EventType: os.EventTypeTimer, EventFlags: units2flags[units], UserData: userData}
+	events[0] = os.Event{Identifier: id, EventData: int64(quantity), EventType: os.EventTypeTimer, EventFlags: units2flags(units), UserData: userData}
 	return os.RegisterEventsWithQueue(ctx, q.KernelQueue, events)
 }
 
 func (q *Queue) AddTimerAt(ctx *context.Context, id uintptr, at int, units int, userData unsafe.Pointer) bool {
 	events := make([]os.Event, 1)
-	events[0] = os.Event{Identifier: id, EventData: int64(at), EventType: os.EventTypeTimer, ActionFlags: os.EventQueueActionResetStateAfterRetrieval, EventFlags: units2flags[units] | os.EventNoteAbsoluteTime, UserData: userData}
+	events[0] = os.Event{Identifier: id, EventData: int64(at), EventType: os.EventTypeTimer, ActionFlags: os.EventQueueActionResetStateAfterRetrieval, EventFlags: units2flags(units) | os.EventNoteAbsoluteTime, UserData: userData}
 	return os.RegisterEventsWithQueue(ctx, q.KernelQueue, events)
 }
 
