@@ -18,7 +18,7 @@ func atoi(ctx *context.Context, s string) (int, bool) {
 
 	for ; i < len(s); i++ {
 		if (s[i] < '0') || (s[i] > '9') {
-			ctx.NewError().S("invalid character for a number ").S(string(s[i]))
+			ctx.NewError().S("expected digit, got ").Q(s[i : i+1])
 			return 0, false
 		}
 		n = n*10 + int(s[i]-'0')
