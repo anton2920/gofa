@@ -10,8 +10,10 @@ import (
 	"github.com/anton2920/gofa/pointers"
 )
 
+var stub [4096]byte
+
 func BootstrapWithFourSizes(ctx *context.Context, arenaSize int, fmtSize int, logSize int, errSize int) bool {
-	ctx.InitWithEvenlySplitByteSlice(make([]byte, 512))
+	ctx.InitWithEvenlySplitByteSlice(stub[:])
 
 	arenaSize = ints.AlignUpPow2(arenaSize, int(unsafe.Alignof(int(0))))
 	fmtSize = ints.AlignUpPow2(fmtSize, int(unsafe.Alignof(int(0))))
@@ -35,7 +37,7 @@ func BootstrapWithFourSizes(ctx *context.Context, arenaSize int, fmtSize int, lo
 }
 
 func BootstrapWithEvenlySplitSize(ctx *context.Context, size int) bool {
-	ctx.InitWithEvenlySplitByteSlice(make([]byte, 512))
+	ctx.InitWithEvenlySplitByteSlice(stub[:])
 
 	size = ints.AlignUpPow2(size, os.PageSize)
 	ptr, ok := os.AllocateVirtualMemory(ctx, size)
