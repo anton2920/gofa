@@ -134,11 +134,11 @@ func encodeRune(p []byte, r rune) int {
 		p[1] = tx | byte(r>>6)&maskx
 		p[2] = tx | byte(r)&maskx
 		return 3
-	default:
-		p[0] = t4 | byte(r>>18)
-		p[1] = tx | byte(r>>12)&maskx
-		p[2] = tx | byte(r>>6)&maskx
-		p[3] = tx | byte(r)&maskx
-		return 4
 	}
+	p[0] = t4 | byte(r>>18)
+	p[1] = tx | byte(r>>12)&maskx
+	p[2] = tx | byte(r>>6)&maskx
+	p[3] = tx | byte(r)&maskx
+	return 4
+
 }

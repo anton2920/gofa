@@ -6,7 +6,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"go/format"
 	"io/ioutil"
 	"log"
 	"unicode"
@@ -158,12 +157,7 @@ func main() {
 	}
 	fmt.Fprintf(&buf, "}\n")
 
-	data, err := format.Source(buf.Bytes())
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = ioutil.WriteFile("isprint_table.go", data, 0644)
-	if err != nil {
+	if err := ioutil.WriteFile("isprint_table.go", buf.Bytes(), 0644); err != nil {
 		log.Fatal(err)
 	}
 }
