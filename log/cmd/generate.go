@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 	"unicode"
+
+	"github.com/anton2920/gofa/strings"
 )
 
 func String(w *bufio.Writer, s string) {
@@ -43,21 +44,24 @@ func main() {
 	String(b, "package log\n")
 	String(b, `import "unsafe"`)
 
-	scanner := bufio.NewScanner(src)
-	for scanner.Scan() {
-		line := scanner.Text()
+	rd := bufio.NewReader(src)
+	for {
+		line, err := rd.ReadString('\n')
+		if err != nil {
+			break
+		}
 
 		const prefix = "func (f *Formatter) "
-		if strings.HasPrefix(line, prefix) {
+		if strings.StartsWith(line, prefix) {
 			line = line[len(prefix):]
-			lparen := strings.IndexByte(line, '(')
+			lparen := strings.FindChar(line, '(')
 			if lparen > 0 {
 				fn := line[:lparen]
 				if (unicode.IsUpper(rune(fn[0]))) && (!StringSliceContains(blacklist[:], fn)) {
-					rparen := strings.IndexByte(line, ')')
+					rparen := strings.FindChar(line, ')')
 					if rparen > 0 {
 						params := line[lparen+1 : rparen]
-						sp := strings.IndexByte(params, ' ')
+						sp := strings.FindChar(params, ' ')
 						if sp > 0 {
 							name := params[:sp]
 							fmt.Fprintf(b, `
