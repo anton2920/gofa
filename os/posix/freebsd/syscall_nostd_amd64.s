@@ -1,5 +1,5 @@
-//go:build freebsd && amd64 && !gofanostd
-//+build freebsd,amd64,!gofanostd
+//go:build freebsd && amd64 && gofanostd
+//+build freebsd,amd64,gofanostd
 
 /* From "textflag.h". */
 #define NOSPLIT	4
@@ -48,47 +48,9 @@ RawSyscall6OK:
 
 /* func Syscall(trap, a1, a2, a3 uintptr) (r1, r2, err uintptr) */
 TEXT ·Syscall(SB), NOSPLIT, $0-56
-	CALL	runtime·entersyscall(SB)
-	MOVQ	trap+0(FP), AX
-	MOVQ	a1+8(FP), DI
-	MOVQ	a2+16(FP), SI
-	MOVQ	a3+24(FP), DX
-	SYSCALL
-	JCC	SyscallOK
-	MOVQ	$-1, r1+32(FP)
-	MOVQ	$-1, r2+40(FP)
-	MOVQ	AX, errno+48(FP)
-	CALL	runtime·exitsyscall(SB)
-	RET
-SyscallOK:
-	MOVQ	AX, r1+32(FP)
-	MOVQ	DX, r2+40(FP)
-	MOVQ	$0, errno+48(FP)
-	CALL	runtime·exitsyscall(SB)
-	RET
+	JMP	·RawSyscall(SB)
 
 
 /* func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2, err uintptr) */
 TEXT ·Syscall6(SB), NOSPLIT, $0-80
-	CALL	runtime·entersyscall(SB)
-	MOVQ	trap+0(FP), AX
-	MOVQ	a1+8(FP), DI
-	MOVQ	a2+16(FP), SI
-	MOVQ	a3+24(FP), DX
-	MOVQ	a4+32(FP), R10
-	MOVQ	a5+40(FP), R8
-	MOVQ	a6+48(FP), R9
-	SYSCALL
-	JCC	Syscall6OK
-	MOVQ	$-1, r1+56(FP)
-	MOVQ	$-1, r2+64(FP)
-	MOVQ	AX, errno+72(FP)
-	CALL	runtime·exitsyscall(SB)
-	RET
-Syscall6OK:
-	MOVQ	AX, r1+56(FP)
-	MOVQ	DX, r2+64(FP)
-	MOVQ	$0, errno+72(FP)
-	CALL	runtime·exitsyscall(SB)
-	RET
-
+	JMP	·RawSyscall6(SB)
