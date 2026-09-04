@@ -14,8 +14,8 @@ const (
 	/* From <sys/syscall.h>. */
 	SYS_accept           = 30
 	SYS_access           = 33
-	SYS_aio_cancel       = 316
 	SYS_aio_bool         = 317
+	SYS_aio_cancel       = 316
 	SYS_aio_read         = 255
 	SYS_aio_return       = 314
 	SYS_aio_suspend      = 315
@@ -26,6 +26,7 @@ const (
 	SYS_connect          = 98
 	SYS_exit             = 1
 	SYS_fcntl            = 92
+	SYS_fork             = 2
 	SYS_fstat            = 551
 	SYS_fsync            = 95
 	SYS_ftruncate        = 480
@@ -36,13 +37,14 @@ const (
 	SYS_kevent           = 560
 	SYS_kill             = 37
 	SYS_kqueue           = 362
+	SYS_kqueuex          = 583
 	SYS_listen           = 106
 	SYS_lseek            = 478
 	SYS_madvise          = 75
 	SYS_mkdir            = 136
 	SYS_mmap             = 477
-	SYS_munmap           = 73
 	SYS_mprotect         = 74
+	SYS_munmap           = 73
 	SYS_nanosleep        = 240
 	SYS_nmount           = 378
 	SYS_open             = 5
@@ -52,6 +54,7 @@ const (
 	SYS_rctl_add_rule    = 528
 	SYS_rctl_remove_rule = 529
 	SYS_read             = 3
+	SYS_rfork            = 251
 	SYS_rmdir            = 137
 	SYS_setsockopt       = 105
 	SYS_shm_open2        = 571
@@ -144,6 +147,11 @@ func Fcntl(ctx *context.Context, fd, cmd int32, arg int32) (int32, bool) {
 	return int32(r1), ReportPotentialError(ctx, errno)
 }
 
+func Fork(ctx *context.Context) (int32, bool) {
+	r1, _, errno := RawSyscall(SYS_fork, 0, 0, 0)
+	return int32(r1), ReportPotentialError(ctx, errno)
+}
+
 //go:nosplit
 func Fstat(ctx *context.Context, fd int32, sb *Stat_t) bool {
 	_, _, errno := RawSyscall(SYS_fstat, uintptr(fd), uintptr(unsafe.Pointer(sb)), 0)
@@ -209,6 +217,12 @@ func Kill(ctx *context.Context, pid int32, sig Signal) bool {
 //go:nosplit
 func Kqueue(ctx *context.Context) (int32, bool) {
 	r1, _, errno := RawSyscall(SYS_kqueue, 0, 0, 0)
+	return int32(r1), ReportPotentialError(ctx, errno)
+}
+
+//go:nosplit
+func Kqueuex(ctx *context.Context, flags uint32) (int32, bool) {
+	r1, _, errno := RawSyscall(SYS_kqueuex, uintptr(flags), 0, 0)
 	return int32(r1), ReportPotentialError(ctx, errno)
 }
 
@@ -312,6 +326,11 @@ func RctlRemoveRule(ctx *context.Context, filter []byte) bool {
 func Read(ctx *context.Context, fd int32, buf []byte) (int, bool) {
 	r1, _, errno := Syscall(SYS_read, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
 	return int(r1), ReportPotentialError(ctx, errno)
+}
+
+func Rfork(ctx *context.Context, flags int32) (int32, bool) {
+	r1, _, errno := RawSyscall(SYS_rfork, uintptr(flags), 0, 0)
+	return int32(r1), ReportPotentialError(ctx, errno)
 }
 
 func Rmdir(ctx *context.Context, path string) bool {
