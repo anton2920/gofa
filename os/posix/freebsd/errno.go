@@ -250,17 +250,17 @@ var strerror = [...]string{
 	EINTEGRITY:      "integrity check failed",
 }
 
+func (errno Errno) String() string {
+	if (errno >= 0) && (errno <= ELAST) {
+		return strerror[errno]
+	}
+	return "<UNKNOWN ERROR>"
+}
+
 func ReportPotentialError(ctx *context.Context, errno uintptr) bool {
 	if errno == 0 {
 		return true
 	}
 	ctx.NewErrorWithCode(int(errno)).S(Errno(errno).String())
 	return false
-}
-
-func (errno Errno) String() string {
-	if (errno >= 0) && (errno <= ELAST) {
-		return strerror[errno]
-	}
-	return "<UNKNOWN ERROR>"
 }
