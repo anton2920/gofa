@@ -84,3 +84,17 @@ func WriteToFileAt(ctx *context.Context, f Handle, buf []byte, offt int64) (int,
 func ResizeFile(ctx *context.Context, f Handle, size int) bool {
 	return freebsd.Ftruncate(ctx, int32(f), int64(size))
 }
+
+func ToggleHandleFlags(ctx *context.Context, f Handle, toggle bits.Flags) bool {
+	_flags, ok := freebsd.Fcntl(ctx, int32(f), freebsd.F_GETFL, 0)
+	if !ok {
+		return ctx.WrapError("failed to get handle status flags")
+	}
+	flags := bits.Flags(_flags)
+
+	flags.Toggle(toggle)
+	if _, ok := freebsd.Fcntl(ctx, int32(f), freebsd.F_SETFL, int32(flags)); !ok {
+		return ctx.WrapError("failed to set handle status flags")
+	}
+	return true
+}
