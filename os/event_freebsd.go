@@ -33,7 +33,7 @@ type Event struct {
 const (
 	EventQueueActionAdd                      = bits.Flags16(freebsd.EV_ADD)
 	EventQueueActionDelete                   = bits.Flags16(freebsd.EV_DELETE)
-	EventQueueActionShotOnce                 = bits.Flags16(freebsd.EV_ONESHOT)
+	EventQueueActionShootOnce                = bits.Flags16(freebsd.EV_ONESHOT)
 	EventQueueActionResetStateAfterRetrieval = bits.Flags16(freebsd.EV_CLEAR)
 )
 
@@ -62,9 +62,6 @@ func CreateNewEventQueue(ctx *context.Context) (Handle, bool) {
 }
 
 func RegisterAndReturnPendingEventsFromQueue(ctx *context.Context, q Handle, chlist []Event, evlist []Event, t *SecondsWithNanoseconds) (int, bool) {
-	for i := 0; i < len(chlist); i++ {
-		chlist[i].ActionFlags |= EventQueueActionAdd
-	}
 	n, ok := freebsd.Kevent(ctx, int32(q), *(*[]freebsd.Kevent_t)(unsafe.Pointer(&chlist)), *(*[]freebsd.Kevent_t)(unsafe.Pointer(&evlist)), (*freebsd.Timespec)(unsafe.Pointer(t)))
 	return int(n), ok
 }
