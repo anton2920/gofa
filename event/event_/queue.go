@@ -30,18 +30,18 @@ func (q *Queue) Init(ctx *context.Context) bool {
 	return true
 }
 
-func (q *Queue) AddFile(ctx *context.Context, f os.Handle, request bits.Flags, trigger int, userData unsafe.Pointer) bool {
+func (q *Queue) AddFile(ctx *context.Context, fd os.Handle, request bits.Flags, trigger bits.Flags, userData unsafe.Pointer) bool {
 	var flags bits.Flags16
-	if trigger == event.TriggerEdge {
+	if trigger.Have(event.TriggerEdge) {
 		flags |= os.EventQueueActionResetStateAfterRetrieval
 	}
 
 	events := make([]os.Event, 0, 2)
 	if request.Has(event.RequestRead) {
-		events = append(events, os.Event{Identifier: uintptr(f), EventType: os.EventTypeRead, ActionFlags: flags, UserData: userData})
+		events = append(events, os.Event{Identifier: uintptr(fd), EventType: os.EventTypeRead, ActionFlags: os.EventQueueActionAdd | flags, UserData: userData})
 	}
 	if request.Has(event.RequestWrite) {
-		events = append(events, os.Event{Identifier: uintptr(f), EventType: os.EventTypeWrite, ActionFlags: flags, UserData: userData})
+		events = append(events, os.Event{Identifier: uintptr(fd), EventType: os.EventTypeWrite, ActionFlags: os.EventQueueActionAdd | flags, UserData: userData})
 	}
 
 	return os.RegisterEventsWithQueue(ctx, q.KernelQueue, events)
@@ -55,7 +55,7 @@ func (q *Queue) AddSignals(ctx *context.Context, sigs ...os.Signal) bool {
 
 		var i int
 		for i < len(sigs) {
-			events = append(events, os.Event{Identifier: uintptr(sigs[i]), EventType: os.EventTypeSignal})
+			events = append(events, os.Event{Identifier: uintptr(sigs[i]), EventType: os.EventTypeSignal, ActionFlags: os.EventQueueActionAdd})
 			i++
 		}
 
@@ -101,16 +101,49 @@ func units2flags(units int) bits.Flags32 {
 	return 0
 }
 
+func (q *Queue) AddTimer(ctx *context.Context, id uintptr, quantity int, units int, userData unsafe.Pointer) bool {
+	var events [1]os.Event
+	events[0] = os.Event{Identifier: id, EventData: int64(quantity), EventType: os.EventTypeTimer, ActionFlags: os.EventQueueActionAdd | os.EventQueueActionShootOnce, EventFlags: units2flags(units), UserData: userData}
+	return os.RegisterEventsWithQueue(ctx, q.KernelQueue, events[:])
+}
+
 func (q *Queue) AddPeriodicTimer(ctx *context.Context, id uintptr, quantity int, units int, userData unsafe.Pointer) bool {
-	events := make([]os.Event, 1)
-	events[0] = os.Event{Identifier: id, EventData: int64(quantity), EventType: os.EventTypeTimer, EventFlags: units2flags(units), UserData: userData}
-	return os.RegisterEventsWithQueue(ctx, q.KernelQueue, events)
+	var events [1]os.Event
+	events[0] = os.Event{Identifier: id, EventData: int64(quantity), EventType: os.EventTypeTimer, ActionFlags: os.EventQueueActionAdd, EventFlags: units2flags(units), UserData: userData}
+	return os.RegisterEventsWithQueue(ctx, q.KernelQueue, events[:])
 }
 
 func (q *Queue) AddTimerAt(ctx *context.Context, id uintptr, at int, units int, userData unsafe.Pointer) bool {
-	events := make([]os.Event, 1)
-	events[0] = os.Event{Identifier: id, EventData: int64(at), EventType: os.EventTypeTimer, ActionFlags: os.EventQueueActionResetStateAfterRetrieval, EventFlags: units2flags(units) | os.EventNoteAbsoluteTime, UserData: userData}
+	var events [1]os.Event
+	events[0] = os.Event{Identifier: id, EventData: int64(at), EventType: os.EventTypeTimer, ActionFlags: os.EventQueueActionAdd | os.EventQueueActionResetStateAfterRetrieval, EventFlags: units2flags(units) | os.EventNoteAbsoluteTime, UserData: userData}
+	return os.RegisterEventsWithQueue(ctx, q.KernelQueue, events[:])
+}
+
+func (q *Queue) AddFileAndTimer(ctx *context.Context, fd os.Handle, request bits.Flags, trigger bits.Flags, quantity int, units int, userData unsafe.Pointer) bool {
+	var flags bits.Flags16
+	if trigger.Have(event.TriggerEdge) {
+		flags |= os.EventQueueActionResetStateAfterRetrieval
+	}
+	if trigger.Have(event.TriggerOnce) {
+		flags |= os.EventQueueActionShootOnce
+	}
+
+	events := make([]os.Event, 0, 3)
+	if request.Has(event.RequestRead) {
+		events = append(events, os.Event{Identifier: uintptr(fd), EventType: os.EventTypeRead, ActionFlags: os.EventQueueActionAdd | flags, UserData: userData})
+	}
+	if request.Has(event.RequestWrite) {
+		events = append(events, os.Event{Identifier: uintptr(fd), EventType: os.EventTypeWrite, ActionFlags: os.EventQueueActionAdd | flags, UserData: userData})
+	}
+	events = append(events, os.Event{Identifier: uintptr(fd), EventData: int64(quantity), EventType: os.EventTypeTimer, ActionFlags: os.EventQueueActionAdd | flags, EventFlags: units2flags(units), UserData: userData})
+
 	return os.RegisterEventsWithQueue(ctx, q.KernelQueue, events)
+}
+
+func (q *Queue) DelTimer(ctx *context.Context, id uintptr) bool {
+	var events [1]os.Event
+	events[0] = os.Event{Identifier: id, EventType: os.EventTypeTimer, ActionFlags: os.EventQueueActionDelete}
+	return os.RegisterEventsWithQueue(ctx, q.KernelQueue, events[:])
 }
 
 func (q *Queue) Close(ctx *context.Context) bool {
