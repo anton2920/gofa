@@ -45,7 +45,7 @@ func (c *CircularBuffer) Produce(n int) {
 	c.Tail += n
 }
 
-func (c *CircularBuffer) RemainingSlice() []byte {
+func (c *CircularBuffer) RemainingByteSlice() []byte {
 	return c.Buffer[c.Tail : c.Head+len(c.Buffer)/2]
 }
 
@@ -62,14 +62,14 @@ func (c *CircularBuffer) UnconsumedLen() int {
 	return c.Tail - c.Head
 }
 
-func (c *CircularBuffer) UnconsumedSlice() []byte {
+func (c *CircularBuffer) UnconsumedByteSlice() []byte {
 	//return *(*[]byte)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(unsafe.Pointer(&c.Buffer[c.Head])), Len: c.UnconsumedLen(), Cap: c.UnconsumedLen()}))
 	return c.Buffer[c.Head : c.Head+c.UnconsumedLen()]
 }
 
 func (c *CircularBuffer) UnconsumedString() string {
 	//return *(*string)(unsafe.Pointer(&types.StringHeader{Data: uintptr(unsafe.Pointer(&c.Buffer[c.Head])), Len: c.UnconsumedLen()}))
-	return bytes.AsString(c.UnconsumedSlice())
+	return bytes.AsString(c.UnconsumedByteSlice())
 }
 
 func (c *CircularBuffer) Free(ctx *context.Context) bool {
