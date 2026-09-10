@@ -196,15 +196,7 @@ func JailSet(ctx *context.Context, iovs []Iovec, flags int32) (int32, bool) {
 
 //go:nosplit
 func Kevent(ctx *context.Context, kq int32, changelist []Kevent_t, eventlist []Kevent_t, timeout *Timespec) (int32, bool) {
-	var chptr, evptr unsafe.Pointer
-	if len(changelist) > 0 {
-		chptr = unsafe.Pointer(&changelist[0])
-	}
-	if len(eventlist) > 0 {
-		evptr = unsafe.Pointer(&eventlist[0])
-	}
-
-	r1, _, errno := Syscall6(SYS_kevent, uintptr(kq), uintptr(chptr), uintptr(len(changelist)), uintptr(evptr), uintptr(len(eventlist)), uintptr(unsafe.Pointer(timeout)))
+	r1, _, errno := Syscall6(SYS_kevent, uintptr(kq), uintptr(*(*uintptr)(unsafe.Pointer(&changelist))), uintptr(len(changelist)), uintptr(*(*uintptr)(unsafe.Pointer(&eventlist))), uintptr(len(eventlist)), uintptr(unsafe.Pointer(timeout)))
 	return int32(r1), ReportPotentialError(ctx, errno)
 }
 
@@ -324,7 +316,7 @@ func RctlRemoveRule(ctx *context.Context, filter []byte) bool {
 
 //go:nosplit
 func Read(ctx *context.Context, fd int32, buf []byte) (int, bool) {
-	r1, _, errno := Syscall(SYS_read, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
+	r1, _, errno := Syscall(SYS_read, uintptr(fd), uintptr(*(*uintptr)(unsafe.Pointer(&buf))), uintptr(len(buf)))
 	return int(r1), ReportPotentialError(ctx, errno)
 }
 
@@ -397,12 +389,12 @@ func Unmount(ctx *context.Context, path string, flags int32) bool {
 
 //go:nosplit
 func Write(ctx *context.Context, fd int32, buf []byte) (int, bool) {
-	r1, _, errno := Syscall(SYS_write, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
+	r1, _, errno := Syscall(SYS_write, uintptr(fd), uintptr(*(*uintptr)(unsafe.Pointer(&buf))), uintptr(len(buf)))
 	return int(r1), ReportPotentialError(ctx, errno)
 }
 
 //go:nosplit
 func Writev(ctx *context.Context, fd int32, iov []Iovec) (int, bool) {
-	r1, _, errno := Syscall(SYS_writev, uintptr(fd), uintptr(unsafe.Pointer(&iov[0])), uintptr(len(iov)))
+	r1, _, errno := Syscall(SYS_writev, uintptr(fd), uintptr(*(*uintptr)(unsafe.Pointer(&iov))), uintptr(len(iov)))
 	return int(r1), ReportPotentialError(ctx, errno)
 }
