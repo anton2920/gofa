@@ -14,7 +14,7 @@ func String(w *bufio.Writer, s string) {
 }
 
 func main() {
-	types := [...]string{"byte", "int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64", "int", "uint", "float32", "float64", "complex64", "complex128"}
+	types := [...]string{"byte", "int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64", "int", "uint", "float32", "float64", "complex64", "complex128", "string"}
 
 	const path = "arena_helpers.go"
 	f, err := os.Create(path)

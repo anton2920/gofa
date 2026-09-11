@@ -351,3 +351,26 @@ func (a *Arena) RepushComplex128Array(old []complex128, n int) []complex128 {
 	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(complex128(0))*uintptr(len(old)), unsafe.Sizeof(complex128(0))*uintptr(n), unsafe.Alignof(complex128(0)))
 	return *(*[]complex128)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
 }
+
+func (a *Arena) PushString() *string {
+	return (*string)(a.PushSizeWithAlignment(unsafe.Sizeof(string(0)), unsafe.Alignof(string(0))))
+}
+
+func (a *Arena) PushStringArray(n int) []string {
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(string(0))*uintptr(n), unsafe.Alignof(string(0)))
+	return *(*[]string)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
+}
+
+func (a *Arena) PushStringArrayFrom(arr []string) []string {
+	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
+		return arr
+	}
+	narr := a.PushStringArray(len(arr))
+	copy(narr, arr)
+	return narr
+}
+
+func (a *Arena) RepushStringArray(old []string, n int) []string {
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(string(0))*uintptr(len(old)), unsafe.Sizeof(string(0))*uintptr(n), unsafe.Alignof(string(0)))
+	return *(*[]string)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
+}
