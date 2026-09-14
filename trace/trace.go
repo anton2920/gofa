@@ -136,7 +136,7 @@ func (p *Profiler) BeginBody(pc uintptr, label string) Block {
 
 //go:nosplit
 func (p *Profiler) Begin(label string) Block {
-	cpu.WaitForLoadOperationsToComplete()
+	cpu.ReadMemoryBarrier()
 	return p.BeginBody(funcs.GetCallerPC(unsafe.Pointer(&label)), label)
 }
 

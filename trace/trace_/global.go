@@ -29,7 +29,7 @@ func BeginProfile() {
 
 //go:nosplit
 func Begin(label string) trace.Block {
-	cpu.WaitForLoadOperationsToComplete()
+	cpu.ReadMemoryBarrier()
 	return prof.BeginBody(funcs.GetCallerPC(unsafe.Pointer(&label)), label)
 }
 
