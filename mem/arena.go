@@ -56,6 +56,7 @@ func (a *Arena) PushSizeWithAlignment(n uintptr, align uintptr) unsafe.Pointer {
 	}
 
 	/* TODO(anton2920): handle shortage of memory better. */
+	//println("\n\nCurrent arena values:", a.Base, a.Size, a.PrevOfft, a.CurrOfft, "requested:", n, align)
 	panic(buyMoreRamMsg)
 }
 
