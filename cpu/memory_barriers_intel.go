@@ -5,14 +5,14 @@ package cpu
 
 import "github.com/anton2920/gofa/cpu/intel"
 
-func WaitForLoadOperationsToComplete() {
+func ReadMemoryBarrier() {
 	intel.LFENCE()
 }
 
-func WaitForStoreOperationsToComplete() {
+func WriteMemoryBarrier() {
 	intel.SFENCE()
 }
 
-func WaitForLoadAndStoreOperationsToComplete() {
+func TotalMemoryBarrier() {
 	intel.MFENCE()
 }
