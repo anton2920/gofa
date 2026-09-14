@@ -41,14 +41,17 @@ func (f *Formatter) applyWidth(n int, after bool) {
 
 func (f *Formatter) InitWithUnsafePointer(ptr unsafe.Pointer, n int) {
 	f.Buffer = bytes.SliceFromUnsafePointer(ptr, n)
+	f.Reset()
 }
 
 func (f *Formatter) InitWithBytePointer(ptr *byte, n int) {
 	f.Buffer = bytes.SliceFromBytePointer(ptr, n)
+	f.Reset()
 }
 
 func (f *Formatter) InitWithByteSlice(buf []byte) {
 	f.Buffer = bytes.SliceFromBytePointer(&buf[0], len(buf))
+	f.Reset()
 }
 
 func (f *Formatter) Backspace(n int) *Formatter {
