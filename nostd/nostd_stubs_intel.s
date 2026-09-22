@@ -162,22 +162,6 @@ TEXT runtime·morestack48(SB), 6, $-0
 	RET
 
 
-// memhash_varlen(p unsafe.Pointer, h seed) uintptr
-// redirects to memhash(p, h, size) using the size
-// stored in the closure.
-TEXT runtime·memhash_varlen(SB), 6, $32-24
-	MOVQ	p+0(FP), AX
-	MOVQ	h+8(FP), BX
-	MOVQ	8(DX), CX
-	MOVQ	AX, 0(SP)
-	MOVQ	BX, 8(SP)
-	MOVQ	CX, 16(SP)
-	CALL	runtime·memhash(SB)
-	MOVQ	24(SP), AX
-	MOVQ	AX, ret+16(FP)
-	RET
-
-
 GLOBL runtime·algarray(SB), 8, $192
 GLOBL runtime·writeBarrier(SB), 8, $8
 GLOBL runtime·writeBarrierEnabled(SB), 24, $8
