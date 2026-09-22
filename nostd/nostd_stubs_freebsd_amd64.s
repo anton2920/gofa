@@ -14,7 +14,7 @@ TEXT settls<>(SB), 4, $8
 	RET
 
 TEXT	·exit(SB), 4, $-0
-	MOVL	AX, DI
+	MOVL	code+0(FP), DI
 	MOVL	$1, AX
 	SYSCALL
 	MOVQ	(AX), AX // crash

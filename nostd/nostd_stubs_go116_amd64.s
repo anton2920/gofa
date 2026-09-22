@@ -1,0 +1,454 @@
+//go:build: amd64 && gofanostd && gofanostd116
+// +build amd64,gofanostd,gofanostd116
+
+// gcWriteBarrier performs a heap pointer write and informs the GC.
+//
+// gcWriteBarrier does NOT follow the Go ABI. It takes two arguments:
+// - DI is the destination of the write
+// - AX is the value being written at DI
+// It clobbers FLAGS. It does not clobber any general-purpose registers,
+// but may clobber others (e.g., SSE registers).
+// Defined as ABIInternal since it does not use the stack-based Go ABI.
+TEXT runtime·gcWriteBarrier<ABIInternal>(SB), 6, $-0
+	// Do the write.
+	MOVQ	AX, (DI)
+	RET
+
+// gcWriteBarrierBX is gcWriteBarrier, but with args in DI and BX.
+// Defined as ABIInternal since it does not use the stable Go ABI.
+TEXT runtime·gcWriteBarrierBX<ABIInternal>(SB), 6, $-0
+	XCHGQ BX, AX
+	CALL runtime·gcWriteBarrier<ABIInternal>(SB)
+	XCHGQ BX, AX
+	RET
+
+// gcWriteBarrierR8 is gcWriteBarrier, but with args in DI and R8.
+// Defined as ABIInternal since it does not use the stable Go ABI.
+TEXT runtime·gcWriteBarrierR8<ABIInternal>(SB), 6, $-0
+	XCHGQ R8, AX
+	CALL runtime·gcWriteBarrier<ABIInternal>(SB)
+	XCHGQ R8, AX
+	RET
+
+
+TEXT runtime·duffzero<ABIInternal>(SB), 6, $-0
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	MOVUPS	X0,(DI)
+	MOVUPS	X0,16(DI)
+	MOVUPS	X0,32(DI)
+	MOVUPS	X0,48(DI)
+	LEAQ	64(DI),DI
+
+	RET
+
+TEXT runtime·duffcopy<ABIInternal>(SB), 6, $-0
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	MOVUPS	(SI), X0
+	ADDQ	$16, SI
+	MOVUPS	X0, (DI)
+	ADDQ	$16, DI
+
+	RET
