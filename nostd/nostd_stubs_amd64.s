@@ -1,6 +1,5 @@
-//go:build amd64 && gofanostd && (gofanostd13 || gofanostd14 || gofanostd15 || gofanostd16 || gofanostd17 || gofanostdxx)
+//go:build amd64 && gofanostd
 // +build amd64,gofanostd
-// +build gofanostd13 gofanostd14 gofanostd15 gofanostd16 gofanostd17 gofanostdxx
 
 // memhash_varlen(p unsafe.Pointer, h seed) uintptr
 // redirects to memhash(p, h, size) using the size

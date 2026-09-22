@@ -1,6 +1,5 @@
-//go:build gofanostd && (gofanostd13 || gofanostd14 || gofanostd15 || gofanostd16 || gofanostd17 || gofanostdxx)
+//go:build gofanostd
 // +build gofanostd
-// +build gofanostd13 gofanostd14 gofanostd15 gofanostd16 gofanostd17 gofanostdxx
 
 package nostd
 

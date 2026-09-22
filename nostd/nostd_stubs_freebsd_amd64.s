@@ -1,6 +1,5 @@
-//go:build freebsd && amd64 && gofanostd && (gofanostd13 || gofanostd14 || gofanostd15 || gofanostd16 || gofanostd17 || gofanostdxx)
+//go:build freebsd && amd64 && gofanostd
 // +build freebsd,amd64,gofanostd
-// +build gofanostd13 gofanostd14 gofanostd15 gofanostd16 gofanostd17 gofanostdxx
 
 TEXT runtime·panicslice(SB), 6, $-0
 	MOVL	$66, DI
