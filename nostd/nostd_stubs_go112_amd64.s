@@ -1,6 +1,21 @@
 //go:build: amd64 && gofanostd && gofanostd112
 // +build amd64,gofanostd,gofanostd112
 
+// gcWriteBarrierBX is gcWriteBarrier, but with args in DI and BX.
+TEXT runtime·gcWriteBarrierBX(SB), 6, $-0
+	XCHGQ BX, AX
+	CALL runtime·gcWriteBarrier(SB)
+	XCHGQ BX, AX
+	RET
+
+// gcWriteBarrierR9 is gcWriteBarrier, but with args in DI and R9.
+TEXT runtime·gcWriteBarrierR9(SB), 6, $-0
+	XCHGQ R9, AX
+	CALL runtime·gcWriteBarrier(SB)
+	XCHGQ R9, AX
+	RET
+
+
 TEXT runtime·duffzero(SB), 6, $-0
 	MOVUPS	X0,(DI)
 	MOVUPS	X0,16(DI)
