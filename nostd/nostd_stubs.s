@@ -139,3 +139,4 @@ GLOBL runtime·algarray(SB), 8, $192
 GLOBL runtime·writeBarrier(SB), 8, $8
 GLOBL runtime·writeBarrierEnabled(SB), 24, $8
 GLOBL runtime·firstmoduledata(SB), 8, $1024
+GLOBL runtime·framepointer_enabled(SB), 24, $8

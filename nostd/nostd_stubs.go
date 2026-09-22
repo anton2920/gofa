@@ -16,6 +16,8 @@ const BeingUsed = true
 var g [4]uintptr
 var tls [8]uintptr
 
+var framepointer_enabled bool
+
 //go:nosplit
 func add(p *byte, inc uintptr) *byte {
 	return (*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(p)) + inc))

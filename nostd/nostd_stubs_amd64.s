@@ -121,3 +121,16 @@ di_finish:
 equal:
 	SETEQ	(AX)
 	RET
+
+
+// gcWriteBarrier performs a heap pointer write and informs the GC.
+//
+// gcWriteBarrier does NOT follow the Go ABI. It takes two arguments:
+// - DI is the destination of the write
+// - AX is the value being written at DI
+// It clobbers FLAGS. It does not clobber any general-purpose registers,
+// but may clobber others (e.g., SSE registers).
+TEXT runtime·gcWriteBarrier(SB), 6, $-0
+	// Do the write.
+	MOVQ	AX, (DI)
+	RET
