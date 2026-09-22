@@ -1,6 +1,6 @@
-//go:build gofanostd && (gofanostd13 || gofanostd14 || gofanostd15 || gofanostd16 || gofanostdxx)
+//go:build gofanostd && (gofanostd13 || gofanostd14 || gofanostd15 || gofanostd16 || gofanostd17 || gofanostdxx)
 // +build gofanostd
-// +build gofanostd13 gofanostd14 gofanostd15 gofanostd16 gofanostdxx
+// +build gofanostd13 gofanostd14 gofanostd15 gofanostd16 gofanostd17 gofanostdxx
 
 TEXT runtime·memcopy(SB), 6, $-0
 	JMP	·memcopy(SB)
