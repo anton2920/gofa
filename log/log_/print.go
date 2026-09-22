@@ -19,7 +19,7 @@ func Println(f *log.Formatter) {
 		case log.LevelFatal:
 			os.Exit(1)
 		case log.LevelPanic:
-			panic(panicMsg)
+			Panic(panicMsg)
 		}
 	}
 }
