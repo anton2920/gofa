@@ -34,7 +34,7 @@ func Listen(ctx *context.Context, proto string, endpoint string) (os.Handle, boo
 
 		addrLen = uint32(unsafe.Sizeof(*iaddr))
 	default:
-		panic(protoNotSupportedMsg)
+		Panic(protoNotSupportedMsg)
 	}
 
 	s, ok := os.CreateNetworkSocket(ctx, pf, typ, prot)
