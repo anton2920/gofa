@@ -42,12 +42,6 @@ func Listen(ctx *context.Context, proto string, endpoint string) (os.Handle, boo
 		return -1, false
 	}
 
-	paddr := (*os.NetworkAddress)(unsafe.Pointer(&addrBuf))
-	if !os.BindSocketToAddress(ctx, s, paddr, addrLen) {
-		os.CloseHandle(ctx, s)
-		return -1, false
-	}
-
 	if pf == os.ProtocolFamilyInternet {
 		if !os.SetSocketBooleanOption(ctx, s, os.SocketOptionReuseLocalAddressAndPortWithLoadBalancing, true) {
 			os.CloseHandle(ctx, s)
@@ -59,6 +53,12 @@ func Listen(ctx *context.Context, proto string, endpoint string) (os.Handle, boo
 				return -1, false
 			}
 		}
+	}
+
+	paddr := (*os.NetworkAddress)(unsafe.Pointer(&addrBuf))
+	if !os.BindSocketToAddress(ctx, s, paddr, addrLen) {
+		os.CloseHandle(ctx, s)
+		return -1, false
 	}
 
 	if !os.ListenForIncomingConnections(ctx, s, 128) {
