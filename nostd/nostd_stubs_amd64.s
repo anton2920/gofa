@@ -1,21 +1,6 @@
 //go:build amd64 && gofanostd
 // +build amd64,gofanostd
 
-// memhash_varlen(p unsafe.Pointer, h seed) uintptr
-// redirects to memhash(p, h, size) using the size
-// stored in the closure.
-TEXT runtime·memhash_varlen(SB), 6, $32-24
-	MOVQ	p+0(FP), AX
-	MOVQ	h+8(FP), BX
-	MOVQ	8(DX), CX
-	MOVQ	AX, 0(SP)
-	MOVQ	BX, 8(SP)
-	MOVQ	CX, 16(SP)
-	CALL	runtime·memhash(SB)
-	MOVQ	24(SP), AX
-	MOVQ	AX, ret+16(FP)
-	RET
-
 // memequal_varlen(a, b unsafe.Pointer) bool
 TEXT runtime·memequal_varlen(SB), 6, $-17
 	MOVQ	a+0(FP), SI

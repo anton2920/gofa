@@ -18,6 +18,46 @@ var tls [8]uintptr
 
 var framepointer_enabled bool
 
+func exit(code int32)
+
+//go:linkname main_main main.main
+func main_main()
+
+func main() {
+	main_main()
+}
+
+//go:linkname panicslice runtime.panicslice
+func panicslice() {
+	exit(66)
+}
+
+//go:linkname panicindex runtime.panicindex
+func panicindex() {
+	exit(67)
+}
+
+//go:linkname panicwrap runtime.panicwrap
+func panicwrap() {
+	exit(68)
+}
+
+//go:linkname gopanic runtime.gopanic
+func gopanic() {
+	exit(69)
+}
+
+//go:linkname panic runtime.panic
+func panic() {
+	exit(69)
+}
+
+//go:nosplit
+//go:linkname growslice runtime.growslice
+func growslice() {
+	panic()
+}
+
 //go:nosplit
 func add(p *byte, inc uintptr) *byte {
 	return (*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(p)) + inc))
@@ -33,11 +73,7 @@ func dec(p *byte) *byte { var zero uintptr; return add(p, zero-1) }
 func asuintptr(p *byte) uintptr { return uintptr(unsafe.Pointer(p)) }
 
 //go:nosplit
-func typedmemmove(psize *uintptr, dst *byte, src *byte) {
-	memmove(dst, src, *psize)
-}
-
-//go:nosplit
+//go:linkname memmove runtime.memmove
 func memmove(dst *byte, src *byte, length uintptr) {
 	if (length == 0) || (dst == src) {
 		return
@@ -63,6 +99,7 @@ func memmove(dst *byte, src *byte, length uintptr) {
 }
 
 //go:nosplit
+//go:linkname cmpstring runtime.cmpstring
 func cmpstring(s1, s2 string) int {
 	l := len(s1)
 	if len(s2) < l {
@@ -169,6 +206,13 @@ func writebarrierfat(siz *uintptr, dst *byte, src *byte) {
 }
 
 //go:nosplit
+//go:linkname typedmemmove runtime.typedmemmove
+func typedmemmove(psize *uintptr, dst *byte, src *byte) {
+	memmove(dst, src, *psize)
+}
+
+//go:nosplit
+//go:linkname typedslicecopy runtime.typedslicecopy
 func typedslicecopy(psize *uintptr, dst slice, src slice) int {
 	n := dst.len
 	if src.len < n {

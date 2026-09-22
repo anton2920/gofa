@@ -1,30 +1,6 @@
 //go:build freebsd && amd64 && gofanostd
 // +build freebsd,amd64,gofanostd
 
-TEXT runtime·panicslice(SB), 6, $-0
-	MOVL	$66, DI
-	MOVL	$1, AX
-	SYSCALL
-
-TEXT runtime·panicindex(SB), 6, $-0
-	MOVL	$67, DI
-	MOVL	$1, AX
-	SYSCALL
-
-TEXT runtime·panicwrap(SB), 6, $-0
-	MOVL	$68, DI
-	MOVL	$1, AX
-	SYSCALL
-
-TEXT runtime·gopanic(SB), 6, $-0
-	MOVL	$69, DI
-	MOVL	$1, AX
-	SYSCALL
-
-TEXT runtime·panic(SB), 6, $-0
-	JMP	runtime·gopanic(SB)
-
-
 /* From 'src/runtime/sys_freebsd_amd64.s'. */
 TEXT settls<>(SB), 4, $8
 	ADDQ	$16, AX	// adjust for ELF: wants to use -16(FS) and -8(FS) for g and m
@@ -37,7 +13,7 @@ TEXT settls<>(SB), 4, $8
 	MOVL	$0xf1, 0xf1  // crash
 	RET
 
-TEXT	exit<>(SB), 4, $-0
+TEXT	·exit(SB), 4, $-0
 	MOVL	AX, DI
 	MOVL	$1, AX
 	SYSCALL
@@ -52,7 +28,7 @@ TEXT _rt0_amd64_freebsd(SB), 6, $-0
 
 	/* TODO(anton2920): either remove the need of 'init' or make it work. */
 	//CALL	main·init(SB)
-	CALL	main·main(SB)
+	CALL	·main(SB)
 
 	XORL	AX, AX
-	CALL	exit<>(SB)
+	CALL	·exit(SB)
