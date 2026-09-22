@@ -70,7 +70,6 @@ func ReadFromFileAt(ctx *context.Context, f Handle, buf []byte, offt int64) (int
 	return freebsd.Pread(ctx, int32(f), buf, offt)
 }
 
-//go:nosplit
 func WriteToFile(ctx *context.Context, f Handle, buf []byte) (int, bool) {
 	return freebsd.Write(ctx, int32(f), buf)
 }
