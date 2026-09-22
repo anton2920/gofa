@@ -70,16 +70,19 @@ func memequal0(p, q *byte, size uintptr) bool {
 }
 
 //go:nosplit
+//go:linkname memequal8 runtime.memequal8
 func memequal8(p, q *byte, size uintptr) bool {
 	return *(*int8)(unsafe.Pointer(p)) == *(*int8)(unsafe.Pointer(q))
 }
 
 //go:nosplit
+//go:linkname memequal16 runtime.memequal16
 func memequal16(p, q *byte, size uintptr) bool {
 	return *(*int16)(unsafe.Pointer(p)) == *(*int16)(unsafe.Pointer(q))
 }
 
 //go:nosplit
+//go:linkname memequal32 runtime.memequal32
 func memequal32(p, q *byte, size uintptr) bool {
 	return *(*int32)(unsafe.Pointer(p)) == *(*int32)(unsafe.Pointer(q))
 }
@@ -91,6 +94,7 @@ func memequal64(p, q *byte, size uintptr) bool {
 }
 
 //go:nosplit
+//go:linkname memequal128 runtime.memequal128
 func memequal128(p, q *byte, size uintptr) bool {
 	return *(*[2]int64)(unsafe.Pointer(p)) == *(*[2]int64)(unsafe.Pointer(q))
 }
@@ -127,4 +131,11 @@ func strequal(p, q *byte, size uintptr) bool {
 //go:linkname strhash runtime.strhash
 func strhash(a *byte, h uintptr) uintptr {
 	return memhash(*(**byte)(unsafe.Pointer(a)), uintptr(len(*(*string)(unsafe.Pointer(a)))), h)
+}
+
+//go:nosplit
+//go:linkname nilinterequal runtime.nilinterequal
+func nilinterequal(p, q unsafe.Pointer) bool {
+	panic()
+	return false
 }
