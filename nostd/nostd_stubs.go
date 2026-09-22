@@ -18,12 +18,24 @@ var tls [8]uintptr
 
 var framepointer_enabled bool
 
+//go:linkname buildVersion runtime.buildVersion
+var buildVersion string
+
+//go:linkname modinfo runtime.modinfo
+var modinfo string
+
 func exit(code int32)
 
 //go:linkname main_main main.main
 func main_main()
 
 func main() {
+	if buildVersion == "" {
+		buildVersion = "unknown"
+	}
+	if len(modinfo) == 1 {
+		modinfo = ""
+	}
 	main_main()
 }
 
@@ -32,8 +44,28 @@ func panicslice() {
 	exit(66)
 }
 
+//go:linkname panicSliceAlen runtime.panicSliceAlen
+func panicSliceAlen() {
+	exit(66)
+}
+
+//go:linkname panicSliceAcap runtime.panicSliceAcap
+func panicSliceAcap() {
+	exit(66)
+}
+
+//go:linkname panicSliceB runtime.panicSliceB
+func panicSliceB() {
+	exit(66)
+}
+
 //go:linkname panicindex runtime.panicindex
 func panicindex() {
+	exit(67)
+}
+
+//go:linkname panicIndex runtime.panicIndex
+func panicIndex() {
 	exit(67)
 }
 
