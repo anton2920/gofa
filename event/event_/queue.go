@@ -70,14 +70,14 @@ func (q *Queue) AddSignals(ctx *context.Context, sigs ...os.Signal) bool {
 }
 
 func (q *Queue) AddAndIgnoreSignals(ctx *context.Context, sigs ...os.Signal) bool {
-	if !q.AddSignals(ctx, sigs...) {
-		return false
-	}
-
 	for i := 0; i < len(sigs); i++ {
 		if !os.InstallSignalHandler(ctx, sigs[i], os.IgnoreSignalHandler) {
 			return false
 		}
+	}
+
+	if !q.AddSignals(ctx, sigs...) {
+		return false
 	}
 
 	return true
