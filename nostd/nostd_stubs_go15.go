@@ -6,7 +6,7 @@ package nostd
 import "unsafe"
 
 //go:nosplit
-func memhash(p *byte, s, h uintptr) uintptr {
+func memhash(p *byte, h, s uintptr) uintptr {
 	const (
 		ptrSize = unsafe.Sizeof(uintptr(0))
 		c0      = uintptr((8-ptrSize)/4*2860486313 + (ptrSize-4)/4*33054211828000289)

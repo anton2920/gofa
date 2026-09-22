@@ -31,7 +31,7 @@ func memhash_varlen(p *byte, h uintptr) uintptr {
 
 //go:nosplit
 //go:linkname memhash runtime.memhash
-func memhash(p *byte, s, h uintptr) uintptr {
+func memhash(p *byte, h, s uintptr) uintptr {
 	const (
 		ptrSize = unsafe.Sizeof(uintptr(0))
 		c0      = uintptr((8-ptrSize)/4*2860486313 + (ptrSize-4)/4*33054211828000289)
@@ -125,6 +125,6 @@ func strequal(p, q *byte, size uintptr) bool {
 
 //go:nosplit
 //go:linkname strhash runtime.strhash
-func strhash(a *byte, _ uintptr, h uintptr) uintptr {
+func strhash(a *byte, h uintptr) uintptr {
 	return memhash(*(**byte)(unsafe.Pointer(a)), uintptr(len(*(*string)(unsafe.Pointer(a)))), h)
 }
