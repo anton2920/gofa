@@ -14,15 +14,15 @@ var (
 	HighestBasicFunction    uint32
 	HighestExtendedFunction uint32
 
-	VendorString string
+	//VendorString string
 
 	Stepping      int
 	Model         int /* this contains both Model and ExtendedModel fields. */
 	Family        int /* this contains both Family and ExtendedFamily fields. */
 	ProcessorType int /* 00 - Original OEM Processor, 01 - Intel OverDrive® Processor, 10 - Dual processor. */
 
-	BrandIndex  int
-	BrandString string
+	//BrandIndex  int
+	//BrandString string
 
 	CPUHz uint64
 )
@@ -51,6 +51,13 @@ var BrandIndex2BrandString = [...]string{
 }
 
 func init() {
+	/* TODO(anton2920): replace with globals after fixing 'init' calls in 'nostd'. */
+	var (
+		BrandIndex   int
+		BrandString  string
+		VendorString string
+	)
+
 	{
 		a, b, c, d := CPUID(0x0, 0)
 		HighestBasicFunction = a
