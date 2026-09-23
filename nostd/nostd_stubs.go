@@ -102,6 +102,12 @@ func growslice() {
 }
 
 //go:nosplit
+//go:linkname wbMove runtime.wbMove
+func wbMove() {
+	exit(96)
+}
+
+//go:nosplit
 func add(p *byte, inc uintptr) *byte {
 	return (*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(p)) + inc))
 }

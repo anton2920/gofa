@@ -3,6 +3,35 @@
 
 #include "textflag.h"
 
+// See map.go comment on the need for this routine.
+TEXT runtime·mapinitnoop<ABIInternal>(SB), NOSPLIT, $-0
+	RET
+
+TEXT runtime·gcWriteBarrier1<ABIInternal>(SB), NOSPLIT|NOFRAME, $-0
+	MOVL   $8, R11
+	JMP     runtime·gcWriteBarrier<ABIInternal>(SB)
+TEXT runtime·gcWriteBarrier2<ABIInternal>(SB), NOSPLIT|NOFRAME, $-0
+	MOVL   $16, R11
+	JMP     runtime·gcWriteBarrier<ABIInternal>(SB)
+TEXT runtime·gcWriteBarrier3<ABIInternal>(SB), NOSPLIT|NOFRAME, $-0
+	MOVL   $24, R11
+	JMP     runtime·gcWriteBarrier<ABIInternal>(SB)
+TEXT runtime·gcWriteBarrier4<ABIInternal>(SB), NOSPLIT|NOFRAME, $-0
+	MOVL   $32, R11
+	JMP     runtime·gcWriteBarrier<ABIInternal>(SB)
+TEXT runtime·gcWriteBarrier5<ABIInternal>(SB), NOSPLIT|NOFRAME, $-0
+	MOVL   $40, R11
+	JMP     runtime·gcWriteBarrier<ABIInternal>(SB)
+TEXT runtime·gcWriteBarrier6<ABIInternal>(SB), NOSPLIT|NOFRAME, $-0
+	MOVL   $48, R11
+	JMP     runtime·gcWriteBarrier<ABIInternal>(SB)
+TEXT runtime·gcWriteBarrier7<ABIInternal>(SB), NOSPLIT|NOFRAME, $-0
+	MOVL   $56, R11
+	JMP     runtime·gcWriteBarrier<ABIInternal>(SB)
+TEXT runtime·gcWriteBarrier8<ABIInternal>(SB), NOSPLIT|NOFRAME, $-0
+	MOVL   $64, R11
+	JMP     runtime·gcWriteBarrier<ABIInternal>(SB)
+
 // gcWriteBarrier performs a heap pointer write and informs the GC.
 //
 // gcWriteBarrier does NOT follow the Go ABI. It takes two arguments:
