@@ -24,11 +24,13 @@ var buildVersion string
 //go:linkname modinfo runtime.modinfo
 var modinfo string
 
+//go:nosplit
 func exit(code int32)
 
 //go:linkname main_main main.main
 func main_main()
 
+//go:nosplit
 func main() {
 	if buildVersion == "" {
 		buildVersion = "unknown"
@@ -39,46 +41,55 @@ func main() {
 	main_main()
 }
 
+//go:nosplit
 //go:linkname panicslice runtime.panicslice
 func panicslice() {
 	exit(66)
 }
 
+//go:nosplit
 //go:linkname panicSliceAlen runtime.panicSliceAlen
 func panicSliceAlen() {
 	exit(66)
 }
 
+//go:nosplit
 //go:linkname panicSliceAcap runtime.panicSliceAcap
 func panicSliceAcap() {
 	exit(66)
 }
 
+//go:nosplit
 //go:linkname panicSliceB runtime.panicSliceB
 func panicSliceB() {
 	exit(66)
 }
 
+//go:nosplit
 //go:linkname panicindex runtime.panicindex
 func panicindex() {
 	exit(67)
 }
 
+//go:nosplit
 //go:linkname panicIndex runtime.panicIndex
 func panicIndex() {
 	exit(67)
 }
 
+//go:nosplit
 //go:linkname panicwrap runtime.panicwrap
 func panicwrap() {
 	exit(68)
 }
 
+//go:nosplit
 //go:linkname gopanic runtime.gopanic
 func gopanic() {
 	exit(69)
 }
 
+//go:nosplit
 //go:linkname panic runtime.panic
 func panic() {
 	exit(69)

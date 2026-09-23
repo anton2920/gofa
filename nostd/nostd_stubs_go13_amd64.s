@@ -1,7 +1,9 @@
 //go:build: amd64 && gofanostd && gofanostd13
 // +build amd64,gofanostd,gofanostd13
 
-TEXT runtime·duffzero(SB), 6, $-0
+#include "nostd_stubs_intel.h"
+
+TEXT runtime·duffzero(SB), NOSPLIT, $-0
 	STOSQ
 	STOSQ
 	STOSQ
@@ -132,7 +134,7 @@ TEXT runtime·duffzero(SB), 6, $-0
 	STOSQ
 	RET
 
-TEXT runtime·duffcopy(SB), 6, $-0
+TEXT runtime·duffcopy(SB), NOSPLIT, $-0
 	MOVQ	(SI),CX
 	ADDQ	$8,SI
 	MOVQ	CX,(DI)

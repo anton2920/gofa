@@ -1,5 +1,5 @@
-//go:build gofanostd && gofanostd117
-// +build gofanostd,gofanostd117
+//go:build gofanostd && gofanostd118
+// +build gofanostd,gofanostd118
 
 package nostd
 

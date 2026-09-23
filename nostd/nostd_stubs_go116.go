@@ -5,9 +5,6 @@ package nostd
 
 import "unsafe"
 
-//go:linkname log_stmp_0 github.com/anton2920/gofa/log/log_..stmp_0
-var log_stmp_0 interface{}
-
 // getclosureptr returns the pointer to the current closure.
 // getclosureptr can only be used in an assignment statement
 // at the entry of a function. Moreover, go:nosplit directive

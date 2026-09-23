@@ -1,6 +1,10 @@
 //go:build: amd64 && gofanostd && gofanostd117
 // +build amd64,gofanostd,gofanostd117
 
+#include "textflag.h"
+#include "nostd_stubs_intel.h"
+#include "nostd_stubs_amd64.h"
+
 // gcWriteBarrier performs a heap pointer write and informs the GC.
 //
 // gcWriteBarrier does NOT follow the Go ABI. It takes two arguments:
@@ -9,14 +13,14 @@
 // It clobbers FLAGS. It does not clobber any general-purpose registers,
 // but may clobber others (e.g., SSE registers).
 // Defined as ABIInternal since it does not use the stack-based Go ABI.
-TEXT runtime·gcWriteBarrier<ABIInternal>(SB), 6, $-0
+TEXT runtime·gcWriteBarrier<ABIInternal>(SB), NOSPLIT, $-0
 	// Do the write.
 	MOVQ	AX, (DI)
 	RET
 
 // gcWriteBarrierBX is gcWriteBarrier, but with args in DI and BX.
 // Defined as ABIInternal since it does not use the stable Go ABI.
-TEXT runtime·gcWriteBarrierBX<ABIInternal>(SB), 6, $-0
+TEXT runtime·gcWriteBarrierBX<ABIInternal>(SB), NOSPLIT, $-0
 	XCHGQ BX, AX
 	CALL runtime·gcWriteBarrier<ABIInternal>(SB)
 	XCHGQ BX, AX
@@ -24,7 +28,7 @@ TEXT runtime·gcWriteBarrierBX<ABIInternal>(SB), 6, $-0
 
 // gcWriteBarrierR8 is gcWriteBarrier, but with args in DI and R8.
 // Defined as ABIInternal since it does not use the stable Go ABI.
-TEXT runtime·gcWriteBarrierR8<ABIInternal>(SB), 6, $-0
+TEXT runtime·gcWriteBarrierR8<ABIInternal>(SB), NOSPLIT, $-0
 	XCHGQ R8, AX
 	CALL runtime·gcWriteBarrier<ABIInternal>(SB)
 	XCHGQ R8, AX

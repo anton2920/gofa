@@ -1,22 +1,26 @@
 //go:build: amd64 && gofanostd && gofanostd112
 // +build amd64,gofanostd,gofanostd112
 
+#include "textflag.h"
+#include "nostd_stubs_intel.h"
+#include "nostd_stubs_amd64.h"
+
 // gcWriteBarrierBX is gcWriteBarrier, but with args in DI and BX.
-TEXT runtime·gcWriteBarrierBX(SB), 6, $-0
+TEXT runtime·gcWriteBarrierBX(SB), NOSPLIT, $-0
 	XCHGQ BX, AX
 	CALL runtime·gcWriteBarrier(SB)
 	XCHGQ BX, AX
 	RET
 
 // gcWriteBarrierR9 is gcWriteBarrier, but with args in DI and R9.
-TEXT runtime·gcWriteBarrierR9(SB), 6, $-0
+TEXT runtime·gcWriteBarrierR9(SB), NOSPLIT, $-0
 	XCHGQ R9, AX
 	CALL runtime·gcWriteBarrier(SB)
 	XCHGQ R9, AX
 	RET
 
 
-TEXT runtime·duffzero(SB), 6, $-0
+TEXT runtime·duffzero(SB), NOSPLIT, $-0
 	MOVUPS	X0,(DI)
 	MOVUPS	X0,16(DI)
 	MOVUPS	X0,32(DI)
@@ -115,7 +119,7 @@ TEXT runtime·duffzero(SB), 6, $-0
 
 	RET
 
-TEXT runtime·duffcopy(SB), 6, $-0
+TEXT runtime·duffcopy(SB), NOSPLIT, $-0
 	MOVUPS	(SI), X0
 	ADDQ	$16, SI
 	MOVUPS	X0, (DI)

@@ -1,10 +1,15 @@
-//go:build amd64 && gofanostd
-// +build amd64,gofanostd
+#ifndef DUPOK
+#define DUPOK	2
+#endif // DUPOK
+
+#ifndef NOSPLIT
+#define NOSPLIT	4
+#endif // NOSPLIT
 
 // memhash_varlen(p unsafe.Pointer, h seed) uintptr
 // redirects to memhash(p, h, size) using the size
 // stored in the closure.
-TEXT runtime·memhash_varlen(SB), 6, $32-24
+TEXT runtime·memhash_varlen(SB), NOSPLIT|DUPOK, $32-24
 	MOVQ	p+0(FP), AX
 	MOVQ	h+8(FP), BX
 	MOVQ	8(DX), CX
@@ -18,7 +23,7 @@ TEXT runtime·memhash_varlen(SB), 6, $32-24
 
 
 // memequal_varlen(a, b unsafe.Pointer) bool
-TEXT runtime·memequal_varlen(SB), 6, $-17
+TEXT runtime·memequal_varlen(SB), NOSPLIT, $-17
 	MOVQ	a+0(FP), SI
 	MOVQ	b+8(FP), DI
 	CMPQ	SI, DI
@@ -34,7 +39,7 @@ eq:
 // b in DI
 // count in BX
 // address of result byte in AX
-TEXT runtime·memeqbody(SB), 6, $-0
+TEXT runtime·memeqbody(SB), NOSPLIT, $-0
 	CMPQ	BX, $8
 	JB	small
 
@@ -131,7 +136,7 @@ equal:
 // - AX is the value being written at DI
 // It clobbers FLAGS. It does not clobber any general-purpose registers,
 // but may clobber others (e.g., SSE registers).
-TEXT runtime·gcWriteBarrier(SB), 6, $-0
+TEXT runtime·gcWriteBarrier(SB), NOSPLIT, $-0
 	// Do the write.
 	MOVQ	AX, (DI)
 	RET

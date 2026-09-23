@@ -1,7 +1,11 @@
 //go:build: amd64 && gofanostd && gofanostd16
 // +build amd64,gofanostd,gofanostd16
 
-TEXT runtime·duffzero(SB), 6, $-0
+#include "textflag.h"
+#include "nostd_stubs_intel.h"
+#include "nostd_stubs_amd64.h"
+
+TEXT runtime·duffzero(SB), NOSPLIT, $-0
 	MOVUPS	X0,(DI)
 	MOVUPS	X0,16(DI)
 	MOVUPS	X0,32(DI)
@@ -100,7 +104,7 @@ TEXT runtime·duffzero(SB), 6, $-0
 
 	RET
 
-TEXT runtime·duffcopy(SB), 6, $-0
+TEXT runtime·duffcopy(SB), NOSPLIT, $-0
 	MOVUPS	(SI), X0
 	ADDQ	$16, SI
 	MOVUPS	X0, (DI)
