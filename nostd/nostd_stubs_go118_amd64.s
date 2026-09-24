@@ -53,6 +53,14 @@ TEXT runtime·gcWriteBarrierBX<ABIInternal>(SB), NOSPLIT, $-0
 	XCHGQ BX, AX
 	RET
 
+// gcWriteBarrierDX is gcWriteBarrier, but with args in DI and DX.
+// Defined as ABIInternal since it does not use the stable Go ABI.
+TEXT runtime·gcWriteBarrierDX<ABIInternal>(SB), NOSPLIT, $-0
+	XCHGQ DX, AX
+	CALL runtime·gcWriteBarrier<ABIInternal>(SB)
+	XCHGQ DX, AX
+	RET
+
 // gcWriteBarrierSI is gcWriteBarrier, but with args in DI and SI.
 // Defined as ABIInternal since it does not use the stable Go ABI.
 TEXT runtime·gcWriteBarrierSI<ABIInternal>(SB), NOSPLIT, $-0

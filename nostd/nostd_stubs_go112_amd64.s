@@ -12,6 +12,13 @@ TEXT runtime·gcWriteBarrierBX(SB), NOSPLIT, $-0
 	XCHGQ BX, AX
 	RET
 
+// gcWriteBarrierDX is gcWriteBarrier, but with args in DI and DX.
+TEXT runtime·gcWriteBarrierDX(SB), NOSPLIT, $-0
+	XCHGQ DX, AX
+	CALL runtime·gcWriteBarrier(SB)
+	XCHGQ DX, AX
+	RET
+
 // gcWriteBarrierR9 is gcWriteBarrier, but with args in DI and R9.
 TEXT runtime·gcWriteBarrierR9(SB), NOSPLIT, $-0
 	XCHGQ R9, AX
