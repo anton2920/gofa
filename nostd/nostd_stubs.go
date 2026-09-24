@@ -96,6 +96,12 @@ func panic() {
 }
 
 //go:nosplit
+//go:linkname panicBounds runtime.panicBounds
+func panicBounds() {
+	exit(70)
+}
+
+//go:nosplit
 //go:linkname growslice runtime.growslice
 func growslice() {
 	panic()
