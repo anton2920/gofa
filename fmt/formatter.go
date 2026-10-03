@@ -32,26 +32,23 @@ func (f *Formatter) applyWidth(n int, after bool) {
 
 	if leftAlign == after {
 		for i := 0; i < width-n; i++ {
-			f.Buffer[f.Pos] = ' '
-			f.Pos++
+			f.Pos += copy(f.Buffer[f.Pos:], " ")
 		}
 		f.Width = 0
 	}
 }
 
-func (f *Formatter) InitWithUnsafePointer(ptr unsafe.Pointer, n int) {
+func (f *Formatter) InitWithUnsafePointer(ptr unsafe.Pointer, n int) *Formatter {
 	f.Buffer = bytes.SliceFromUnsafePointer(ptr, n)
-	f.Reset()
+	return f.Reset()
 }
 
-func (f *Formatter) InitWithBytePointer(ptr *byte, n int) {
-	f.Buffer = bytes.SliceFromBytePointer(ptr, n)
-	f.Reset()
+func (f *Formatter) InitWithBytePointer(ptr *byte, n int) *Formatter {
+	return f.InitWithUnsafePointer(unsafe.Pointer(ptr), n)
 }
 
-func (f *Formatter) InitWithByteSlice(buf []byte) {
-	f.Buffer = bytes.SliceFromBytePointer(&buf[0], len(buf))
-	f.Reset()
+func (f *Formatter) InitWithByteSlice(buf []byte) *Formatter {
+	return f.InitWithBytePointer(&buf[0], len(buf))
 }
 
 func (f *Formatter) Backspace(n int) *Formatter {

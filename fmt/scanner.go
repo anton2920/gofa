@@ -25,13 +25,13 @@ func isdigit(ch byte) bool {
 	return (ch >= '0') && (ch <= '9')
 }
 
-func (s *Scanner) InitWithUnsafePointer(p unsafe.Pointer, len int) *Scanner {
-	s.Buffer = bytes.SliceFromUnsafePointer(p, len)
+func (s *Scanner) InitWithUnsafePointer(ptr unsafe.Pointer, n int) *Scanner {
+	s.Buffer = bytes.SliceFromUnsafePointer(ptr, n)
 	return s.Reset()
 }
 
-func (s *Scanner) InitWithBytePointer(p *byte, len int) *Scanner {
-	return s.InitWithUnsafePointer(unsafe.Pointer(p), len)
+func (s *Scanner) InitWithBytePointer(ptr *byte, n int) *Scanner {
+	return s.InitWithUnsafePointer(unsafe.Pointer(ptr), n)
 }
 
 func (s *Scanner) InitWithByteSlice(buf []byte) *Scanner {
