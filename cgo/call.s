@@ -102,7 +102,7 @@ TEXT ·on_call4(SB), NOSPLIT, $-56
 	MOVQ	a0+16(FP), DI
 	MOVQ	a1+24(FP), SI
 	MOVQ	a2+32(FP), DX
-	MOVQ	a4+40(FP), CX
+	MOVQ	a3+40(FP), CX
 
 	MOVQ	sp+0(FP), SP
 	CALL	AX
