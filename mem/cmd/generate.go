@@ -31,15 +31,20 @@ func main() {
 	"github.com/anton2920/gofa/go/types"
 )`)
 	for _, typ := range types {
+		zero := "0"
+		if typ == "string" {
+			zero = `""`
+		}
+
 		String(b, fmt.Sprintf(`
 func (a *Arena) Push%s() *%s {
-	return (*%s)(a.PushSizeWithAlignment(unsafe.Sizeof(%s(0)), unsafe.Alignof(%s(0))))
-}`, strings.Title(typ), typ, typ, typ, typ))
+	return (*%s)(a.PushSizeWithAlignment(unsafe.Sizeof(%s(%s)), unsafe.Alignof(%s(%s))))
+}`, strings.Title(typ), typ, typ, typ, zero, typ, zero))
 		String(b, fmt.Sprintf(`
 func (a *Arena) Push%sArray(n int) []%s {
-	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(%s(0))*uintptr(n), unsafe.Alignof(%s(0)))
+	ptr := a.PushSizeWithAlignment(unsafe.Sizeof(%s(%s))*uintptr(n), unsafe.Alignof(%s(%s)))
 	return *(*[]%s)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
-}`, strings.Title(typ), typ, typ, typ, typ))
+}`, strings.Title(typ), typ, typ, zero, typ, zero, typ))
 		String(b, fmt.Sprintf(`
 func (a *Arena) Push%sArrayFrom(arr []%s) []%s {
 	if a.AllocationComesFromHere(unsafe.Pointer(&arr[0]), uintptr(len(arr))*unsafe.Sizeof(arr[0])) {
@@ -51,9 +56,9 @@ func (a *Arena) Push%sArrayFrom(arr []%s) []%s {
 }`, strings.Title(typ), typ, typ, strings.Title(typ)))
 		String(b, fmt.Sprintf(`
 func (a *Arena) Repush%sArray(old []%s, n int) []%s {
-	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(%s(0))*uintptr(len(old)), unsafe.Sizeof(%s(0))*uintptr(n), unsafe.Alignof(%s(0)))
+	ptr := a.RepushSizeWithAlignment(unsafe.Pointer(&old[0]), unsafe.Sizeof(%s(%s))*uintptr(len(old)), unsafe.Sizeof(%s(%s))*uintptr(n), unsafe.Alignof(%s(%s)))
 	return *(*[]%s)(unsafe.Pointer(&types.SliceHeader{Data: uintptr(ptr), Len: n, Cap: n}))
-}`, strings.Title(typ), typ, typ, typ, typ, typ, typ))
+}`, strings.Title(typ), typ, typ, typ, zero, typ, zero, typ, zero, typ))
 	}
 
 	if err := b.Flush(); err != nil {
