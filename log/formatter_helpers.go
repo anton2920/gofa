@@ -24,13 +24,6 @@ func (f *Formatter) D32(d int32) *Formatter {
 	return f
 }
 
-func (f *Formatter) D64(d int64) *Formatter {
-	if f != nil {
-		f.Fmt.D64(d)
-	}
-	return f
-}
-
 func (f *Formatter) Date(t int64) *Formatter {
 	if f != nil {
 		f.Fmt.Date(t)
@@ -52,20 +45,6 @@ func (f *Formatter) E(e float64) *Formatter {
 	return f
 }
 
-func (f *Formatter) E32(e float32) *Formatter {
-	if f != nil {
-		f.Fmt.E32(e)
-	}
-	return f
-}
-
-func (f *Formatter) E64(e float64) *Formatter {
-	if f != nil {
-		f.Fmt.E64(e)
-	}
-	return f
-}
-
 func (f *Formatter) F(f_ float64) *Formatter {
 	if f != nil {
 		f.Fmt.F(f_)
@@ -73,37 +52,9 @@ func (f *Formatter) F(f_ float64) *Formatter {
 	return f
 }
 
-func (f *Formatter) F32(f_ float32) *Formatter {
-	if f != nil {
-		f.Fmt.F32(f_)
-	}
-	return f
-}
-
-func (f *Formatter) F64(f_ float64) *Formatter {
-	if f != nil {
-		f.Fmt.F64(f_)
-	}
-	return f
-}
-
 func (f *Formatter) G(g float64) *Formatter {
 	if f != nil {
 		f.Fmt.G(g)
-	}
-	return f
-}
-
-func (f *Formatter) G32(g float32) *Formatter {
-	if f != nil {
-		f.Fmt.G32(g)
-	}
-	return f
-}
-
-func (f *Formatter) G64(g float64) *Formatter {
-	if f != nil {
-		f.Fmt.G64(g)
 	}
 	return f
 }
@@ -125,13 +76,6 @@ func (f *Formatter) I32(i int32) *Formatter {
 func (f *Formatter) I64(i int64) *Formatter {
 	if f != nil {
 		f.Fmt.I64(i)
-	}
-	return f
-}
-
-func (f *Formatter) P(p unsafe.Pointer) *Formatter {
-	if f != nil {
-		f.Fmt.P(p)
 	}
 	return f
 }
@@ -160,6 +104,62 @@ func (f *Formatter) W(width int) *Formatter {
 func (f *Formatter) Prec(prec int) *Formatter {
 	if f != nil {
 		f.Fmt.Prec(prec)
+	}
+	return f
+}
+
+func (f *Formatter) D64(d int64) *Formatter {
+	if f != nil {
+		f.Fmt.D64(d)
+	}
+	return f
+}
+
+func (f *Formatter) E32(e float32) *Formatter {
+	if f != nil {
+		f.Fmt.E32(e)
+	}
+	return f
+}
+
+func (f *Formatter) E64(e float64) *Formatter {
+	if f != nil {
+		f.Fmt.E64(e)
+	}
+	return f
+}
+
+func (f *Formatter) F32(f_ float32) *Formatter {
+	if f != nil {
+		f.Fmt.F32(f_)
+	}
+	return f
+}
+
+func (f *Formatter) F64(f_ float64) *Formatter {
+	if f != nil {
+		f.Fmt.F64(f_)
+	}
+	return f
+}
+
+func (f *Formatter) G32(g float32) *Formatter {
+	if f != nil {
+		f.Fmt.G32(g)
+	}
+	return f
+}
+
+func (f *Formatter) G64(g float64) *Formatter {
+	if f != nil {
+		f.Fmt.G64(g)
+	}
+	return f
+}
+
+func (f *Formatter) P(p unsafe.Pointer) *Formatter {
+	if f != nil {
+		f.Fmt.P(p)
 	}
 	return f
 }
